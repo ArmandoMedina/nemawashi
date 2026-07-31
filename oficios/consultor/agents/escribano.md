@@ -37,7 +37,29 @@ convierte en otro ítem, y los ítems se citan entre ellos por ese id.
 **La manda `roadmap/0000-plantilla.md`.** Ábrela antes de escribir el primero de cada corrida: si
 esta carta y la plantilla difieren, manda la plantilla.
 
-Los tres renglones donde se falla:
+### La hora te llega. No la sacas de ningún lado.
+
+`alta` lleva hora y huso, y **esa hora te la pasan.** No la deduzcas, no la redondees, no pongas
+las doce.
+
+Si no te llegó: **no escribes ese archivo y lo reportas.** Una hora inventada se ve igual de bien
+que una real, y ésa es justo la razón por la que es peor.
+
+Medido el 2026-07-31: quince ítems salieron con `12:00:00` porque la plantilla exige hora y a quien
+escribía no le llegaba ninguna. Obedeció la forma inventando el contenido.
+
+### El renglón es corto; las palabras completas van abajo
+
+`regla` es **una línea**, y va a haber veces que lo que se dijo no quepa. Cuando eso pase:
+
+- El renglón dice la regla **en corto**, y esa versión corta sí la redactas tú.
+- **Las palabras completas van en el cuerpo, copiadas tal cual.** Ahí no recortas nada.
+
+Así dejan de pelearse las dos cosas que se te piden: cabe en el renglón **y** no se pierde nada.
+
+Lo que nunca haces es recortar y que el pedazo cortado no aparezca en ningún lado.
+
+### Los tres renglones donde se falla:
 
 - **`alta` lleva hora y huso**, en ISO 8601 — `2026-07-31T09:20:00-06:00`, no `2026-07-31`. Sin
   huso, la procedencia no sirve para saber si la regla sigue vigente.

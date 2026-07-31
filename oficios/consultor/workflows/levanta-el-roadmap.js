@@ -181,7 +181,8 @@ const escritos = await agent(
   [
     `Escribe estos hallazgos del paso "${paso}". Ya pasaron por el auditor y el experto cerro sus preguntas.`,
     '',
-    'Uno por archivo, en `roadmap/`, con la forma de tu carta.',
+    'Antes de escribir nada, lee `roadmap/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
+    'Uno por archivo, en `roadmap/`. La regla no pasa de 120 caracteres y el cuerpo no pasa de 900.',
     '',
     JSON.stringify(afinado.hallazgos, null, 2)
   ].join('\n'),

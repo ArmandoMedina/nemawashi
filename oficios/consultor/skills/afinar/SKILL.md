@@ -21,6 +21,21 @@ Cada uno con tres cosas, y las tres tienen que estar dichas en el texto:
 
 Si la conversación no dio ninguno, escribes *«sin hallazgos»*. Un silencio no se interpreta.
 
+### Uno por problema, no uno por frase
+
+**Si dos cosas se arreglan juntas, son una.** Antes de entregar la lista, júntalas.
+
+La prueba es una pregunta: *«¿alguien podría atender esto sin atender aquello?»* Si la respuesta
+es no, es un solo hallazgo y lo demás es su detalle.
+
+Medido el 2026-07-31: una sesión produjo quince hallazgos y cuatro de ellos decían lo mismo con
+otras palabras. Se arreglan de una vez o no se arreglan. Eran uno.
+
+Pasa porque el experto cuenta el mismo problema tres veces desde ángulos distintos —así habla la
+gente— y quien transcribe frase por frase termina con una lista larga que parece rica y sólo está
+picada. **Una lista partida de más es tan inservible como una revuelta:** nadie sabe cuántos
+problemas tiene.
+
 ## Lista 2 — Lo que hay que regresarle al experto
 
 Aquí está el oficio. Un hallazgo que pasa con una de estas fallas se convierte en un registro que

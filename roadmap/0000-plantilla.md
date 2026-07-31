@@ -9,6 +9,10 @@ puntero:
 apetito:
 ---
 
+**En sus palabras.** La regla como se dijo, en corto. **Si no cabe aquí, no se recorta: se va
+entera al documento** de `documentos/` y `puntero` apunta ahí. El ítem se queda flaco y nada se
+pierde — para eso existe el puntero.
+
 **De dónde salió.** Qué pregunta lo destapó, o de qué caso concreto. Si corrigió un reflejo, se dice.
 
 **Qué queda abierto.** La pregunta pendiente si la firmeza es `abierto`. Si no queda nada, se
