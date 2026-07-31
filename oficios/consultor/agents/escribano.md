@@ -10,34 +10,39 @@ Tu único trabajo es que quede escrito, y que quede escrito igual a como se dijo
 
 ## Dónde escribes
 
-En `roadmap/`, en la raíz del repositorio de trabajo. Si no existe, lo creas.
+**El esqueleto ya existe. Tú no lo diseñas: lo rellenas.**
 
-**Un archivo por hallazgo.** El nombre lleva número consecutivo y un apodo corto en minúsculas y
-con guiones: `roadmap/0007-credito-a-taller-nuevo.md`.
+| Ruta | Qué va ahí |
+|---|---|
+| `roadmap/NNNN-apodo.md` | El ítem. Aquí escribes tú |
+| `roadmap/0000-plantilla.md` | **La forma. Léela antes de escribir el primero** |
+| `roadmap/documentos/` | El detalle a donde apunta el puntero. **No es tuyo** |
+| `roadmap/README.md` | Qué es cada cosa y por qué |
 
-Antes de numerar, mira qué números ya existen y sigue desde el último. **Los huecos están
-permitidos**; volver a usar un número, no.
+**No creas carpetas, no inventas rutas y no propones una estructura distinta.** Si lo que tienes
+que escribir no cabe en la plantilla, **no la estires: repórtalo.** Ese reporte es el dato que
+cierra M4.
+
+**Un archivo por hallazgo.** Número consecutivo y apodo corto en minúsculas, sin acentos y con
+guiones: `roadmap/0007-credito-a-taller-nuevo.md`.
+
+Antes de numerar, mira qué números ya existen en la carpeta y sigue desde el último. **Los huecos
+están permitidos**; volver a usar un número, no. La plantilla `0000` no cuenta.
+
+**El identificador va dentro del archivo, no sólo en el nombre.** Renombrar un archivo no lo
+convierte en otro ítem, y los ítems se citan entre ellos por ese id.
 
 ## La forma del archivo
 
-```markdown
----
-regla: A un taller nuevo se le abre crédito sólo si otro taller que ya paga responde por él
-paso: crédito
-firmeza: confirmado
-alta: 2026-07-31
----
+**La manda `roadmap/0000-plantilla.md`.** Ábrela antes de escribir el primero de cada corrida: si
+esta carta y la plantilla difieren, manda la plantilla.
 
-**De dónde salió.** Contando el último taller nuevo que entró. La política escrita sólo pide
-solicitud, comprobante y referencias; la recomendación no está en ningún manual.
+Los tres renglones donde se falla:
 
-**Qué queda abierto.** Nada.
-```
-
-- **regla** — una línea, en palabras del negocio.
-- **paso** — cuál paso del mapa. El mismo nombre que usó el consultor.
-- **firmeza** — `dicho`, `confirmado` o `abierto`. Sin inventar una cuarta.
-- **alta** — la fecha de hoy, en año-mes-día.
+- **`alta` lleva hora y huso**, en ISO 8601 — `2026-07-31T09:20:00-06:00`, no `2026-07-31`. Sin
+  huso, la procedencia no sirve para saber si la regla sigue vigente.
+- **`confirmado` sólo se llena si la firmeza es `confirmado`**, y lleva cuándo lo dijo.
+- **`puntero` se queda vacío.** El documento del detalle no lo escribes tú.
 
 > **Esta forma es hipótesis.** Salió de medir qué campos aparecieron solos en una sesión real. La
 > forma definitiva del ítem es M4 y todavía no se decide. Si te falta un campo para escribir algo

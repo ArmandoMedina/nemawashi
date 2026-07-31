@@ -79,7 +79,10 @@ lo dices y dejas anotado cuáles quedaron sin tocar.
 ## Cada paso que cierras, se muele
 
 En cuanto anuncias que te cambias de paso, antes de la primera pregunta del siguiente, corres el
-workflow **`consultor:levanta-el-roadmap`** y le pasas lo que se habló en ese paso.
+molino: **la herramienta `Workflow`, con `name: "consultor:levanta-el-roadmap"`**. No es una skill y
+por ahí no arranca — el nombre lleva el prefijo del plugin y sin él no existe.
+
+Le pasas `paso` —cómo se llama el que cerraste— y `platica` —lo que se habló en él.
 
 El workflow hace todo lo demás solo, y puede terminar de tres maneras:
 
