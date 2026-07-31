@@ -1,0 +1,64 @@
+{
+  // Fin de línea LF, siempre. La máquina tiene core.autocrlf=true y .gitattributes
+  // fuerza eol=lf: sin esto el editor y git se pelean en cada guardado.
+  "files.eol": "\n",
+  "files.encoding": "utf8",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // No hay formateador acordado en este repositorio. Dejarlo apagado a propósito,
+  // para que el Prettier de nadie reformatee 500 líneas de otro.
+  "editor.formatOnSave": false,
+
+  // El TypeScript del repositorio (5.7), no el que trae VS Code.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Prosa: markdown se lee, no se compila.
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    },
+    "files.trimTrailingWhitespace": false
+  },
+
+  // Ruido fuera del explorador, la búsqueda y el vigilante de archivos.
+  "files.exclude": {
+    "**/node_modules": true,
+    "out": true,
+    "test-results": true,
+    "playwright-report": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "out": true,
+    "test-results": true,
+    "playwright-report": true,
+    "package-lock.json": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/out/**": true,
+    "**/test-results/**": true
+  },
+
+  // Todo se escribe en español; el corrector revisa los dos idiomas.
+  "cSpell.language": "es,en",
+  "cSpell.words": [
+    "cajetin",
+    "electron",
+    "happy",
+    "nucleo",
+    "oxlint",
+    "playwright",
+    "preload",
+    "renderer",
+    "nemawashi",
+    "tsdk",
+    "vite",
+    "vitest"
+  ]
+}

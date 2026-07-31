@@ -1,0 +1,554 @@
+<!-- @dsCard group="Componentes" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conocimiento — afirmaciones, firma e ítems</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:26px; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .bloque { display:flex; flex-direction:column; gap:11px; }
+  .bloque > h2 { font-family:var(--disp); font-size:17px; font-weight:600;
+                 letter-spacing:-.01em; margin:0; }
+  .bloque > p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:64ch; }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:64ch; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+         background:var(--sheet-2); border:1px solid var(--rule-soft); padding:2px 7px;
+         border-radius:var(--r); color:var(--ink-2); white-space:nowrap; }
+  .tag.ok { background:var(--ok-bg); color:var(--ok); border-color:transparent; }
+  .tag.stop { background:var(--stop-bg); color:var(--stop); border-color:transparent; }
+
+  /* ── La afirmación, en sus cuatro estados ──
+     «A lápiz y a tinta»: lo propuesto va a lápiz —tinta media, hoja secundaria, filo
+     punteado— y al confirmarse pasa a tinta. Nunca ámbar ni rojo: lo propuesto es el
+     material normal de trabajo, no un aviso. */
+  .afirms { border:1px solid var(--rule); border-radius:var(--r); background:var(--sheet); }
+  .afirm { display:flex; align-items:flex-start; gap:12px; padding:10px 13px;
+           border-bottom:1px solid var(--rule-soft); font-size:14px; }
+  .afirm:last-child { border-bottom:none; }
+  .afirm .txt { flex:1; min-width:0; }
+  .afirm .acts { display:flex; gap:5px; flex:none; }
+
+  .afirm[data-lapiz] { background:var(--sheet-2); color:var(--ink-2);
+                       border-left:2px dashed var(--rule); }
+  .afirm[data-tinta] { color:var(--ink); border-left:2px solid var(--ok); }
+  .afirm[data-tachado] { background:var(--sheet-2); border-left:2px solid var(--rule); }
+  .afirm[data-tachado] .txt { text-decoration:line-through;
+                              text-decoration-thickness:1px; color:var(--ink-3); }
+  .afirm .correccion { display:block; margin-top:5px; color:var(--ink);
+                       text-decoration:none; padding-left:13px;
+                       border-left:2px solid var(--ok); }
+
+  .mini { font:inherit; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em;
+          text-transform:uppercase; cursor:pointer; white-space:nowrap;
+          border:1px solid var(--rule); background:var(--sheet); color:var(--ink-2);
+          border-radius:var(--r); padding:3px 9px; }
+  .mini:hover { border-color:var(--blue); color:var(--blue); }
+  .mini:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
+  .mini[data-ok]:hover { border-color:var(--ok); color:var(--ok); }
+  .mini[data-no]:hover { border-color:var(--stop); color:var(--stop); }
+
+  /* ── La firma al pie ── tres fórmulas fijas, en anotación. La palabra manda; el
+     tratamiento sólo acompaña. */
+  .firma { display:flex; flex-wrap:wrap; align-items:center; gap:9px;
+           font-family:var(--mono); font-size:10.5px; letter-spacing:.09em;
+           text-transform:uppercase; color:var(--ink-3); }
+  .firma .sep { color:var(--rule); }
+  .firma .ruta { text-transform:none; letter-spacing:0; font-size:11px; color:var(--ink-2);
+                 border-bottom:1px solid var(--rule); }
+
+  /* ── El hecho de disco ── «nunca la terminal cruda»: lo que la IA tocó se cuenta como
+     hecho legible con su ruta. */
+  .hecho { display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-2);
+           background:var(--sheet-2); border-left:2px solid var(--rule);
+           padding:7px 12px; }
+  .hecho svg { flex:none; color:var(--ink-3); }
+  .hecho .ruta { font-family:var(--mono); font-size:11.5px; color:var(--ink);
+                 border-bottom:1px solid var(--rule); }
+  /* Segunda forma: dentro de la conversación, en palabras y sin ruta. */
+  .hecho[data-enpalabras] { background:var(--ok-bg); border-left-color:var(--ok); color:var(--ok); }
+  .hecho[data-enpalabras] svg { color:var(--ok); }
+  .hecho[data-enpalabras] b { color:var(--ok); font-weight:600; }
+
+  /* ── La ruta suelta ── la misma ruta en mono, sin frase que la envuelva: cuando el
+     dato del que se habla ES la carpeta, y no hace falta contar qué se hizo con ella. */
+  .rutasola { display:inline-block; font-family:var(--mono); font-size:12.5px; color:var(--ink);
+              background:var(--sheet-2); border:1px solid var(--rule-soft);
+              border-radius:var(--r); padding:7px 11px; max-width:100%;
+              overflow-wrap:anywhere; }
+
+  /* ── El turno de la conversación ──
+     Todo queda escrito, se haya dicho por voz o tecleado. La voz no sustituye al hilo:
+     lo alimenta. */
+  .hilo { display:flex; flex-direction:column; gap:15px; }
+  .turno { display:flex; flex-direction:column; gap:5px; max-width:none; }
+  .turno .quien { display:flex; align-items:center; gap:9px; }
+  .turno .hora { margin-left:auto; font-family:var(--mono); font-size:10px; color:var(--ink-3);
+                 font-variant-numeric:tabular-nums; }
+  .turno .dicho { font-size:14.5px; padding:9px 13px; border-radius:var(--r); }
+  .turno[data-de="experto"] .dicho { border:1px solid transparent; border-left:2px solid var(--blue);
+                                     background:var(--blue-soft); color:var(--ink); }
+  .turno[data-de="ia"] .dicho { border:1px solid var(--rule-soft); background:var(--sheet);
+                                color:var(--ink-2); }
+
+  /* ── La lectura en voz alta ──
+     El texto se escribe completo desde el primer instante; lo que la voz todavía no
+     alcanza va difuminado y se aclara a su ritmo. Nada aparece ni desaparece: sólo
+     cambia el foco. */
+  .leyendo .ya    { color:var(--ink); }
+  .leyendo .ahora { color:var(--blue-deep); background:var(--blue-soft);
+                    box-shadow:0 1px 0 0 var(--blue); }
+  .leyendo .falta { color:var(--ink-3); opacity:.45; filter:blur(.6px); }
+  @media (prefers-reduced-motion: reduce) { .leyendo .falta { filter:none; opacity:.6; } }
+
+  /* ── El dictado ── una sola caja, dos estados. Sin pulso ni onda animada:
+     «pantalla quieta» no hace excepción para el micrófono. */
+  .dictado { border:1px solid var(--rule); border-radius:var(--r); background:var(--sheet);
+             display:flex; flex-direction:column; }
+  .dictado .barra { display:flex; align-items:center; gap:12px; padding:11px 13px; }
+  .dictado .estado { display:flex; align-items:center; gap:8px; flex:none;
+                     font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+                     text-transform:uppercase; font-weight:600; color:var(--ink-3); }
+  .dictado[data-escuchando] .estado { color:var(--blue); }
+  .dictado[data-escuchando] { border-color:var(--blue); }
+  .dictado .escribir { flex:1; min-width:0; font:inherit; font-size:13.5px; color:var(--ink);
+                       background:transparent; border:none; padding:2px 0; }
+  .dictado .escribir::placeholder { color:var(--ink-3); }
+  .dictado .escribir:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
+  .dictado .pie { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+                  border-top:1px solid var(--rule-soft); background:var(--sheet-2);
+                  padding:8px 13px; font-size:12.5px; color:var(--ink-3); }
+
+  .seg { display:inline-flex; border:1px solid var(--rule); border-radius:var(--r);
+         overflow:hidden; flex-wrap:wrap; }
+  .seg button { font:inherit; font-size:12.5px; cursor:pointer; line-height:1.25;
+        background:var(--sheet); color:var(--ink-2); border:none;
+        border-right:1px solid var(--rule); padding:5px 13px; }
+  .seg button:last-child { border-right:none; }
+  .seg button[aria-pressed="true"] { background:var(--blue); color:var(--sheet); font-weight:600; }
+  .seg button:focus-visible { outline:2px solid var(--blue); outline-offset:-2px; }
+
+  /* ── El ítem flaco ── un renglón que se lee de un vistazo. El detalle no vive aquí:
+     vive donde apunta el puntero. */
+  .items { border:1px solid var(--rule); border-radius:var(--r); background:var(--sheet); }
+  .itemrow { display:grid; grid-template-columns:auto 1fr auto auto;
+             align-items:baseline; gap:13px; padding:10px 13px;
+             border-bottom:1px solid var(--rule-soft); font-size:14px; }
+  .itemrow:last-child { border-bottom:none; }
+  .itemrow .folio { font-family:var(--mono); font-size:11px; color:var(--ink-3);
+                    font-variant-numeric:tabular-nums; }
+  .itemrow .cuerpo { min-width:0; display:flex; flex-direction:column; gap:5px; }
+  .itemrow .apetito { font-family:var(--mono); font-size:11.5px; color:var(--ink-2);
+                      font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .itemrow .edad { font-family:var(--mono); font-size:11px; color:var(--ink-3);
+                   white-space:nowrap; }
+  .puntero { display:inline-flex; align-items:center; gap:6px; font-size:12px;
+             color:var(--ink-3); }
+  .puntero .ruta { font-family:var(--mono); font-size:11.5px; color:var(--blue);
+                   border-bottom:1px solid var(--rule); }
+
+  /* ── La contradicción con folio ── pieza de primera clase, las dos versiones lado a
+     lado. Nada parpadea y nada cuenta el tiempo. */
+  .folio { border:1px solid var(--rule); border-radius:var(--r); background:var(--sheet); }
+  .folio .cab { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+                padding:9px 13px; border-bottom:1px solid var(--rule-soft);
+                background:var(--sheet-2); }
+  .folio .num { font-family:var(--mono); font-size:11px; color:var(--ink-3);
+                font-variant-numeric:tabular-nums; }
+  .folio .caras { display:grid; grid-template-columns:1fr 1fr; }
+  @media (max-width:640px) { .folio .caras { grid-template-columns:1fr; } }
+  .folio .cara { padding:12px 13px; display:flex; flex-direction:column; gap:7px; }
+  .folio .cara:first-child { border-right:1px solid var(--rule-soft); }
+  @media (max-width:640px) { .folio .cara:first-child { border-right:none;
+                             border-bottom:1px solid var(--rule-soft); } }
+  .folio .cara p { margin:0; font-size:14px; }
+
+  /* ── La cosecha ── verde y neutro, jamás rojo: es valor por capturar, no requisito
+     incumplido. */
+  .cosecha { border:1px solid var(--ok); border-radius:var(--r); background:var(--sheet); }
+  .cosecha .cab { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+                  padding:10px 13px; background:var(--ok-bg); color:var(--ok); }
+  .cosecha .cab b { font-weight:650; font-size:13.5px; }
+
+  /* ── La franja de proporción ── de un vistazo, qué está firme. Cada tramo escribe su
+     palabra: el color solo no informa. */
+  .prop { display:flex; flex-direction:column; gap:7px; }
+  .prop .barra { display:flex; height:9px; border:1px solid var(--rule);
+                 border-radius:var(--r); overflow:hidden; }
+  .prop .tramo[data-dicho] { background:var(--rule); }
+  .prop .tramo[data-confirmado] { background:var(--ok); }
+  .prop .tramo[data-contradicho] { background:var(--stop); }
+  .prop .leyenda { display:flex; flex-wrap:wrap; gap:15px; }
+  .prop .ley { display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--ink-2); }
+  .prop .ley .cifra { font-family:var(--mono); font-size:13px; color:var(--ink);
+                      font-variant-numeric:tabular-nums; font-weight:600; }
+  .prop .ley .marca { width:9px; height:9px; flex:none; border:1px solid var(--rule); }
+  .prop .ley .marca[data-dicho] { background:var(--rule); }
+  .prop .ley .marca[data-confirmado] { background:var(--ok); border-color:var(--ok); }
+  .prop .ley .marca[data-contradicho] { background:var(--stop); border-color:var(--stop); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+
+<div class="doc">
+
+  <div class="bloque">
+    <div class="anot">Nemawashi · Componentes</div>
+    <h2>Conocimiento</h2>
+    <p>Las piezas con las que se muestra lo que alguien sabe: la afirmación en sus cuatro
+    estados, la firma que dice de dónde salió, el ítem flaco y su puntero, la contradicción
+    con folio y la cosecha. Todas nacen aquí antes de usarse en una pantalla.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">A lápiz y a tinta · los cuatro estados de una afirmación</div>
+    <div class="afirms">
+
+      <div class="afirm" data-lapiz>
+        <span class="txt">Una operación en efectivo por encima del umbral dispara una alerta que alguien tiene que atender.</span>
+        <span class="acts">
+          <button class="mini" type="button" data-ok>Está bien</button>
+          <button class="mini" type="button" data-no>No es así</button>
+          <button class="mini" type="button">Corregir hablando</button>
+        </span>
+      </div>
+
+      <div class="afirm" data-tinta>
+        <span class="txt">El expediente de un cliente se revisa completo antes de la primera operación.</span>
+        <span class="acts"><span class="tag ok">confirmado</span></span>
+      </div>
+
+      <div class="afirm" data-tachado>
+        <span class="txt">El umbral es el mismo para todos los clientes.</span>
+        <span class="acts"><span class="tag">tachado</span></span>
+      </div>
+
+      <div class="afirm" data-tachado>
+        <span class="txt">La alerta se revisa al cierre del mes.
+          <span class="correccion">La alerta se revisa el mismo día en que se dispara.</span>
+        </span>
+        <span class="acts"><span class="tag ok">corregido</span></span>
+      </div>
+
+    </div>
+    <p class="nota"><b>Lo propuesto va a lápiz: tinta media, hoja secundaria y filo punteado</b> — nunca
+    ámbar ni rojo, porque una propuesta no es un aviso ni un conflicto, es el material normal de
+    trabajo. Al confirmarse pasa a tinta plena con filo verde. <b>El tachado no desaparece:</b> queda
+    visible con su raya, como en un plano corregido, porque haber descartado algo también es
+    conocimiento. Los tres botones son de un golpe; el tercero abre el dictado en su lugar, para que
+    corregir nunca exija teclear.</p>
+    <p class="nota"><b>El botón habla, el sello registra.</b> El botón lleva las palabras que alguien
+    diría en voz alta —<i>está bien</i>, <i>no es así</i>, <i>guardar</i>, <i>no vale</i>— porque
+    quien decide está hablando, no operando un sistema. El sello va en participio —<i>confirmado</i>,
+    <i>tachado</i>, <i>corregido</i>, <i>guardado</i>— porque ya no es una acción ofrecida sino un
+    estado asentado. Los dos registros no se mezclan: un botón en participio suena a formulario y un
+    sello en imperativo parece que todavía se puede tocar.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La firma al pie · tres tintas, tres fórmulas fijas</div>
+    <div class="afirms">
+      <div class="afirm" style="display:block">
+        <div class="firma"><span>lo dijiste tú</span><span class="sep">·</span><span>2026-07-30</span></div>
+      </div>
+      <div class="afirm" style="display:block">
+        <div class="firma"><span>lo propuso la IA</span><span class="sep">·</span><span>2026-07-30</span></div>
+      </div>
+      <div class="afirm" style="display:block">
+        <div class="firma"><span>medido en el código</span><span class="sep">·</span><span class="ruta">src/alertas/umbral.ts</span></div>
+      </div>
+    </div>
+    <p class="nota">Las tres fórmulas no cambian nunca, y son <b>palabras</b>: quien lea una captura en
+    blanco y negro sabe igual de dónde salió cada cosa. Un solo renglón por ítem — el detalle
+    completo se abre desde la firma, en el lugar, y nunca se impone.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">El hecho de disco · nunca la terminal cruda</div>
+    <div class="hecho">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 2h6l4 4v8H3V2Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M9 2v4h4" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+      </svg>
+      <span>Escribió <span class="ruta">roadmap/0042-umbral-efectivo.md</span> en el repositorio del cliente</span>
+    </div>
+    <div class="hecho" data-enpalabras style="margin-top:8px">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 8.4 6.2 11.6 13 4.8" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Guardado en el proyecto: <b>lo que revisa una persona cuando se pasa el umbral</b></span>
+    </div>
+    <p class="nota">Cuando la IA toca el disco se cuenta como un hecho legible, jamás como salida
+    técnica. El icono va acompañado de su palabra, y la frase dice <b>de qué lado cayó el archivo</b>
+    — sin eso, la promesa de no invadir sería un acto de fe.</p>
+    <div class="rutasola" style="margin-top:12px">C:\Users\usuario\OneDrive\Documentos\proyecto-ejemplo</div>
+    <p class="nota" style="margin-top:8px"><b>Y la ruta sola, sin frase que la envuelva.</b> El hecho
+    de disco cuenta <i>qué se hizo</i> con un archivo; ésta aparece cuando el dato del que se habla
+    <b>es</b> la carpeta —al elegirla, al confirmarla— y no hay nada que contar todavía. Misma letra
+    y mismo tratamiento: si fueran distintas, la misma ruta se leería como dos cosas.</p>
+
+    <p class="nota"><b>Dos formas, y la elige quién está mirando.</b> Donde lee quien revisa el
+    trabajo —el tablero, un informe— va <b>la ruta en mono</b>: ahí el archivo es la evidencia, y sin
+    su nombre no se puede ir a verlo. Dentro de la conversación va <b>en palabras y sin ruta</b>:
+    quien está hablando no lee código, y una ruta en medio de una frase lo saca del hilo justo cuando
+    lo que importa es que siga hablando. La palomita verde dice que quedó asentado; el nombre del
+    archivo, si hace falta, se abre desde la firma.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">El turno de la conversación</div>
+    <div class="hilo">
+      <div class="turno" data-de="experto">
+        <div class="quien"><span class="anot">El experto</span><span class="tag">dictado</span><span class="hora">10:42</span></div>
+        <div class="dicho">Cuando la operación pasa del umbral, no basta con registrarla: hay que
+        revisar quién es el cliente y de dónde viene el dinero, y eso lo tiene que ver una persona.</div>
+      </div>
+      <div class="turno" data-de="ia">
+        <div class="quien"><span class="anot">Nemawashi</span><span class="tag">leyendo en voz alta</span><span class="hora">10:42</span></div>
+        <div class="dicho">Entendí tres cosas y me falta una. Confírmalas o táchalas.</div>
+      </div>
+    </div>
+    <p class="nota">Todo queda escrito, se haya dicho por voz o tecleado — <b>la voz no sustituye al
+    hilo, lo alimenta</b>. Lo que dice el experto lleva el acento azul porque es <b>la fuente</b>, no
+    porque sea un estado; el semáforo sigue reservado. La etiqueta dice por dónde entró cada turno,
+    para que nadie tenga que deducirlo del formato.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La lectura en voz alta</div>
+    <div class="hilo">
+      <div class="turno" data-de="ia">
+        <div class="quien"><span class="anot">Nemawashi</span><span class="tag">leyendo en voz alta</span><span class="hora">10:43</span></div>
+        <div class="dicho leyendo"><span class="ya">Me falta una para poder llevarlo a sistema: cuando el giro cambia el umbral,</span> <span class="ahora">¿quién</span> <span class="falta">decide el número — la norma, o el criterio de cumplimiento de la casa?</span></div>
+      </div>
+    </div>
+    <p class="nota"><b>El texto se escribe completo desde el primer instante</b>; lo que la voz todavía
+    no alcanza va difuminado y se aclara a su ritmo, con la palabra en curso marcada. Quien prefiera
+    leer va por delante sin esperar a que la voz termine, y quien escucha sigue el hilo con la vista
+    sin perder el punto.</p>
+    <p class="nota"><b>Por qué esto no rompe «pantalla quieta».</b> Nada aparece, se desliza ni pulsa:
+    lo único que cambia es dónde está puesto el foco, y ese cambio no es decorativo — es la posición
+    real de la voz. Es la misma excepción que el patrón ya le concede al texto que llega en pedazos.
+    Con «menos movimiento» encendido el difuminado se apaga y sólo queda el contraste.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">El dictado · escuchando</div>
+    <div class="dictado" data-escuchando>
+      <div class="barra">
+        <span class="estado">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M3 7.5a5 5 0 0 0 10 0M8 12.5V14.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          Escuchando
+        </span>
+        <input class="escribir" type="text" aria-label="Escribir en el hilo"
+               placeholder="Tu voz se está escribiendo arriba — o teclea aquí si prefieres" />
+        <button class="mini" type="button">Enviar</button>
+      </div>
+      <div class="pie">
+        <span class="anot">Modo</span>
+        <span class="seg" role="group" aria-label="Qué puede hacer sin preguntarte">
+          <button type="button" aria-pressed="false">Preguntarme</button>
+          <button type="button" aria-pressed="true">Avanzar solo</button>
+          <button type="button" aria-pressed="false">Sólo planear</button>
+        </span>
+        <span>Con los dos motores en local, tu voz no sale de esta máquina.</span>
+      </div>
+    </div>
+    <p class="nota"><b>Nada pulsa y nada ondea.</b> «Pantalla quieta» no hace excepción para el
+    micrófono: el estado lo carga la palabra «Escuchando» y el filo azul, no una animación.
+    <b>El micrófono y el campo de texto conviven encendidos</b> — lo dictado se escribe solo en el
+    hilo, y quien prefiera teclear lo hace sin apagar nada. El selector de modo vive aquí porque es
+    lo único que hay que gobernar sin salir de la conversación, y el letrero de frontera dice si la
+    voz sale de la máquina.</p>
+    <p class="nota"><b>Estos tres no son otro parámetro: son los cinco modos de la consola, reducidos
+    a lo que se puede decidir hablando.</b> Por eso llevan las mismas palabras que la barra de la
+    sesión —<i>preguntarme</i>, <i>avanzar solo</i>, <i>sólo planear</i>— y no un vocabulario propio.
+    Un tercer juego de palabras para el mismo gobierno obliga a quien configura a traducir entre
+    pantallas, que es justo el trabajo que la consola existe para quitar.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">El ítem flaco · un renglón que se lee de un vistazo</div>
+    <div class="items">
+      <div class="itemrow">
+        <span class="folio">R-0042</span>
+        <span class="cuerpo">
+          <span>Una operación en efectivo sobre el umbral exige revisión humana del cliente y del origen del dinero.</span>
+          <span class="puntero">Detalle en
+            <span class="ruta">analisis/umbral-efectivo.md</span>
+          </span>
+          <span class="firma"><span>lo dijiste tú</span><span class="sep">·</span><span>2026-07-30</span><span class="sep">·</span><span class="tag ok">confirmado</span></span>
+        </span>
+        <span class="apetito">2 h</span>
+        <span class="edad">hace 1 día</span>
+      </div>
+      <div class="itemrow">
+        <span class="folio">R-0043</span>
+        <span class="cuerpo">
+          <span>El expediente del cliente se revisa completo antes de su primera operación.</span>
+          <span class="puntero">Detalle en
+            <span class="ruta">analisis/expediente-alta.md</span>
+          </span>
+          <span class="firma"><span>lo propuso la IA</span><span class="sep">·</span><span>2026-06-02</span><span class="sep">·</span><span class="tag">dicho</span></span>
+        </span>
+        <span class="apetito">4 h</span>
+        <span class="edad">hace 58 días</span>
+      </div>
+    </div>
+    <p class="nota">El renglón lleva sólo lo que se lee de corrido: folio, la afirmación, su puntero, su
+    firma, el apetito y la edad. <b>El detalle nunca vive en la lista</b> — si cupiera en el renglón no
+    haría falta el puntero, y si no cupiera la lista dejaría de poderse leer. El apetito mide horas de
+    revisión humana, no esfuerzo de construcción. La edad se pinta en neutro a propósito: que un ítem
+    lleve dos meses colgado se ve, pero <b>qué hace la app al cumplirse un plazo está sin decidir</b>, y
+    pintarlo de ámbar afirmaría una política que nadie tomó.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La contradicción con folio</div>
+    <div class="folio">
+      <div class="cab">
+        <span class="num">C-0007</span>
+        <span class="tag stop">contradicho</span>
+        <span class="anot">sigue abierta — no urge</span>
+      </div>
+      <div class="caras">
+        <div class="cara">
+          <p>La alerta se revisa el mismo día en que se dispara.</p>
+          <div class="firma"><span>lo dijiste tú</span><span class="sep">·</span><span>2026-07-30</span></div>
+        </div>
+        <div class="cara">
+          <p>La revisión de alertas corre al cierre de mes, en lote.</p>
+          <div class="firma"><span>medido en el código</span><span class="sep">·</span><span class="ruta">jobs/cierre-mensual.ts</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="nota">Una contradicción abierta es <b>conocimiento valioso, no un defecto</b>: tiene folio
+    propio, las dos versiones lado a lado y su firma cada una. Nada parpadea, nada cuenta el tiempo y
+    no aparece entre los avisos. La palabra del experto es la que manda cuando toque resolverla — pero
+    resolverla no es urgente, y la pantalla no finge que lo sea.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La cosecha</div>
+    <div class="cosecha">
+      <div class="cab">
+        <b>Hoy salieron 3 hallazgos que aún no quedan registrados.</b>
+      </div>
+      <div class="afirms" style="border:none">
+        <div class="afirm" data-lapiz>
+          <span class="txt">El umbral cambia según el giro del cliente.</span>
+          <span class="acts">
+            <button class="mini" type="button" data-ok>Guardar</button>
+            <button class="mini" type="button" data-no>No vale</button>
+          </span>
+        </div>
+        <div class="afirm" data-lapiz>
+          <span class="txt">Un expediente incompleto bloquea la operación, no sólo la marca.</span>
+          <span class="acts">
+            <button class="mini" type="button" data-ok>Guardar</button>
+            <button class="mini" type="button" data-no>No vale</button>
+          </span>
+        </div>
+      </div>
+    </div>
+    <p class="nota"><b>Verde y neutro, jamás rojo.</b> El tono es de valor por capturar, no de requisito
+    incumplido: quien llega al final de una sesión de horas no merece una pantalla que lo regañe. Cada
+    hallazgo se registra de un clic o se descarta de un clic, y cerrar se habilita cuando la lista
+    queda decidida.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La franja de proporción</div>
+    <div class="prop">
+      <div class="barra" role="img" aria-label="184 dichos, 96 confirmados, 7 contradichos">
+        <span class="tramo" data-dicho style="flex:184"></span>
+        <span class="tramo" data-confirmado style="flex:96"></span>
+        <span class="tramo" data-contradicho style="flex:7"></span>
+      </div>
+      <div class="leyenda">
+        <span class="ley"><span class="marca" data-dicho></span><span class="cifra">184</span> dichos</span>
+        <span class="ley"><span class="marca" data-confirmado></span><span class="cifra">96</span> confirmados</span>
+        <span class="ley"><span class="marca" data-contradicho></span><span class="cifra">7</span> contradichos</span>
+      </div>
+    </div>
+    <p class="nota">Responde de un vistazo la única pregunta que el tablero existe para responder: <b>qué
+    tanto de lo que sabemos está firme</b>. Cada tramo escribe su palabra y su cifra debajo — la franja
+    sola sería color sin información, y eso es justo lo que la regla prohíbe.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Lo que este archivo no trae</div>
+    <p class="nota">No hay variante <b>vacía, con error ni cargando</b> de estas piezas. Es la misma deuda
+    que ya carga la consola y por el mismo motivo: cuál es el primer paso que enseña cada vacío depende
+    del flujo, y el flujo de la sesión todavía no está cerrado. <i>Disparador: la primera sesión real
+    con un experto.</i></p>
+  </div>
+
+</div>
+
+<script>
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

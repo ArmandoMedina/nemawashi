@@ -1,0 +1,11 @@
+{
+  // Los ajustes, las extensiones, las tareas y el depurador viven en .vscode/,
+  // no aquí: así funcionan igual si alguien abre la carpeta en vez del workspace.
+  "folders": [
+    {
+      "name": "Nemawashi",
+      "path": "."
+    }
+  ],
+  "settings": {}
+}

@@ -1,0 +1,30 @@
+# anti-pii.denylist.txt — plantilla, NO el archivo real
+#
+# Copia este archivo como `anti-pii.denylist.txt` (sin `.example`) en la raiz del
+# repositorio. Ese archivo copiado NUNCA se versiona — ya esta en `.gitignore` — porque
+# su contenido es justo lo que este gate protege: cadenas literales del entorno del dueno
+# de esta maquina o de un cliente. Si no existe, el contrato anti dato personal corre
+# igual, solo con los tres detectores estructurales de `src/nucleo/sin-dato-personal.ts`.
+#
+# Una linea = una cadena literal a buscar tal cual, sin regex. Las lineas que empiezan
+# con `#` y las lineas en blanco se ignoran.
+#
+# LA LECCION MAS CARA, YA PAGADA: solo cadenas largas y unicas — nunca palabras sueltas.
+# Sembrar nombres de pila sueltos aqui produjo 116 bloqueos en 35 archivos de historia ya
+# aceptada, y habria bloqueado el push de todo el equipo la siguiente vez que alguien
+# tocara cualquiera de esos archivos. Un nombre de pila aparece en cualquier lado —una
+# palabra del idioma, un ejemplo, otro nombre propio que coincide— y una lista pensada
+# para atrapar un accidente puntual termina bloqueando trabajo que no tiene nada que ver.
+#
+# Antes de sembrar una cadena, verifica que no colisiona con nada ya aceptado:
+#
+#   git grep -F "la-cadena-exacta-que-vas-a-sembrar"
+#
+# Si esa cadena aparece en algo que ya esta en el historial y no es el dato que quieres
+# bloquear, no la siembres tal cual: hazla mas larga y mas especifica hasta que sea unica.
+#
+# Ejemplos de la FORMA correcta (no cadenas reales, no las copies):
+#
+# nombre-completo-de-una-persona-real-del-cliente
+# razon-social-completa-del-cliente-sa-de-cv
+# el-identificador-interno-exacto-que-usa-un-sistema-del-cliente

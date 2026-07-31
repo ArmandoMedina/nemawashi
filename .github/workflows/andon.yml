@@ -1,0 +1,36 @@
+name: andon
+
+# El andon: el freno que se jala cuando algo esta mal, antes de que siga corriendo.
+# Corre el contrato anti dato personal — src/contratos/sin-dato-personal.test.ts — porque
+# el repositorio va a hacerse publico y ese contrato es el muro.
+#
+# No depende de Electron: instala con ELECTRON_SKIP_BINARY_DOWNLOAD=1 y corre solo el
+# contrato, no `npm test` completo. La suite entera abre la app de verdad con Playwright
+# sobre Electron, y eso no corre en un runner sin mas.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  anti-dato-personal:
+    name: anti-dato-personal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias sin el binario de Electron
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - name: Correr el contrato anti dato personal
+        run: npx vitest run src/contratos/sin-dato-personal.test.ts

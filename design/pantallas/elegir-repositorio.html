@@ -1,0 +1,381 @@
+<!-- @dsCard group="Pantallas" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Elegir repositorio</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; padding:26px; background:var(--paper); color:var(--ink);
+         font-family:var(--sans); font-size:15px; line-height:1.55;
+         -webkit-font-smoothing:antialiased; }
+
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .intro h1 { font-family:var(--disp); font-size:21px; font-weight:600;
+              letter-spacing:-.012em; margin:0 0 5px; }
+  .intro p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:66ch; }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:66ch; margin:0; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  /* ── La hoja sin marco · componentes/hoja.html ──
+     Sin repositorio no hay hoja, no hay indice y no hay cajetin. Es la unica
+     pantalla del producto que puede usar esta variante. El marco doble —borde de
+     tinta con la hoja dentro— es identidad y se conserva aunque no haya barra. */
+  .win { background:var(--sheet); border:1px solid var(--ink-2);
+         border-radius:var(--r); padding:5px; }
+  .sheet { border:1px solid var(--rule); display:flex; flex-direction:column; min-width:0; }
+  .desnuda { min-height:400px; display:grid; place-items:center; padding:32px 24px; }
+  .desnuda .centro { display:flex; flex-direction:column; align-items:center;
+                     gap:14px; text-align:center; max-width:420px; }
+  .desnuda .marca { font-family:var(--disp); font-size:22px; font-weight:600;
+                    letter-spacing:-.015em; margin:0; }
+  .desnuda .lema { margin:0; color:var(--ink-2); font-size:13.5px; }
+  .desnuda .titulo { font-family:var(--disp); font-size:17px; font-weight:600;
+                     letter-spacing:-.01em; margin:0; }
+
+  /* Botones · componentes/controles.html */
+  .btn { font:inherit; font-size:13px; font-weight:600; cursor:pointer; border-radius:var(--r);
+         padding:7px 16px; border:1px solid var(--rule); background:var(--sheet); color:var(--ink); }
+  .btn.primary { background:var(--blue); border-color:var(--blue); color:var(--sheet); }
+  .btn[disabled] { cursor:default; opacity:.62; }
+  .btn:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  .botones { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; }
+
+  /* La ruta suelta · componentes/conocimiento.html */
+  .rutasola { display:inline-block; font-family:var(--mono); font-size:12.5px; color:var(--ink);
+              background:var(--sheet-2); border:1px solid var(--rule-soft);
+              border-radius:var(--r); padding:7px 11px; max-width:100%;
+              overflow-wrap:anywhere; }
+
+  /* La tarjeta de aviso · componentes/controles.html
+     Ninguna ofrece arreglar nada: el repositorio es del cliente, y Nemawashi solo lo lee. */
+  .pila { width:100%; display:flex; flex-direction:column; gap:9px; text-align:left; }
+  .tarjaviso { display:flex; gap:11px; align-items:flex-start; padding:12px 14px;
+               background:var(--warn-bg); border:1px solid var(--warn-rule);
+               border-radius:var(--r); }
+  .tarjaviso svg { flex:none; color:var(--warn); margin-top:2px; }
+  .tarjaviso .cuerpo { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .tarjaviso b { font-size:13.5px; font-weight:600; color:var(--ink); }
+  .tarjaviso span { font-size:12.5px; color:var(--ink-2); }
+  .tarjaviso[data-corta] { background:var(--stop-bg); border-color:var(--stop); }
+  .tarjaviso[data-corta] svg { color:var(--stop); }
+
+  /* Etiquetas de estado · componentes/listas-y-editor.html */
+  .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+         background:var(--sheet-2); border:1px solid var(--rule-soft); padding:2px 7px;
+         border-radius:var(--r); color:var(--ink-2); white-space:nowrap;
+         flex:none; align-self:flex-start; }
+  .tag.stop { background:var(--stop-bg); color:var(--stop); border-color:transparent; }
+  .tag.ok { background:var(--ok-bg); color:var(--ok); border-color:transparent; }
+  .tag.warn { background:transparent; color:var(--warn); border-color:var(--warn-rule); }
+
+  /* El hecho en palabras · componentes/conocimiento.html
+     El caso limpio no estrena forma: usa la misma pieza verde con su palabra al lado. */
+  .hecho { display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--ink-2);
+           background:var(--sheet-2); border-left:2px solid var(--rule); padding:7px 12px; }
+  .hecho svg { flex:none; color:var(--ink-3); }
+  .hecho[data-enpalabras] { background:var(--ok-bg); border-left-color:var(--ok); color:var(--ok); }
+  .hecho[data-enpalabras] svg { color:var(--ok); }
+
+  /* La frontera · componentes/hoja.html */
+  .frontera { display:flex; gap:9px; align-items:flex-start; font-size:12.5px;
+              color:var(--ink-2); background:var(--sheet-2);
+              border-left:2px solid var(--rule); padding:9px 12px; max-width:64ch;
+              text-align:left; }
+  .frontera b { color:var(--ink); font-weight:600; }
+
+  /* ── El selector de estados ──
+     Andamio de la página de muestra, no interfaz del producto: por eso no es
+     componente. Cambia de estado en la misma ventana en vez de apilarlos, para
+     que se comparen a tamaño real. El botón «ocultar» lo apaga cuando la pantalla
+     se le enseña a alguien: quien mira no tiene por qué ver la maquinaria. */
+  .selector { display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+              padding:9px 12px; background:var(--sheet-2);
+              border:1px solid var(--rule); border-radius:var(--r); }
+  .selector .btn { padding:4px 11px; font-size:12.5px; }
+  .selector .btn[aria-pressed="true"] { background:var(--blue); border-color:var(--blue); color:var(--sheet); }
+  .selector .apagar { margin-left:auto; }
+  body[data-sin-andamio] .selector,
+  body[data-sin-andamio] .intro,
+  body[data-sin-andamio] .nota { display:none; }
+  body[data-sin-andamio] .encender { display:inline-flex; }
+  .encender { display:none; position:fixed; right:14px; bottom:14px; z-index:9;
+              font:inherit; font-size:11.5px; cursor:pointer; padding:5px 11px;
+              border-radius:var(--r); border:1px solid var(--rule);
+              background:var(--sheet-2); color:var(--ink-2); opacity:.7; }
+  .encender:hover { opacity:1; }
+  [data-estado][hidden] { display:none; }
+</style>
+</head>
+<body>
+<div class="doc">
+
+  <div class="intro">
+    <div class="anot">Pantallas · Elegir repositorio</div>
+    <h1>La primera, y la única que se dibuja sola</h1>
+    <p>Antes de que exista un repositorio no hay marco, no hay índice y no hay cajetín — el
+    cajetín dice «vive en», y todavía no vive en ningún lado. Aquí se elige la carpeta y se
+    dice en palabras qué se encontró en ella. <b>Nemawashi revisa y avisa; no arregla.</b> Arreglar
+    exigiría escribir en el repositorio del cliente, que es justo lo que este producto promete
+    no hacer.</p>
+  </div>
+
+  <div class="selector" role="group" aria-label="Estado de la pantalla">
+    <span class="anot">Estado</span>
+    <button class="btn" type="button" data-ir="vacia" aria-pressed="true">Vacía</button>
+    <button class="btn" type="button" data-ir="cargando" aria-pressed="false">Cargando</button>
+    <button class="btn" type="button" data-ir="avisos" aria-pressed="false">Con avisos</button>
+    <button class="btn" type="button" data-ir="limpia" aria-pressed="false">Sin avisos</button>
+    <button class="btn" type="button" data-ir="error" aria-pressed="false">Con error</button>
+    <button class="btn apagar" type="button" id="apagar">Ocultar el andamio</button>
+  </div>
+
+  <!-- ══ VACÍA ══ -->
+  <div data-estado="vacia">
+    <div class="anot" style="margin-bottom:9px">Vacía · el primer arranque</div>
+    <div class="win"><div class="sheet"><div class="desnuda">
+      <div class="centro">
+        <p class="marca">Nemawashi</p>
+        <p class="lema">Elige el repositorio del proyecto. Todo lo que se capture va a vivir
+        ahí, no aquí dentro.</p>
+        <div class="botones">
+          <button class="btn primary" type="button">Elegir carpeta…</button>
+        </div>
+        <p class="frontera">Al elegirla, Nemawashi <b>sólo lee</b> para revisarla. No escribe nada
+        hasta que tú se lo pidas.</p>
+      </div>
+    </div></div></div>
+    <p class="nota" style="margin-top:9px">Un solo botón y nada más. <b>No hay lista de
+    repositorios recientes</b>: guardarla obligaría a Nemawashi a recordar en qué proyectos
+    trabajaste, y esa memoria es exactamente lo que promete no tener.</p>
+  </div>
+
+  <!-- ══ CARGANDO ══ -->
+  <div data-estado="cargando" hidden>
+    <div class="anot" style="margin-bottom:9px">Cargando · revisando la carpeta</div>
+    <div class="win"><div class="sheet"><div class="desnuda">
+      <div class="centro">
+        <p class="marca">Nemawashi</p>
+        <div class="rutasola">C:\Users\usuario\OneDrive\Documentos\proyecto-ejemplo</div>
+        <div class="botones">
+          <button class="btn primary" type="button" disabled aria-busy="true">Revisando la carpeta…</button>
+        </div>
+        <p class="frontera">Leyendo dónde está, cómo se llama la ruta y qué reglas trae. Nada
+        se escribe.</p>
+      </div>
+    </div></div></div>
+    <p class="nota" style="margin-top:9px">Ni rueda ni punto que late: <b>el propio botón
+    escribe qué está haciendo</b>, como manda el patrón de los controles.</p>
+  </div>
+
+  <!-- ══ CON AVISOS ══ -->
+  <div data-estado="avisos" hidden>
+    <div class="anot" style="margin-bottom:9px">Revisada · con avisos</div>
+    <div class="win"><div class="sheet"><div class="desnuda">
+      <div class="centro">
+        <p class="titulo">Encontré cuatro cosas antes de empezar</p>
+        <div class="rutasola">C:\Users\usuario\OneDrive\Documentos\proyecto-ejemplo</div>
+
+        <div class="pila">
+          <div class="tarjaviso">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+            </svg>
+            <div class="cuerpo">
+              <b>Este repositorio está dentro de una carpeta que se sincroniza sola.</b>
+              <span>La sincronización puede duplicar ítems, resucitar los borrados y dañar el
+              historial. Muévelo fuera antes de empezar una sesión.</span>
+            </div>
+            <span class="tag warn">aviso</span>
+          </div>
+
+          <div class="tarjaviso">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+            </svg>
+            <div class="cuerpo">
+              <b>La ruta de este repositorio es muy larga.</b>
+              <span>Windows corta en 260 caracteres por defecto. Los archivos más hondos van a
+              fallar al escribirse.</span>
+            </div>
+            <span class="tag warn">aviso</span>
+          </div>
+
+          <div class="tarjaviso">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+            </svg>
+            <div class="cuerpo">
+              <b>Este repositorio vive en una unidad de red.</b>
+              <span>Trabajar sobre red hace lentas las lecturas y deja el historial a merced de
+              la conexión.</span>
+            </div>
+            <span class="tag warn">aviso</span>
+          </div>
+
+          <div class="tarjaviso">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+              <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+            </svg>
+            <div class="cuerpo">
+              <b>Este repositorio no fija el fin de línea.</b>
+              <span>Sin eso, un cambio de una palabra se ve como si hubiera cambiado el archivo
+              entero, y el historial deja de servir como memoria del proyecto.</span>
+            </div>
+            <span class="tag warn">aviso</span>
+          </div>
+        </div>
+
+        <p class="frontera"><b>Ninguno de los cuatro lo arregla Nemawashi.</b> Los tres se arreglan
+        en el repositorio, y el repositorio es tuyo.</p>
+
+        <div class="botones">
+          <button class="btn primary" type="button">Empezar de todos modos</button>
+          <button class="btn" type="button">Elegir otra carpeta</button>
+        </div>
+      </div>
+    </div></div></div>
+    <p class="nota" style="margin-top:9px">Ámbar y no rojo, y con la palabra <b>aviso</b> escrita
+    al lado: son cosas que conviene arreglar, no impedimentos. <b>Se puede empezar igual</b> — el
+    botón que sigue adelante es el que pesa. Quien decide es el dueño del repositorio, y una
+    pantalla que le bloquea el paso decide por él.</p>
+  </div>
+
+  <!-- ══ LIMPIA ══ -->
+  <div data-estado="limpia" hidden>
+    <div class="anot" style="margin-bottom:9px">Revisada · sin nada que avisar</div>
+    <div class="win"><div class="sheet"><div class="desnuda">
+      <div class="centro">
+        <p class="titulo">Todo en orden</p>
+        <div class="rutasola">D:\trabajo\proyecto-ejemplo</div>
+        <div class="hecho" data-enpalabras><svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8.4 6.2 11.6 13 4.8" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg><span>Nada que avisar en esta carpeta</span></div>
+        <div class="botones">
+          <button class="btn primary" type="button">Empezar</button>
+          <button class="btn" type="button">Elegir otra carpeta</button>
+        </div>
+      </div>
+    </div></div></div>
+    <p class="nota" style="margin-top:9px">El verde lleva su palabra al lado, igual que el ámbar.
+    <b>No se enumera lo que se revisó</b>: una lista de palomitas convierte el caso normal en un
+    trámite, y el caso normal debe pasar sin ceremonia.</p>
+  </div>
+
+  <!-- ══ CON ERROR ══ -->
+  <div data-estado="error" hidden>
+    <div class="anot" style="margin-bottom:9px">Con error · la carpeta no sirve</div>
+    <div class="win"><div class="sheet"><div class="desnuda">
+      <div class="centro">
+        <p class="titulo">Esa carpeta no se puede usar</p>
+        <div class="rutasola">E:\respaldos\documentos-viejos</div>
+
+        <div class="pila">
+          <div class="tarjaviso" data-corta>
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M8 4.6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="11.1" r=".9" fill="currentColor"/>
+            </svg>
+            <div class="cuerpo">
+              <b>No es un repositorio de git.</b>
+              <span>Nemawashi guarda el conocimiento como archivos versionados, y sin historial no
+              hay procedencia que sostener. Elige una carpeta que ya sea un repositorio, o
+              conviértela en uno desde tu herramienta de siempre.</span>
+            </div>
+            <span class="tag stop">no sirve</span>
+          </div>
+        </div>
+
+        <p class="frontera"><b>Nemawashi tampoco lo convierte por ti.</b> Crear un repositorio es
+        escribir en la carpeta, y ese primer paso lo da su dueño.</p>
+
+        <div class="botones">
+          <button class="btn primary" type="button">Elegir otra carpeta</button>
+        </div>
+      </div>
+    </div></div></div>
+    <p class="nota" style="margin-top:9px">Rojo con su palabra, y <b>un solo botón</b>: aquí no
+    hay «empezar de todos modos» porque no hay con qué. La diferencia entre ámbar y rojo en esta
+    pantalla es exactamente ésa — el ámbar deja pasar, el rojo no tiene por dónde.</p>
+  </div>
+
+  <p class="nota"><b>Lo que esta pantalla no hace, y se declara para que nadie lo agregue
+  creyendo que fue un olvido:</b> no ofrece arreglar ninguno de los avisos, no crea el
+  repositorio, y no recuerda cuál elegiste la vez pasada. Los tres serían escribir o recordar,
+  y esta herramienta hace lo contrario: lee, avisa, y deja que decida quien es dueño.</p>
+
+</div>
+
+<button class="encender" type="button" id="encender">Mostrar el andamio</button>
+
+<script>
+  var estados = document.querySelectorAll('[data-estado]');
+  var botones = document.querySelectorAll('[data-ir]');
+
+  botones.forEach(function (b) {
+    b.addEventListener('click', function () {
+      botones.forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+      estados.forEach(function (e) { e.hidden = e.dataset.estado !== b.dataset.ir; });
+    });
+  });
+
+  document.getElementById('apagar').addEventListener('click', function () {
+    document.body.setAttribute('data-sin-andamio', '');
+  });
+  document.getElementById('encender').addEventListener('click', function () {
+    document.body.removeAttribute('data-sin-andamio');
+  });
+</script>
+</body>
+</html>

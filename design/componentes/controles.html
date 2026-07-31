@@ -1,0 +1,381 @@
+<!-- @dsCard group="Componentes" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Controles</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:26px; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .bloque { display:flex; flex-direction:column; gap:11px; }
+  .bloque > h2 { font-family:var(--disp); font-size:17px; font-weight:600;
+                 letter-spacing:-.01em; margin:0; }
+  .bloque > p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:64ch; }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:64ch; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  .field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .field > label, .grouplabel {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; font-weight:600; color:var(--ink-2);
+  }
+  .hint { font-size:12.5px; color:var(--ink-3); max-width:62ch; }
+  select, input[type="text"], textarea {
+    font:inherit; font-size:13.5px; background:var(--sheet); color:var(--ink);
+    border:1px solid var(--rule); border-radius:var(--r); padding:7px 9px; width:100%;
+  }
+  textarea { font-family:var(--mono); font-size:12.5px; line-height:1.7; resize:vertical; }
+  select:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline:2px solid var(--blue); outline-offset:-1px; border-color:var(--blue);
+  }
+  .seg { display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; }
+  .seg button {
+    font:inherit; font-size:13px; cursor:pointer; line-height:1.25;
+    background:var(--sheet); color:var(--ink-2);
+    border:none; border-right:1px solid var(--rule); padding:6px 15px;
+  }
+  .seg button:last-child { border-right:none; }
+  .seg button[aria-pressed="true"] { background:var(--blue); color:var(--sheet); font-weight:600; }
+  .seg .def { display:block; font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+              text-transform:uppercase; font-weight:600; opacity:.8; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font:inherit; font-size:12.5px; border-radius:var(--r); padding:3px 10px; cursor:pointer;
+          border:1px solid var(--rule); background:var(--sheet); color:var(--ink-2); }
+  .chip[aria-pressed="true"] { background:var(--blue-soft); border-color:var(--blue);
+                               color:var(--blue-deep); font-weight:600; }
+  .chip[aria-pressed="true"][data-stop] { background:var(--stop-bg); border-color:var(--stop); color:var(--stop); }
+  .sw { flex:none; width:32px; height:18px; border-radius:var(--r); background:var(--rule);
+        border:none; cursor:pointer; position:relative; }
+  .sw::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px;
+               background:var(--sheet); transition:transform .12s; }
+  .sw[aria-pressed="true"] { background:var(--blue); }
+  .sw[aria-pressed="true"]::after { transform:translateX(14px); }
+  .togrow { display:flex; gap:12px; align-items:flex-start; }
+  .togrow > div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .togrow b { font-size:13px; font-weight:600; }
+  .radios { display:flex; flex-direction:column; gap:8px; max-width:560px; }
+  .radio { display:flex; gap:11px; align-items:flex-start; border:1px solid var(--rule);
+           border-radius:var(--r); padding:11px 13px; cursor:pointer; }
+  .radio[data-on] { border-color:var(--blue); background:var(--blue-soft); }
+  .radio i { flex:none; margin-top:3px; width:13px; height:13px;
+             border:1.5px solid var(--ink-3); display:block; }
+  .radio[data-on] i { border-color:var(--blue); border-width:4px; }
+  .radio div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .radio b { font-size:13.5px; font-weight:600; }
+  .radio span { font-size:12.5px; color:var(--ink-3); }
+  .btn { font:inherit; font-size:13px; font-weight:600; cursor:pointer; border-radius:var(--r);
+         padding:7px 16px; border:1px solid var(--rule); background:var(--sheet); color:var(--ink); }
+  .btn.primary { background:var(--blue); border-color:var(--blue); color:var(--sheet); }
+  .btn[disabled] { cursor:default; opacity:.62; }
+  .btn:focus-visible, .chip:focus-visible, .sw:focus-visible, .seg button:focus-visible {
+    outline:2px solid var(--blue); outline-offset:2px;
+  }
+  .cmdnote { font-size:12.5px; color:var(--ink-3); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px) { .row { grid-template-columns:1fr; } }
+
+  .unidad { display:flex; align-items:stretch; max-width:190px; }
+  .unidad .pre, .unidad .post {
+    font-family:var(--mono); font-size:12.5px; color:var(--ink-3);
+    background:var(--sheet-2); border:1px solid var(--rule);
+    display:flex; align-items:center; padding:0 9px; white-space:nowrap;
+  }
+  .unidad .pre { border-right:none; border-radius:var(--r) 0 0 var(--r); }
+  .unidad .post { border-left:none; border-radius:0 var(--r) var(--r) 0;
+                  letter-spacing:.1em; text-transform:uppercase; font-size:10.5px; }
+  .unidad input { border-radius:0; text-align:right; font-family:var(--mono);
+                  font-variant-numeric:tabular-nums; }
+
+  .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+         background:var(--sheet-2); border:1px solid var(--rule-soft); padding:2px 7px;
+         border-radius:var(--r); color:var(--ink-2); white-space:nowrap; }
+
+  .mudo { border:1px dashed var(--rule); background:var(--sheet-2);
+          padding:10px 12px; display:flex; flex-direction:column; gap:5px; }
+  .mudo .cab { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .mudo .nm { font-size:13.5px; font-weight:600; color:var(--ink-3); }
+  .mudo .motivo { font-size:12.5px; color:var(--ink-2); max-width:62ch; }
+  .mudo .motivo b { font-weight:600; }
+
+  /* ── La tarjeta de aviso ──
+     Hermana de la franja de la hoja y del aviso de campo, y distinta de las dos:
+     la franja habla de la ventana entera, el aviso de campo del control que tiene
+     al lado, y ésta se apila — son varias cosas encontradas de una sola revisión.
+     Ámbar deja pasar; rojo no tiene por dónde. */
+  .tarjaviso { display:flex; gap:11px; align-items:flex-start; padding:12px 14px;
+               background:var(--warn-bg); border:1px solid var(--warn-rule);
+               border-radius:var(--r); }
+  .tarjaviso svg { flex:none; color:var(--warn); margin-top:2px; }
+  .tarjaviso .cuerpo { display:flex; flex-direction:column; gap:3px; min-width:0; }
+  .tarjaviso b { font-size:13.5px; font-weight:600; color:var(--ink); }
+  .tarjaviso span { font-size:12.5px; color:var(--ink-2); }
+  .tarjaviso .tag { flex:none; align-self:flex-start; }
+  .tarjaviso[data-corta] { background:var(--stop-bg); border-color:var(--stop); }
+  .tarjaviso[data-corta] svg { color:var(--stop); }
+  .tag.warn { background:transparent; color:var(--warn); border:1px solid var(--warn-rule); }
+  .tag.stop { background:var(--stop-bg); color:var(--stop); }
+  .pila { display:flex; flex-direction:column; gap:9px; }
+
+  .avisocampo { display:flex; gap:9px; align-items:flex-start; font-size:12.5px;
+                color:var(--warn); background:var(--warn-bg);
+                border-left:2px solid var(--warn-rule); padding:8px 11px; max-width:62ch; }
+  .avisocampo svg { flex:none; margin-top:2px; }
+  .avisocampo b { font-weight:650; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="bloque">
+    <div class="anot">Componentes · Controles</div>
+    <h2>Los controles del formulario</h2>
+    <p class="nota">Toda etiqueta es una anotación. Toda ayuda va debajo del control y explica <b>la consecuencia</b>, no lo que el control es.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Campo de texto y selector</div>
+    <div class="row">
+      <div class="field">
+        <label for="a">Nombre</label>
+        <input id="a" type="text" value="explorador" />
+      </div>
+      <div class="field">
+        <label for="b">Modelo</label>
+        <select id="b"><option>El mismo de la sesión</option><option>Opus 5 · contexto de 1M</option><option>Sonnet 5</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Área de texto</div>
+    <div class="field">
+      <label for="c">Instrucción</label>
+      <textarea id="c" rows="3">Antes de opinar, abre el archivo o corre la consulta.
+Si no encontraste evidencia, dilo así — no rellenes.</textarea>
+      <span class="hint">Se suma a las instrucciones de fábrica; no las reemplaza.</span>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Segmentado, con predeterminado marcado</div>
+    <div class="field">
+      <span class="grouplabel">Cuánto piensa antes de responder</span>
+      <div class="seg" role="group" aria-label="Esfuerzo">
+        <button type="button" aria-pressed="false">Bajo</button>
+        <button type="button" aria-pressed="false">Medio</button>
+        <button type="button" aria-pressed="true">Alto <span class="def">predeterminado</span></button>
+        <button type="button" aria-pressed="false">Máximo</button>
+      </div>
+      <span class="hint">Bajarlo se nota: contesta más rápido y razona menos antes de actuar.</span>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Fichas — permisos, con la negación en rojo</div>
+    <div class="field">
+      <span class="grouplabel">Qué puede tocar</span>
+      <div class="chips">
+        <button class="chip" type="button" aria-pressed="true">Leer</button>
+        <button class="chip" type="button" aria-pressed="true">Buscar</button>
+        <button class="chip" type="button" aria-pressed="false">Escribir</button>
+        <button class="chip" type="button" aria-pressed="false">Terminal</button>
+        <button class="chip" type="button" aria-pressed="true" data-stop>Nunca borrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Interruptor con su consecuencia</div>
+    <div class="togrow">
+      <button class="sw" type="button" aria-pressed="true" aria-label="La puede cargar el modelo solo"></button>
+      <div>
+        <b>La puede cargar el modelo solo</b>
+        <span class="hint">Apagado: sólo entra si alguien la pide por su nombre.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Opción excluyente — cada una dice qué cuesta</div>
+    <div class="radios">
+      <label class="radio" data-on><i></i><div><b>Sólo la de Nemawashi</b><span>El repositorio del cliente se ignora por completo. La sesión se comporta igual en cualquier repositorio.</span></div></label>
+      <label class="radio"><i></i><div><b>La de Nemawashi y también la del repositorio</b><span>Respeta lo que el cliente ya tenía. A cambio, deja de ser evidente cuál regla ganó.</span></div></label>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Botones</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn primary" type="button">Guardar configuración</button>
+      <button class="btn" type="button">Duplicar</button>
+      <button class="btn" type="button">Eliminar</button>
+      <span class="cmdnote">Un control dice exactamente qué pasa al usarlo.</span>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">El botón mientras trabaja</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn primary" type="button">Guardar configuración</button>
+      <button class="btn primary" type="button" disabled aria-busy="true">Guardando…</button>
+      <button class="btn primary" type="button">Guardado</button>
+    </div>
+    <p class="nota"><b>El mismo verbo de principio a fin.</b> Lo que dice «Guardar» trabaja diciendo «Guardando…» y confirma «Guardado». Cambiar de verbo a medio camino hace dudar de si se pulsó lo que se creía.</p>
+    <p class="nota"><b>Ni rueda ni punto que late.</b> El propio botón escribe qué está haciendo — es «pantalla quieta» aplicado a la espera. Una espera sin explicación se lee como cuelgue, y con dos escritores sobre el mismo repositorio el clic repetido sí hace daño.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Campo con unidad</div>
+    <div class="field">
+      <label for="u1">Tope de gasto</label>
+      <div class="unidad">
+        <span class="pre">$</span>
+        <input id="u1" type="text" value="15.00" />
+        <span class="post">usd</span>
+      </div>
+      <span class="hint">Si lo bajas, la sesión se corta antes de terminar el trabajo. En blanco no hay tope.</span>
+    </div>
+    <p class="nota">La unidad nunca se escribe dentro del campo: vive en el marco, para que el número quede solo y alineado en mono tabular.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Aviso de campo — cuando cambiarlo muerde</div>
+    <div class="field">
+      <label for="v1">Instrucción base</label>
+      <textarea id="v1" rows="2" placeholder="—"></textarea>
+      <div class="avisocampo">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+        </svg>
+        <div><b>Si escribes aquí, se borra la personalidad de fábrica completa.</b>
+        Casi siempre lo que quieres es la instrucción añadida, que suma en vez de reemplazar.</div>
+      </div>
+    </div>
+    <p class="nota">Ámbar y deja continuar: es un aviso, no un bloqueo. Va pegado al campo que muerde, no en la cabecera de la hoja.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Tarjeta de aviso — varias cosas encontradas de una revisión</div>
+    <div class="pila">
+      <div class="tarjaviso">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+        </svg>
+        <div class="cuerpo">
+          <b>Este repositorio está dentro de una carpeta que se sincroniza sola.</b>
+          <span>La sincronización puede duplicar ítems y dañar el historial. Muévelo fuera antes de empezar.</span>
+        </div>
+        <span class="tag warn">aviso</span>
+      </div>
+      <div class="tarjaviso" data-corta>
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="6.4" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M8 4.6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8" cy="11.1" r=".9" fill="currentColor"/>
+        </svg>
+        <div class="cuerpo">
+          <b>No es un repositorio de git.</b>
+          <span>Sin historial no hay procedencia que sostener. Elige otra carpeta.</span>
+        </div>
+        <span class="tag stop">no sirve</span>
+      </div>
+    </div>
+    <p class="nota"><b>Tres avisos y tres formas, y la diferencia es de quién habla cada uno.</b> La
+    franja de la hoja habla de la ventana entera y va arriba del todo. El aviso de campo habla del
+    control que tiene al lado. Ésta se apila, porque son varias cosas encontradas de una sola
+    revisión y ninguna manda sobre la otra.</p>
+    <p class="nota"><b>Ámbar deja pasar, rojo no tiene por dónde.</b> No es intensidad, es si hay
+    camino: el ámbar convive con un botón que sigue adelante, y el rojo aparece cuando ese botón no
+    existiría. Los dos llevan su palabra escrita al lado — el color acompaña, nunca informa solo.</p>
+    <p class="nota"><b>La tarjeta nunca ofrece arreglar lo que avisa</b> cuando lo avisado vive en el
+    repositorio del cliente. Avisar es leer; arreglar sería escribir, y eso es lo que este producto
+    promete no hacer.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Control no disponible, con su motivo escrito</div>
+    <div class="mudo">
+      <div class="cab">
+        <span class="nm">Ignorar las reglas que ya trae el repositorio</span>
+        <span class="tag">no disponible</span>
+      </div>
+      <span class="motivo">Claude Code no tiene forma de apagar <b>solo</b> esas reglas. Lo único que lo hace apaga también los frenos y el paquete de Nemawashi — es decir, justo lo que se necesita.</span>
+    </div>
+    <p class="nota">Ningún control se queda gris y callado. El motivo se escribe, y en neutro: no es un aviso de peligro, es una limitación de la herramienta.</p>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.sw,.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+    });
+  });
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+  document.querySelectorAll('.radios').forEach(function (g) {
+    g.querySelectorAll('.radio').forEach(function (r) {
+      r.addEventListener('click', function () {
+        g.querySelectorAll('.radio').forEach(function (o) { o.removeAttribute('data-on'); });
+        r.setAttribute('data-on','');
+      });
+    });
+  });
+</script>
+</body>
+</html>

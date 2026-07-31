@@ -1,0 +1,16 @@
+{
+  // Lo mínimo para trabajar aquí. Nada de linters ni formateadores:
+  // este repositorio todavía no ha elegido ninguno.
+  "recommendations": [
+    // Capa 4 — la app entera sobre Electron.
+    "ms-playwright.playwright",
+    // Capas 1, 2 y 3 — correr y depurar pruebas desde el editor.
+    "vitest.explorer",
+    // Abrir las maquetas de design/ en el navegador sin montar nada.
+    "ms-vscode.live-server",
+    // Todo el repositorio está escrito en español.
+    "streetsidesoftware.code-spell-checker",
+    "streetsidesoftware.code-spell-checker-spanish"
+  ],
+  "unwantedRecommendations": []
+}

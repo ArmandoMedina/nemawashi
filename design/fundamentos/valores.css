@@ -1,0 +1,51 @@
+/*
+ * Los valores con nombre — la fuente.
+ *
+ * `arquitectura-diseno.md` §4: un valor vive en un solo lugar, porque dos copias del
+ * mismo numero divergen en cuanto una se edita. Este es ese lugar.
+ *
+ * La app importa este archivo tal cual: del lado del codigo no hay ninguna copia.
+ *
+ * Las nueve paginas del sistema si llevan su copia dentro, y es a proposito: cada una
+ * tiene que abrir sola, sin depender de nada publicado (§4). Lo que impide que esas
+ * copias diverjan no es la disciplina, es `src/contratos/valores-de-diseno.test.ts`,
+ * que las compara contra este archivo. Si un numero cambia aqui y no alla, truena.
+ */
+
+:root {
+  --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+  --rule:#c6d0d8; --rule-soft:#dde4e9;
+  --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+  --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+  --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+  --ok:#2f6141; --ok-bg:#dfeae1;
+  --stop:#8c3a2c; --stop-bg:#f4dfda;
+  --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+  --r:2px;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+  --rule:#2e3d4a; --rule-soft:#232f3a;
+  --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+  --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+  --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+  --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+} }
+:root[data-theme="dark"] {
+  --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+  --rule:#2e3d4a; --rule-soft:#232f3a;
+  --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+  --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+  --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+  --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+}
+:root[data-theme="light"] {
+  --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+  --rule:#c6d0d8; --rule-soft:#dde4e9;
+  --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+  --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+  --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+  --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+}

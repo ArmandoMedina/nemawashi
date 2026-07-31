@@ -1,0 +1,19 @@
+# Fin de línea fijado para todas las máquinas.
+# Sin esto, el core.autocrlf de cada quien hace que un diff diga «cambió todo el
+# archivo» cuando cambió una palabra, y el historial deja de servir como memoria.
+
+* text=auto eol=lf
+
+*.md   text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.pdf binary

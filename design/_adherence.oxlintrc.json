@@ -1,0 +1,124 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": [
+          {
+            "group": [
+              "electron",
+              "electron/*",
+              "node:*",
+              "fs",
+              "path",
+              "child_process"
+            ],
+            "message": "La pantalla no toca archivos ni procesos. Todo pasa por la lista corta de mensajes con nombre de src/contratos/mensajes.ts."
+          }
+        ]
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]",
+        "message": "Color escrito a mano. Los valores con nombre salen de design/fundamentos/valores.css."
+      },
+      {
+        "selector": "Literal[value=/^[0-9]+(?:\\.[0-9]+)?(?:px|rem|em)$/]",
+        "message": "Medida suelta. Ningun pixel suelto en el codigo: el espacio se llama por su nombre."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": [
+        "src/main/**",
+        "src/preload/**"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--paper",
+      "--sheet",
+      "--sheet-2",
+      "--rule",
+      "--rule-soft",
+      "--ink",
+      "--ink-2",
+      "--ink-3",
+      "--blue",
+      "--blue-soft",
+      "--blue-deep",
+      "--warn",
+      "--warn-bg",
+      "--warn-rule",
+      "--ok",
+      "--ok-bg",
+      "--stop",
+      "--stop-bg",
+      "--disp",
+      "--sans",
+      "--mono",
+      "--r"
+    ],
+    "tokenKinds": {
+      "color": [
+        "--paper",
+        "--sheet",
+        "--sheet-2",
+        "--rule",
+        "--rule-soft",
+        "--ink",
+        "--ink-2",
+        "--ink-3",
+        "--blue",
+        "--blue-soft",
+        "--blue-deep",
+        "--warn",
+        "--warn-bg",
+        "--warn-rule",
+        "--ok",
+        "--ok-bg",
+        "--stop",
+        "--stop-bg"
+      ],
+      "font": [
+        "--disp",
+        "--sans",
+        "--mono"
+      ],
+      "radius": [
+        "--r"
+      ]
+    },
+    "fontFamilies": [
+      "Segoe UI Variable Display",
+      "Segoe UI Variable Text",
+      "Cascadia Mono"
+    ]
+  }
+}

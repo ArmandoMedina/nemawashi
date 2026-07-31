@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Arranca la app y engancha el depurador al proceso principal y al preload.
+      "name": "Nemawashi: proceso principal",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron-vite",
+      "windows": {
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron-vite.cmd"
+      },
+      "runtimeArgs": ["--sourcemap"],
+      "args": ["dev", "--remote-debugging-port=9222"],
+      "outFiles": ["${workspaceFolder}/out/**/*.js"],
+      "autoAttachChildProcesses": true,
+      "console": "integratedTerminal"
+    },
+    {
+      // Se engancha a la ventana ya abierta por la configuración de arriba.
+      "name": "Nemawashi: la pantalla",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "webRoot": "${workspaceFolder}/src/renderer",
+      "timeout": 60000
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Nemawashi: los dos mundos",
+      "configurations": ["Nemawashi: proceso principal", "Nemawashi: la pantalla"],
+      "stopAll": true
+    }
+  ]
+}

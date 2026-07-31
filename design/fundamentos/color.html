@@ -1,0 +1,136 @@
+<!-- @dsCard group="Fundamentos" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Color</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:26px; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .bloque { display:flex; flex-direction:column; gap:11px; }
+  .bloque > h2 { font-family:var(--disp); font-size:17px; font-weight:600;
+                 letter-spacing:-.01em; margin:0; }
+  .bloque > p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:64ch; }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:64ch; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  .muestras { display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:11px; }
+  .m { border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; background:var(--sheet); }
+  .m .sw2 { height:56px; border-bottom:1px solid var(--rule); }
+  .m .txt { padding:8px 10px; display:flex; flex-direction:column; gap:2px; }
+  .m .rol { font-size:12.5px; font-weight:600; }
+  .m .val { font-family:var(--mono); font-size:11px; color:var(--ink-3); }
+  .m .uso { font-size:11.5px; color:var(--ink-3); line-height:1.4; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="bloque">
+    <div class="anot">Fundamentos · Color</div>
+    <h2>Azul de plano sobre papel frío</h2>
+    <p>El acento sale del vocabulario del método: el documento que gobierna este producto se llama <em>el plano</em>. El azul de Prusia es el color con el que se dibujan los planos, y es el único acento del sistema.</p>
+    <p class="nota"><b>Regla dura:</b> ámbar, verde y rojo son <b>estado</b>, nunca acento. Si un elemento decorativo se pinta de ámbar, el ámbar deja de significar «revisa esto».</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Superficies y tinta</div>
+    <div class="muestras">
+      <div class="m"><div class="sw2" style="background:var(--paper)"></div><div class="txt"><span class="rol">Papel</span><span class="val">--paper</span><span class="uso">El fondo sobre el que descansa la hoja</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--sheet)"></div><div class="txt"><span class="rol">Hoja</span><span class="val">--sheet</span><span class="uso">La superficie de trabajo y los campos</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--sheet-2)"></div><div class="txt"><span class="rol">Hoja secundaria</span><span class="val">--sheet-2</span><span class="uso">Barras, índice, cajetín</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--rule)"></div><div class="txt"><span class="rol">Línea</span><span class="val">--rule</span><span class="uso">Bordes y separaciones firmes</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--ink)"></div><div class="txt"><span class="rol">Tinta</span><span class="val">--ink</span><span class="uso">Texto principal</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--ink-3)"></div><div class="txt"><span class="rol">Tinta tenue</span><span class="val">--ink-3</span><span class="uso">Ayudas y anotaciones</span></div></div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Acento — uno solo</div>
+    <div class="muestras">
+      <div class="m"><div class="sw2" style="background:var(--blue)"></div><div class="txt"><span class="rol">Azul de plano</span><span class="val">--blue</span><span class="uso">Selección, foco, acción principal</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--blue-soft)"></div><div class="txt"><span class="rol">Azul tenue</span><span class="val">--blue-soft</span><span class="uso">Fondo de lo seleccionado</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--blue-deep)"></div><div class="txt"><span class="rol">Azul profundo</span><span class="val">--blue-deep</span><span class="uso">Texto sobre azul tenue</span></div></div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Estado — nunca decoración</div>
+    <div class="muestras">
+      <div class="m"><div class="sw2" style="background:var(--warn-bg);border-bottom-color:var(--warn-rule)"></div><div class="txt"><span class="rol">Aviso</span><span class="val">--warn</span><span class="uso">Algo va a morder después: OneDrive, ruta larga</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--ok-bg)"></div><div class="txt"><span class="rol">Permitido</span><span class="val">--ok</span><span class="uso">Encendido, concedido, activo</span></div></div>
+      <div class="m"><div class="sw2" style="background:var(--stop-bg)"></div><div class="txt"><span class="rol">Prohibido</span><span class="val">--stop</span><span class="uso">Negado a propósito, nunca</span></div></div>
+    </div>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.sw,.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+    });
+  });
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+  document.querySelectorAll('.radios').forEach(function (g) {
+    g.querySelectorAll('.radio').forEach(function (r) {
+      r.addEventListener('click', function () {
+        g.querySelectorAll('.radio').forEach(function (o) { o.removeAttribute('data-on'); });
+        r.setAttribute('data-on','');
+      });
+    });
+  });
+</script>
+</body>
+</html>

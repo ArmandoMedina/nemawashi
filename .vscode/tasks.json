@@ -1,0 +1,28 @@
+{
+  "version": "2.0.0",
+  // Los mismos tres scripts de package.json. No hay un cuarto.
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "dev",
+      "label": "Nemawashi: correr la app",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "panel": "dedicated" }
+    },
+    {
+      "type": "npm",
+      "script": "build",
+      "label": "Nemawashi: compilar",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "type": "npm",
+      "script": "test",
+      "label": "Nemawashi: la suite entera",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    }
+  ]
+}

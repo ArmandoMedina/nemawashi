@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+target/
+test-results/
+playwright-report/
+*.log
+.DS_Store
+
+# La denylist local del gate anti dato personal. Cadenas literales del entorno del
+# dueno de esta maquina o de un cliente — nunca se versiona. Ver anti-pii.denylist.example.txt.
+anti-pii.denylist.txt

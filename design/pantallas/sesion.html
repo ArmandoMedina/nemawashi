@@ -1,0 +1,418 @@
+<!-- @dsCard group="Pantallas" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sesión</title>
+
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  * { box-sizing: border-box; }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f; --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f; --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6; --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans);
+         font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .page { max-width:1160px; margin:0 auto; padding:44px 22px 72px;
+          display:flex; flex-direction:column; gap:26px; }
+  .anot { font-family:var(--mono); font-size:10px; letter-spacing:.15em;
+          text-transform:uppercase; color:var(--ink-3); }
+
+  /* El marco es el mismo que en las otras dos pantallas: mismo alto, mismo filo doble.
+     Lo que cambia es lo de adentro — aquí no hay índice ni cajetín, porque esta pantalla
+     la mira quien no es técnico. */
+  .win { background:var(--sheet); border:1px solid var(--ink-2); border-radius:var(--r); padding:5px; }
+  .sheet { border:1px solid var(--rule); display:flex; flex-direction:column; min-width:0;
+           height:640px; overflow:hidden; }
+
+  /* ── Barra de arriba: lo mínimo. Ninguna ruta de archivo, ningún número de revisión. ── */
+  .barra { display:flex; align-items:center; gap:18px; padding:13px 22px;
+           border-bottom:1px solid var(--rule-soft); background:var(--sheet); }
+  .proyecto { font-size:15px; font-weight:600; color:var(--ink); }
+  .derecha { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .divisor { width:1px; height:20px; background:var(--rule); flex:none; }
+
+  /* Navegación entre pantallas. En texto y sin caja: es un letrero, no un control. */
+  .pantallas { display:flex; gap:2px; }
+  .pantallas a { font:inherit; font-size:13.5px; text-decoration:none; color:var(--ink-2);
+                 border:1px solid transparent; border-radius:var(--r); padding:5px 12px; }
+  .pantallas a:hover { color:var(--ink); background:var(--sheet-2); }
+  .pantallas a[aria-current="page"] { color:var(--blue-deep); background:var(--blue-soft);
+                                      font-weight:600; }
+  .pantallas a:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
+
+  .guardado { font:inherit; font-size:13.5px; cursor:pointer; display:flex; align-items:center; gap:8px;
+              background:var(--ok-bg); color:var(--ok); border:1px solid transparent;
+              border-radius:var(--r); padding:5px 13px; }
+  .guardado:hover { border-color:var(--ok); }
+  .guardado b { font-variant-numeric:tabular-nums; font-weight:700; }
+  .guardado:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  .volver { font:inherit; font-size:13.5px; cursor:pointer; background:none; color:var(--ink-2);
+            border:1px solid var(--rule); border-radius:var(--r); padding:5px 13px; }
+  .volver:hover { border-color:var(--blue); color:var(--blue); }
+
+  .seg { display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; }
+  .seg button { font:inherit; font-size:13px; cursor:pointer; line-height:1.3;
+        background:var(--sheet); color:var(--ink-2); border:none;
+        border-right:1px solid var(--rule); padding:5px 14px; }
+  .seg button:last-child { border-right:none; }
+  .seg button[aria-pressed="true"] { background:var(--blue); color:var(--sheet); font-weight:600; }
+  .seg button:focus-visible { outline:2px solid var(--blue); outline-offset:-2px; }
+
+  /* ── La conversación ── una columna, ancha para leer, con aire. ── */
+  .vista { display:none; flex:1; flex-direction:column; min-height:0; }
+  .vista[data-active] { display:flex; }
+  .conversacion { flex:1; overflow:auto; padding:30px 22px 8px; }
+  .hilo { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:26px; }
+
+  .msg { display:flex; flex-direction:column; gap:7px; }
+  .msg .quien { display:flex; align-items:center; gap:9px; }
+  .msg .texto { font-size:16.5px; line-height:1.62; }
+
+  /* Lo que dice el experto: burbuja a la derecha, como en cualquier chat que ya conoce. */
+  .msg[data-de="yo"] { align-items:flex-end; }
+  .msg[data-de="yo"] .texto { background:var(--blue-soft); color:var(--ink);
+        padding:13px 17px; border-radius:var(--r); max-width:80%; }
+
+  /* La respuesta: a la izquierda y sin caja, para que se lea de corrido. No lleva nombre —
+     la posición y la forma ya dicen de quién es cada mensaje. */
+  .msg[data-de="ia"] .texto { color:var(--ink); max-width:100%; }
+
+  /* La lectura en voz alta: el texto está completo desde el principio y la voz lo va
+     aclarando. No aparece ni se desliza nada — sólo cambia dónde está el foco. */
+  .leyendo .ya    { color:var(--ink); }
+  .leyendo .ahora { color:var(--blue-deep); background:var(--blue-soft);
+                    box-shadow:0 1px 0 0 var(--blue); }
+  .leyendo .falta { color:var(--ink-3); opacity:.42; filter:blur(.7px); }
+  @media (prefers-reduced-motion: reduce) { .leyendo .falta { filter:none; opacity:.6; } }
+  .cursor { display:inline-block; width:2px; height:1.05em; background:var(--blue);
+            vertical-align:-3px; margin-left:2px; }
+
+  .escuchando { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono);
+                font-size:10px; letter-spacing:.15em; text-transform:uppercase;
+                color:var(--blue); }
+
+  /* ── Las afirmaciones que cuelgan de una respuesta ── */
+  .propuesta { margin-top:4px; border:1px solid var(--rule); border-radius:var(--r);
+               background:var(--sheet); overflow:hidden; }
+  .propuesta .cab { padding:9px 16px; background:var(--sheet-2);
+                    border-bottom:1px solid var(--rule-soft); }
+  .fila { display:flex; align-items:center; gap:14px; padding:13px 16px;
+          border-bottom:1px solid var(--rule-soft); }
+  .fila:last-child { border-bottom:none; }
+  /* El número no es decoración: deja descartar una fila de viva voz sin leerla entera. */
+  .fila .num { flex:none; align-self:flex-start; font-family:var(--mono); font-size:11px;
+               font-weight:600; color:var(--ink-3); min-width:1.1em; padding-top:3px; }
+  .fila .frase { flex:1; min-width:0; font-size:15.5px; line-height:1.5; }
+  .fila .acciones { display:flex; gap:7px; flex:none; }
+
+  .fila[data-estado="confirmada"] { border-left:3px solid var(--ok); }
+  .fila[data-estado="tachada"] { background:var(--sheet-2); border-left:3px solid var(--rule); }
+  .fila[data-estado="tachada"] .frase { text-decoration:line-through;
+        text-decoration-thickness:1px; color:var(--ink-3); }
+  .fila[data-estado="corregida"] { border-left:3px solid var(--ok); }
+  .fila[data-estado="corregida"] .antes { display:block; text-decoration:line-through;
+        text-decoration-thickness:1px; color:var(--ink-3); font-size:14px; }
+  .fila[data-estado="abierta"] { border-left:3px dashed var(--rule); background:var(--sheet-2); }
+
+  .bot { font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; white-space:nowrap;
+         border:1px solid var(--rule); background:var(--sheet); color:var(--ink-2);
+         border-radius:var(--r); padding:7px 15px; }
+  .bot:hover { border-color:var(--blue); color:var(--blue); }
+  .bot:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  .bot[data-si] { background:var(--ok-bg); color:var(--ok); border-color:transparent; }
+  .bot[data-si]:hover { border-color:var(--ok); }
+  .bot[data-no]:hover { border-color:var(--stop); color:var(--stop); }
+
+  .sello { font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+           padding:4px 9px; border-radius:var(--r); white-space:nowrap; }
+  .sello.si { background:var(--ok-bg); color:var(--ok); }
+  .sello.no { background:var(--sheet-2); color:var(--ink-2); border:1px solid var(--rule-soft); }
+
+  /* El aviso de que algo quedó guardado. En palabras, nunca una ruta de archivo. */
+  .guardadofila { display:flex; align-items:center; gap:9px; font-size:13.5px; color:var(--ok);
+                  background:var(--ok-bg); border-radius:var(--r); padding:9px 15px;
+                  max-width:760px; }
+  .guardadofila svg { flex:none; }
+
+  /* ── Abajo: hablar o escribir, los dos encendidos a la vez ── */
+  .componer { border-top:1px solid var(--rule-soft); background:var(--sheet-2); padding:16px 22px 18px; }
+  .caja { max-width:760px; margin:0 auto; display:flex; align-items:center; gap:13px;
+          background:var(--sheet); border:1px solid var(--blue); border-radius:var(--r);
+          padding:9px 11px 9px 9px; }
+  .mic { display:flex; align-items:center; gap:9px; flex:none; cursor:pointer;
+         background:var(--blue); color:var(--sheet); border:none; border-radius:var(--r);
+         padding:11px 17px; font:inherit; font-size:13.5px; font-weight:600; }
+  .mic:hover { background:var(--blue-deep); }
+  .mic:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
+  .campo { flex:1; min-width:0; font:inherit; font-size:15.5px; color:var(--ink);
+           background:transparent; border:none; padding:4px 0; }
+  .campo::placeholder { color:var(--ink-3); }
+  .campo:focus-visible { outline:2px solid var(--blue); outline-offset:4px; }
+  .enviar { flex:none; cursor:pointer; background:none; border:1px solid var(--rule);
+            color:var(--ink-2); border-radius:var(--r); padding:9px 12px; }
+  .enviar:hover { border-color:var(--blue); color:var(--blue); }
+  .enviar:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+  .aviso { max-width:760px; margin:9px auto 0; font-size:12.5px; color:var(--ink-3);
+           display:flex; align-items:center; gap:8px; }
+
+  /* ── Lo guardado hoy ── */
+  .cosecha { flex:1; overflow:auto; padding:30px 22px; }
+  .cosecha .dentro { max-width:760px; margin:0 auto; display:flex; flex-direction:column; gap:18px; }
+  .cosecha h2 { font-family:var(--disp); font-size:23px; font-weight:600; margin:0;
+                letter-spacing:-.012em; }
+  .cosecha .intro { margin:0; color:var(--ink-2); font-size:15px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="win"><div class="sheet">
+
+    <header class="barra">
+      <span class="proyecto">Sistema de cumplimiento</span>
+      <span class="divisor"></span>
+      <nav class="pantallas" aria-label="Pantallas">
+        <a href="sesion.html" aria-current="page">Sesión</a>
+        <a href="tablero.html">Tablero</a>
+        <a href="consola-de-parametros.html">Parámetros</a>
+      </nav>
+      <span class="derecha">
+        <button class="guardado" type="button" data-ir="v2">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8.4 6.2 11.6 13 4.8" stroke="currentColor" stroke-width="1.8"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Guardado hoy <b>6</b>
+        </button>
+        <span class="seg" role="group" aria-label="Qué puede hacer sin preguntarte">
+          <button type="button" aria-pressed="false">Preguntarme</button>
+          <button type="button" aria-pressed="true">Avanzar solo</button>
+          <button type="button" aria-pressed="false">Sólo planear</button>
+        </span>
+      </span>
+    </header>
+
+    <!-- ══ LA CONVERSACIÓN ══ -->
+    <div class="vista" id="v1" data-active>
+      <div class="conversacion">
+        <div class="hilo">
+
+          <div class="msg" data-de="yo">
+            <div class="texto">Cuando la operación pasa del umbral, no basta con registrarla: hay que
+            revisar quién es el cliente y de dónde viene el dinero, y eso lo tiene que ver una persona.
+            Y ojo, el umbral no es el mismo para todos.</div>
+          </div>
+
+          <div class="msg" data-de="ia">
+            <div class="texto">Entendí cuatro cosas. Dime cuáles están bien y cuáles no — con tocar
+            un botón basta, y si prefieres no soltar el hilo, dime el número y qué le cambio.</div>
+
+            <div class="propuesta">
+              <div class="cab"><span class="anot">Lo que entendí</span></div>
+
+              <div class="fila" data-estado="confirmada">
+                <span class="num" aria-hidden="true">1</span>
+                <span class="frase">Una operación por encima del umbral exige que una persona revise
+                al cliente y el origen del dinero.</span>
+                <span class="acciones"><span class="sello si">confirmado</span></span>
+              </div>
+
+              <div class="fila" data-estado="tachada">
+                <span class="num" aria-hidden="true">2</span>
+                <span class="frase">El umbral es el mismo para todos los clientes.</span>
+                <span class="acciones"><span class="sello no">tachado</span></span>
+              </div>
+
+              <div class="fila" data-estado="corregida">
+                <span class="num" aria-hidden="true">3</span>
+                <span class="frase">
+                  <span class="antes">Registrar la operación cierra el trámite.</span>
+                  Registrar la operación no cierra el trámite: abre la revisión.
+                </span>
+                <span class="acciones"><span class="sello si">corregido</span></span>
+              </div>
+
+              <div class="fila" data-estado="abierta">
+                <span class="num" aria-hidden="true">4</span>
+                <span class="frase">El umbral depende del giro del cliente.</span>
+                <span class="acciones">
+                  <button class="bot" type="button" data-si>Está bien</button>
+                  <button class="bot" type="button" data-no>No es así</button>
+                  <button class="bot" type="button">Corregir hablando</button>
+                </span>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="guardadofila">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8.4 6.2 11.6 13 4.8" stroke="currentColor" stroke-width="1.8"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Guardado en el proyecto: <b>lo que revisa una persona cuando se pasa el umbral</b></span>
+          </div>
+
+          <div class="msg" data-de="ia">
+            <div class="quien">
+              <span class="escuchando">Leyendo en voz alta</span>
+            </div>
+            <div class="texto leyendo"><span class="ya">Me falta una cosa para poder pasarlo a
+            desarrollo: cuando el giro cambia el umbral,</span> <span class="ahora">¿quién</span>
+            <span class="falta">decide el número — lo dice la norma, o es criterio de la casa?</span></div>
+          </div>
+
+          <div class="msg" data-de="yo">
+            <div class="texto">Lo pone la norma, pero nosotros lo bajamos cuando el giro es de
+            riesgo<span class="cursor"></span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="componer">
+        <div class="caja">
+          <button class="mic" type="button" aria-pressed="true">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <rect x="5.5" y="1.5" width="5" height="8" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3 7.5a5 5 0 0 0 10 0M8 12.5V14.5" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="round"/>
+            </svg>
+            Te escucho
+          </button>
+          <input class="campo" type="text" aria-label="Escribir un mensaje"
+                 placeholder="Habla y se escribe solo — o escribe aquí si prefieres" />
+          <button class="enviar" type="button" aria-label="Enviar">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2.5 8h10M8.5 3.5 13 8l-4.5 4.5" stroke="currentColor" stroke-width="1.6"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="aviso" aria-live="polite">
+          <span class="escuchando">Escuchando</span>
+          <span>Tu voz se está escribiendo arriba. No sale de esta computadora.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LO GUARDADO HOY ══ -->
+    <div class="vista" id="v2">
+      <div class="cosecha">
+        <div class="dentro">
+          <div>
+            <h2>Lo guardado hoy</h2>
+            <p class="intro">Seis cosas quedaron guardadas y tres siguen esperando que me digas si
+            valen. Puedes resolverlas ahora o al terminar.</p>
+          </div>
+
+          <div class="propuesta">
+            <div class="cab"><span class="anot">Esperando tu palabra</span></div>
+            <div class="fila" data-estado="abierta">
+              <span class="frase">El umbral depende del giro del cliente.</span>
+              <span class="acciones">
+                <button class="bot" type="button" data-si>Guardar</button>
+                <button class="bot" type="button" data-no>No vale</button>
+              </span>
+            </div>
+            <div class="fila" data-estado="abierta">
+              <span class="frase">Un expediente incompleto impide operar, no sólo lo marca.</span>
+              <span class="acciones">
+                <button class="bot" type="button" data-si>Guardar</button>
+                <button class="bot" type="button" data-no>No vale</button>
+              </span>
+            </div>
+            <div class="fila" data-estado="abierta">
+              <span class="frase">La revisión de una alerta la firma quien la atiende, no quien la dispara.</span>
+              <span class="acciones">
+                <button class="bot" type="button" data-si>Guardar</button>
+                <button class="bot" type="button" data-no>No vale</button>
+              </span>
+            </div>
+          </div>
+
+          <div class="propuesta">
+            <div class="cab"><span class="anot">Ya guardado</span></div>
+            <div class="fila" data-estado="confirmada">
+              <span class="frase">Una operación por encima del umbral exige que una persona revise
+              al cliente y el origen del dinero.</span>
+              <span class="acciones"><span class="sello si">guardado</span></span>
+            </div>
+            <div class="fila" data-estado="corregida">
+              <span class="frase">Registrar la operación no cierra el trámite: abre la revisión.</span>
+              <span class="acciones"><span class="sello si">guardado</span></span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="volver" type="button" data-ir="v1">Volver a la conversación</button>
+            <span style="font-size:12.5px;color:var(--ink-3)">Todo esto se guarda en tu proyecto, en
+            tu computadora.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<script>
+  // Un chat se abre en lo último que se dijo, no en el principio de la conversación.
+  function alFinal() {
+    var c = document.querySelector('.conversacion');
+    if (c) c.scrollTop = c.scrollHeight;
+  }
+  alFinal();
+  window.addEventListener('load', alFinal);
+
+  document.querySelectorAll('[data-ir]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.vista').forEach(function (v) { v.removeAttribute('data-active'); });
+      document.getElementById(b.dataset.ir).setAttribute('data-active', '');
+    });
+  });
+
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true');
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

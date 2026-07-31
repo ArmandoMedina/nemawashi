@@ -1,0 +1,379 @@
+<!-- @dsCard group="Componentes" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Listas y editor</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:26px; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .bloque { display:flex; flex-direction:column; gap:11px; }
+  .bloque > h2 { font-family:var(--disp); font-size:17px; font-weight:600;
+                 letter-spacing:-.01em; margin:0; }
+  .bloque > p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:64ch; }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:64ch; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  .field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .field > label, .grouplabel {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; font-weight:600; color:var(--ink-2);
+  }
+  .field > label .req, .grouplabel .req {
+    font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+    font-weight:600; color:var(--ink-3); margin-left:7px;
+  }
+  .hint { font-size:12.5px; color:var(--ink-3); max-width:62ch; }
+  select, input[type="text"], textarea {
+    font:inherit; font-size:13.5px; background:var(--sheet); color:var(--ink);
+    border:1px solid var(--rule); border-radius:var(--r); padding:7px 9px; width:100%;
+  }
+  textarea { font-family:var(--mono); font-size:12.5px; line-height:1.7; resize:vertical; }
+  select:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline:2px solid var(--blue); outline-offset:-1px; border-color:var(--blue);
+  }
+  .seg { display:inline-flex; border:1px solid var(--rule); border-radius:var(--r); overflow:hidden; }
+  .seg button {
+    font:inherit; font-size:13px; cursor:pointer; line-height:1.25;
+    background:var(--sheet); color:var(--ink-2);
+    border:none; border-right:1px solid var(--rule); padding:6px 15px;
+  }
+  .seg button:last-child { border-right:none; }
+  .seg button[aria-pressed="true"] { background:var(--blue); color:var(--sheet); font-weight:600; }
+  .seg .def { display:block; font-family:var(--mono); font-size:9px; letter-spacing:.12em;
+              text-transform:uppercase; font-weight:600; opacity:.8; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font:inherit; font-size:12.5px; border-radius:var(--r); padding:3px 10px; cursor:pointer;
+          border:1px solid var(--rule); background:var(--sheet); color:var(--ink-2); }
+  .chip[aria-pressed="true"] { background:var(--blue-soft); border-color:var(--blue);
+                               color:var(--blue-deep); font-weight:600; }
+  .chip[aria-pressed="true"][data-stop] { background:var(--stop-bg); border-color:var(--stop); color:var(--stop); }
+  .sw { flex:none; width:32px; height:18px; border-radius:var(--r); background:var(--rule);
+        border:none; cursor:pointer; position:relative; }
+  .sw::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px;
+               background:var(--sheet); transition:transform .12s; }
+  .sw[aria-pressed="true"] { background:var(--blue); }
+  .sw[aria-pressed="true"]::after { transform:translateX(14px); }
+  .togrow { display:flex; gap:12px; align-items:flex-start; }
+  .togrow > div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .togrow b { font-size:13px; font-weight:600; }
+  .radios { display:flex; flex-direction:column; gap:8px; max-width:560px; }
+  .radio { display:flex; gap:11px; align-items:flex-start; border:1px solid var(--rule);
+           border-radius:var(--r); padding:11px 13px; cursor:pointer; }
+  .radio[data-on] { border-color:var(--blue); background:var(--blue-soft); }
+  .radio i { flex:none; margin-top:3px; width:13px; height:13px;
+             border:1.5px solid var(--ink-3); display:block; }
+  .radio[data-on] i { border-color:var(--blue); border-width:4px; }
+  .radio div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .radio b { font-size:13.5px; font-weight:600; }
+  .radio span { font-size:12.5px; color:var(--ink-3); }
+  .btn { font:inherit; font-size:13px; font-weight:600; cursor:pointer; border-radius:var(--r);
+         padding:7px 16px; border:1px solid var(--rule); background:var(--sheet); color:var(--ink); }
+  .btn.primary { background:var(--blue); border-color:var(--blue); color:var(--sheet); }
+  .btn:focus-visible, .chip:focus-visible, .sw:focus-visible, .seg button:focus-visible {
+    outline:2px solid var(--blue); outline-offset:2px;
+  }
+
+  .listhead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .add { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+         font-weight:600; cursor:pointer; color:var(--blue); background:none;
+         border:1px solid var(--rule); border-radius:var(--r); padding:3px 9px; }
+  .add:hover { border-color:var(--blue); background:var(--blue-soft); }
+  .add:focus-visible, .edit:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
+  .edit:hover { color:var(--blue); border-color:var(--blue); }
+  .list { border:1px solid var(--rule); border-radius:var(--r); }
+  .item { display:flex; align-items:center; gap:12px; padding:9px 12px;
+          border-bottom:1px solid var(--rule-soft); font-size:13.5px; }
+  .item:last-child { border-bottom:none; }
+  .item .nm { font-weight:600; }
+  .item .ds { color:var(--ink-3); font-size:12.5px; flex:1; min-width:0; }
+  .item.open { background:var(--blue-soft); }
+  .item.open .nm { color:var(--blue-deep); }
+  .edit { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+          cursor:pointer; flex:none; color:var(--ink-2); background:var(--sheet-2);
+          border:1px solid var(--rule); border-radius:var(--r); padding:3px 8px; }
+  .tag { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+         background:var(--sheet-2); border:1px solid var(--rule-soft); padding:2px 7px;
+         border-radius:var(--r); color:var(--ink-2); white-space:nowrap; }
+  .tag.stop { background:var(--stop-bg); color:var(--stop); border-color:transparent; }
+  .tag.ok { background:var(--ok-bg); color:var(--ok); border-color:transparent; }
+  /* El ámbar en contorno: va sobre una tarjeta que ya es ámbar, y relleno sobre
+     relleno del mismo color deja de leerse como etiqueta. */
+  .tag.warn { background:transparent; color:var(--warn); border-color:var(--warn-rule); }
+  .editor { border:1px solid var(--rule); border-left:2px solid var(--blue); background:var(--sheet);
+            padding:17px 15px 18px; display:flex; flex-direction:column; gap:15px; }
+  .editor .sep { font-family:var(--mono); font-size:10px; letter-spacing:.15em; text-transform:uppercase;
+                 font-weight:600; color:var(--ink-3); border-top:1px solid var(--rule-soft);
+                 padding-top:13px; }
+  .editor .sep:first-child { border-top:none; padding-top:0; }
+  .editorfoot { display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+                border-top:1px solid var(--rule-soft); padding-top:15px; }
+  .cmdnote { font-size:12.5px; color:var(--ink-3); }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px) { .row { grid-template-columns:1fr; } }
+
+  .matriz .item { gap:14px; }
+  .matriz .item .nm { flex:1; min-width:0; font-weight:500; }
+  .matriz .cab { background:var(--sheet-2); }
+  .matriz .cab .nm { font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+                     text-transform:uppercase; font-weight:600; color:var(--ink-2); }
+  .tri { display:inline-flex; flex:none; border:1px solid var(--rule);
+         border-radius:var(--r); overflow:hidden; }
+  .tri button { font:inherit; font-size:12px; cursor:pointer; line-height:1.25;
+                background:var(--sheet); color:var(--ink-3); border:none;
+                border-right:1px solid var(--rule); padding:4px 11px; }
+  .tri button:last-child { border-right:none; }
+  .tri button[aria-pressed="true"] { font-weight:600; }
+  .tri button[data-si][aria-pressed="true"]   { background:var(--ok-bg);   color:var(--ok); }
+  .tri button[data-ask][aria-pressed="true"]  { background:var(--blue-soft); color:var(--blue-deep); }
+  .tri button[data-no][aria-pressed="true"]   { background:var(--stop-bg); color:var(--stop); }
+  .tri button:focus-visible { outline:2px solid var(--blue); outline-offset:-2px; }
+  .trirot { display:flex; gap:0; }
+  .trirot span { font-family:var(--mono); font-size:9.5px; letter-spacing:.1em;
+                 text-transform:uppercase; color:var(--ink-3); text-align:center;
+                 width:59px; padding-bottom:3px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="bloque">
+    <div class="anot">Componentes · Listas y editor</div>
+    <h2>La pieza, y su editor debajo</h2>
+    <p class="nota">Cada renglón es una pieza que se puede encender, editar o quitar. Al editar, el editor se abre <b>en su lugar</b> — no en una ventana aparte, para no perder de vista dónde estabas.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Lista con alta</div>
+    <div class="listhead">
+      <span class="grouplabel">Agentes</span>
+      <button class="add" type="button">+ Nuevo agente</button>
+    </div>
+    <div class="list">
+      <div class="item open"><span class="nm">explorador</span><span class="ds">Lee el código y los datos para confrontar</span><button class="edit" type="button">Cerrar</button><button class="sw" type="button" aria-pressed="true" aria-label="Activar"></button></div>
+      <div class="item"><span class="nm">entrevistador</span><span class="ds">Refleja lo que entendió y pregunta lo que falta para llevarlo a sistema</span><button class="edit" type="button">Editar</button><button class="sw" type="button" aria-pressed="true" aria-label="Activar"></button></div>
+      <div class="item"><span class="nm">auditor</span><span class="ds">Señala sólo las contradicciones evidentes — la palabra del experto manda</span><button class="edit" type="button">Editar</button><button class="sw" type="button" aria-pressed="false" aria-label="Activar"></button></div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Editor de una pieza</div>
+    <div class="editor">
+      <div class="sep">Qué es</div>
+      <div class="row">
+        <div class="field"><label for="e1">Nombre<span class="req">obligatorio</span></label><input id="e1" type="text" value="explorador" /></div>
+        <div class="field"><label for="e2">Modelo</label><select id="e2"><option>El mismo de la sesión</option><option>Haiku 4.5</option></select></div>
+      </div>
+      <div class="field">
+        <label for="e3">Cuándo se le llama<span class="req">obligatorio</span></label>
+        <textarea id="e3" rows="2">Cuando haga falta ir al código o a los datos antes de afirmar algo</textarea>
+        <span class="hint">Esta frase decide si el agente se usa o se queda dormido. Si es vaga, no lo van a llamar nunca — y ese error no da error.</span>
+      </div>
+      <div class="sep">Qué alcanza</div>
+      <div class="field">
+        <span class="grouplabel">Herramientas</span>
+        <div class="chips">
+          <button class="chip" type="button" aria-pressed="true">Leer</button>
+          <button class="chip" type="button" aria-pressed="true">Buscar</button>
+          <button class="chip" type="button" aria-pressed="false">Escribir</button>
+          <button class="chip" type="button" aria-pressed="true" data-stop>Nunca borrar</button>
+        </div>
+      </div>
+      <div class="sep">Qué sabe, acotado</div>
+      <div class="field">
+        <span class="grouplabel">Paradigma<span class="req">obligatorio</span></span>
+        <div class="chips">
+          <button class="chip" type="button" aria-pressed="true">Orientado a objetos</button>
+          <button class="chip" type="button" aria-pressed="false">Funcional</button>
+          <button class="chip" type="button" aria-pressed="false">Procedural</button>
+        </div>
+        <span class="hint">Vienen sugeridos los que más pesan — corrígelos si el módulo rige otro. Si no se acota, cada sesión elige uno distinto.</span>
+      </div>
+      <div class="field">
+        <span class="grouplabel">Patrones permitidos<span class="req">obligatorio</span></span>
+        <div class="chips">
+          <button class="chip" type="button" aria-pressed="true">Monolito modular</button>
+          <button class="chip" type="button" aria-pressed="false">Repositorio</button>
+          <button class="chip" type="button" aria-pressed="false">Eventos</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="grouplabel">Patrones prohibidos<span class="req">obligatorio</span></span>
+        <div class="chips">
+          <button class="chip" type="button" aria-pressed="true" data-stop>Singleton</button>
+          <button class="chip" type="button" aria-pressed="true" data-stop>Herencia de más de un nivel</button>
+          <button class="chip" type="button" aria-pressed="false" data-stop>Estado global</button>
+        </div>
+        <span class="hint">La mitad negativa, en rojo y con la misma ficha: lo que no está en permitidos el agente lo puede inventar, lo que está aquí no.</span>
+      </div>
+      <div class="field">
+        <label for="e4">Convenciones del módulo<span class="req">obligatorio</span></label>
+        <textarea id="e4" rows="2">Antes de opinar, abre el archivo o corre la consulta.
+Devuelve siempre la ruta o la consulta de la que sacaste cada dato.</textarea>
+      </div>
+      <div class="field">
+        <label for="e5">Fuera de alcance<span class="req">obligatorio</span></label>
+        <textarea id="e5" rows="3">No opina sobre el negocio.
+No escribe archivos: localiza y reporta.
+Si no encontró evidencia, lo dice — no rellena.</textarea>
+        <span class="hint">Qué NO debe hacer. Es el campo más potente y el que todos olvidan: sin límites, el agente puede hacer todo — y no hace nada.</span>
+      </div>
+      <div class="editorfoot">
+        <button class="btn primary" type="button">Guardar agente</button>
+        <button class="btn" type="button">Duplicar</button>
+        <button class="btn" type="button">Eliminar</button>
+        <span class="cmdnote">Se guarda dentro de Nemawashi.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Etiquetas de estado</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap">
+      <span class="tag ok">encendido</span>
+      <span class="tag ok">sólo lectura</span>
+      <span class="tag">apagado</span>
+      <span class="tag warn">aviso</span>
+      <span class="tag stop">nunca</span>
+      <span class="tag stop">fuera de alcance</span>
+    </div>
+    <p class="nota">La etiqueta va en anotación, no en cuerpo: es un dato del sistema, no una frase.</p>
+    <p class="nota"><b>El ámbar va en contorno y no en fondo</b>, al revés que el verde y el rojo. No
+    es capricho: el ámbar aparece sobre una tarjeta que ya es ámbar, y un relleno sobre otro relleno
+    del mismo color deja de leerse como etiqueta.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Matriz de permisos — tres estados por renglón</div>
+    <div class="field">
+      <span class="grouplabel">Qué puede hacer sin preguntar</span>
+      <div class="list matriz">
+        <div class="item cab">
+          <span class="nm">Acción</span>
+          <div class="trirot"><span>Puede</span><span>Pregunta</span><span>Nunca</span></div>
+        </div>
+        <div class="item">
+          <span class="nm">Leer archivos del repositorio</span>
+          <div class="tri" role="group" aria-label="Leer archivos del repositorio">
+            <button type="button" data-si aria-pressed="true">Puede</button>
+            <button type="button" data-ask aria-pressed="false">Pregunta</button>
+            <button type="button" data-no aria-pressed="false">Nunca</button>
+          </div>
+        </div>
+        <div class="item">
+          <span class="nm">Escribir archivos</span>
+          <div class="tri" role="group" aria-label="Escribir archivos">
+            <button type="button" data-si aria-pressed="false">Puede</button>
+            <button type="button" data-ask aria-pressed="true">Pregunta</button>
+            <button type="button" data-no aria-pressed="false">Nunca</button>
+          </div>
+        </div>
+        <div class="item">
+          <span class="nm">Correr comandos en la terminal</span>
+          <div class="tri" role="group" aria-label="Correr comandos en la terminal">
+            <button type="button" data-si aria-pressed="false">Puede</button>
+            <button type="button" data-ask aria-pressed="true">Pregunta</button>
+            <button type="button" data-no aria-pressed="false">Nunca</button>
+          </div>
+        </div>
+        <div class="item">
+          <span class="nm">Borrar archivos</span>
+          <div class="tri" role="group" aria-label="Borrar archivos">
+            <button type="button" data-si aria-pressed="false">Puede</button>
+            <button type="button" data-ask aria-pressed="false">Pregunta</button>
+            <button type="button" data-no aria-pressed="true">Nunca</button>
+          </div>
+        </div>
+        <div class="item">
+          <span class="nm">Salir a internet</span>
+          <div class="tri" role="group" aria-label="Salir a internet">
+            <button type="button" data-si aria-pressed="true">Puede</button>
+            <button type="button" data-ask aria-pressed="false">Pregunta</button>
+            <button type="button" data-no aria-pressed="false">Nunca</button>
+          </div>
+        </div>
+      </div>
+      <span class="hint">Lo que quede en «Pregunta» detiene la sesión hasta que alguien conteste. Con el experto delante, eso interrumpe la conversación — conviene decidirlo antes de empezar.</span>
+    </div>
+    <p class="nota">Tres estados y no dos: «pregunta» es un estado real, no la ausencia de decisión. Cada botón escribe su palabra — el color solo acompaña.</p>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.sw,.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+    });
+  });
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+  document.querySelectorAll('.radios').forEach(function (g) {
+    g.querySelectorAll('.radio').forEach(function (r) {
+      r.addEventListener('click', function () {
+        g.querySelectorAll('.radio').forEach(function (o) { o.removeAttribute('data-on'); });
+        r.setAttribute('data-on','');
+      });
+    });
+  });
+  document.querySelectorAll('.tri').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+</script>
+</body>
+</html>

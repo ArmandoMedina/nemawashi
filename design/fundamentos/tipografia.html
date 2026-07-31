@@ -1,0 +1,133 @@
+<!-- @dsCard group="Fundamentos" -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tipografía</title>
+<style>
+  :root {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1;
+    --stop:#8c3a2c; --stop-bg:#f4dfda;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --mono:"Cascadia Mono","Cascadia Code",ui-monospace,Consolas,monospace;
+    --r:2px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  } }
+  :root[data-theme="dark"] {
+    --paper:#0d1319; --sheet:#151d25; --sheet-2:#1c262f;
+    --rule:#2e3d4a; --rule-soft:#232f3a;
+    --ink:#dde5ec; --ink-2:#9aabbb; --ink-3:#6c7d8e;
+    --blue:#7cb0e8; --blue-soft:#1b3550; --blue-deep:#a8cdf5;
+    --warn:#dcb161; --warn-bg:#33290f; --warn-rule:#5f4a1f;
+    --ok:#79bb90; --ok-bg:#182e20; --stop:#e0937f; --stop-bg:#361d17;
+  }
+  :root[data-theme="light"] {
+    --paper:#e9edf0; --sheet:#fbfcfd; --sheet-2:#f0f3f6;
+    --rule:#c6d0d8; --rule-soft:#dde4e9;
+    --ink:#16202b; --ink-2:#47576a; --ink-3:#7c8b9c;
+    --blue:#234f86; --blue-soft:#dde7f2; --blue-deep:#17395f;
+    --warn:#8a5a06; --warn-bg:#f9efd6; --warn-rule:#ddbe79;
+    --ok:#2f6141; --ok-bg:#dfeae1; --stop:#8c3a2c; --stop-bg:#f4dfda;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:26px; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .anot { font-family:var(--mono); font-size:10.5px; letter-spacing:.16em;
+          text-transform:uppercase; color:var(--ink-3); }
+  .doc { display:flex; flex-direction:column; gap:26px; max-width:940px; }
+  .bloque { display:flex; flex-direction:column; gap:11px; }
+  .bloque > h2 { font-family:var(--disp); font-size:17px; font-weight:600;
+                 letter-spacing:-.01em; margin:0; }
+  .bloque > p { margin:0; color:var(--ink-2); font-size:13.5px; max-width:64ch; }
+  .nota { font-size:12.5px; color:var(--ink-3); max-width:64ch; }
+  .nota b { color:var(--ink-2); font-weight:600; }
+
+  .esc { display:flex; flex-direction:column; gap:14px; }
+  .fila { display:grid; grid-template-columns:120px 1fr; gap:18px; align-items:baseline;
+          border-top:1px solid var(--rule-soft); padding-top:12px; }
+  @media (max-width:640px) { .fila { grid-template-columns:1fr; gap:4px; } }
+  .fila > .anot { padding-top:5px; }
+  .d1 { font-family:var(--disp); font-size:32px; font-weight:600; letter-spacing:-.02em; line-height:1.15; }
+  .d2 { font-family:var(--disp); font-size:21px; font-weight:600; letter-spacing:-.012em; }
+  .b1 { font-size:15px; }
+  .b2 { font-size:13.5px; color:var(--ink-2); }
+  .b3 { font-size:12.5px; color:var(--ink-3); }
+  .dato { font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums; }
+  .mono { font-family:var(--mono); font-size:12px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="bloque">
+    <div class="anot">Fundamentos · Tipografía</div>
+    <h2>Tres voces, una de ellas técnica</h2>
+    <p>No hay tipografías cargadas de fuera: el sistema usa las del equipo y hace lo distintivo con el <em>tratamiento</em>, no con la fuente. Lo característico es la tercera voz — la anotación en versalitas anchas, como se rotula un plano.</p>
+    <p class="nota"><b>Por qué importa:</b> con la anotación cargando las etiquetas, el cuerpo del texto no necesita agrandarse ni engrosarse para marcar jerarquía. Se lee en tamaño normal.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">La escala</div>
+    <div class="esc">
+      <div class="fila"><span class="anot">Título</span><span class="d1">Consola de parámetros</span></div>
+      <div class="fila"><span class="anot">Sección</span><span class="d2">Qué no le dejas hacer</span></div>
+      <div class="fila"><span class="anot">Cuerpo</span><span class="b1">La disciplina que no depende de que el modelo se porte bien.</span></div>
+      <div class="fila"><span class="anot">Secundario</span><span class="b2">Se suma a las instrucciones de fábrica; no las reemplaza.</span></div>
+      <div class="fila"><span class="anot">Ayuda</span><span class="b3">Esta frase decide si el agente se usa o se queda dormido.</span></div>
+      <div class="fila"><span class="anot">Anotación</span><span class="anot">De dónde lee su configuración</span></div>
+      <div class="fila"><span class="anot">Dato</span><span class="dato">2026-07-29 14:22 · rev 7</span></div>
+      <div class="fila"><span class="anot">Dato en línea</span><span class="mono">D:\trabajo\proyecto-ejemplo</span></div>
+    </div>
+    <p class="nota"><b>«Dato» y «dato en línea» son la misma voz a dos tamaños.</b> El primero encabeza o firma; el segundo va dentro de un renglón de lista, junto a texto de cuerpo, y por eso cede medio punto para no descuadrar la línea base.</p>
+  </div>
+
+  <div class="bloque">
+    <div class="anot">Reglas</div>
+    <p class="nota"><b>Las etiquetas van en anotación</b>, siempre: mono, versalitas, tracking ancho. Nunca en cuerpo con negritas.</p>
+    <p class="nota"><b>Los datos van en mono con numerales tabulares</b> — fechas, revisiones, rutas, identificadores. Así alinean en columna sin bailar.</p>
+    <p class="nota"><b>El texto largo no pasa de 64 caracteres de ancho.</b> Una ayuda que cruza toda la pantalla no se lee, se salta.</p>
+  </div>
+</div>
+<script>
+  document.querySelectorAll('.sw,.chip').forEach(function (b) {
+    b.addEventListener('click', function () {
+      b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+    });
+  });
+  document.querySelectorAll('.seg').forEach(function (g) {
+    g.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        g.querySelectorAll('button').forEach(function (o) { o.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+  document.querySelectorAll('.radios').forEach(function (g) {
+    g.querySelectorAll('.radio').forEach(function (r) {
+      r.addEventListener('click', function () {
+        g.querySelectorAll('.radio').forEach(function (o) { o.removeAttribute('data-on'); });
+        r.setAttribute('data-on','');
+      });
+    });
+  });
+</script>
+</body>
+</html>

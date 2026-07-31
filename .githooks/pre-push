@@ -1,0 +1,13 @@
+#!/bin/sh
+# El andon local: corre el contrato anti dato personal antes de empujar, y aborta el
+# push si hay un solo hallazgo. Se enciende con:
+#
+#   git config core.hooksPath .githooks
+#
+# /bin/sh a proposito, para que funcione igual en Git Bash de Windows y en Linux/macOS.
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+npx vitest run src/contratos/sin-dato-personal.test.ts
