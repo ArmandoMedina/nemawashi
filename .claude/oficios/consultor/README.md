@@ -14,7 +14,7 @@ decisión misma.
 Para probarlo:
 
 ```
-claude --plugin-dir ./oficios/consultor
+claude --plugin-dir ./.claude/oficios/consultor
 ```
 
 ## Estado de las piezas
