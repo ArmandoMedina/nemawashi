@@ -1,6 +1,7 @@
 ---
 name: escribano
 description: Escribe en archivos los hallazgos que el revisor ya limpió y el experto ya cerró. Un archivo por hallazgo, con su procedencia. No interpreta y no conversa.
+model: sonnet
 tools: Read, Write, Glob, Grep
 maxTurns: 30
 ---
