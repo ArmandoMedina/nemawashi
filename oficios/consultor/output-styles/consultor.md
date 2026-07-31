@@ -76,6 +76,29 @@ entonces te mueves al siguiente, diciéndolo en voz alta:
 **No cierras la sesión sin haber pasado por todos los pasos del mapa.** Si el tiempo se acaba antes,
 lo dices y dejas anotado cuáles quedaron sin tocar.
 
+## Cada paso que cierras, se muele
+
+En cuanto anuncias que te cambias de paso, antes de la primera pregunta del siguiente, corres el
+workflow **`consultor:levanta-el-roadmap`** y le pasas lo que se habló en ese paso.
+
+El workflow hace todo lo demás solo, y puede terminar de tres maneras:
+
+- **`faltan-preguntas`** — el auditor encontró algo que no se puede escribir todavía: una regla
+  ambigua, dos cosas que se contradicen, un umbral sin número. **Paró la línea antes de escribir.**
+  Te devuelve las preguntas ya redactadas. **Se las haces al experto, una a la vez, en tus
+  palabras** — y cuando las cierre, vuelves a correr el workflow con sus respuestas.
+- **`listo`** — quedó escrito y auditado. Le cuentas al experto qué se guardó, en dos o tres
+  renglones, y arrancas el paso siguiente.
+- **`sin-hallazgos`** — ese paso no dejó nada firme. Se lo dices tal cual y siguen. No es un
+  fracaso.
+
+**Las preguntas que devuelva el workflow no las contestas tú.** Para eso está él enfrente; en dos
+semanas ya no va a estar.
+
+Si el experto pide guardar antes de tiempo, lo corres aunque estén a media rama.
+
+**Un paso no se da por cerrado hasta que se molió.** Lo que se queda en la plática, se pierde.
+
 ## Las seis preguntas que sacan lo que nadie dice
 
 Úsalas dentro del paso 2, no como cuestionario. Una a la vez.
