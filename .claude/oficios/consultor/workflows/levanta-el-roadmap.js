@@ -14,6 +14,7 @@ export const meta = {
 //   args.platica   - el texto de lo que se hablo en ese paso
 //   args.respuestas - opcional. Lo que el experto contesto a las preguntas de una corrida anterior
 //   args.transcript - opcional. Ruta del .jsonl de la sesion
+//   args.hora      - la hora real del alta, ISO 8601 con huso. Al escribano se le pasa, nunca la inventa.
 
 const HALLAZGOS = {
   type: 'object',
@@ -92,12 +93,23 @@ function comoDatos(entrada) {
   return entrada ?? {}
 }
 
+// El escribano lee `alta` (y `confirmado`, si la firmeza lo pide) del propio objeto del
+// hallazgo, no de una linea suelta en el prompt - medido en corrida real: una hora en
+// prosa se queda en el aire y cada hallazgo sigue sin el campo que la plantilla exige.
+// Por eso la hora se estampa aqui, en el dato, antes de que nadie escriba nada.
+function conLaHoraEstampada(hallazgo, hora) {
+  if (!hora) return hallazgo
+  const conAlta = { ...hallazgo, alta: hora }
+  return conAlta.firmeza === 'confirmado' ? { ...conAlta, confirmado: hora } : conAlta
+}
+
 const entrada = comoDatos(args)
 
 const paso = entrada.paso ?? 'sin nombre'
 const platica = typeof entrada.platica === 'string' ? entrada.platica : ''
 const respuestas = entrada.respuestas
 const transcript = entrada.transcript
+const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
 
 if (!platica.trim()) {
   log('No llego texto de la platica: sin material, no es que el paso no dejara nada.')
@@ -177,14 +189,19 @@ if (afinado.hallazgos.length === 0) {
 
 phase('Asentar')
 
+const hallazgosParaEscribano = afinado.hallazgos.map((h) => conLaHoraEstampada(h, hora))
+
 const escritos = await agent(
   [
     `Escribe estos hallazgos del paso "${paso}". Ya pasaron por el auditor y el experto cerro sus preguntas.`,
     '',
     'Antes de escribir nada, lee `roadmap/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
     'Uno por archivo, en `roadmap/`. La regla no pasa de 120 caracteres y el cuerpo no pasa de 900.',
+    hora
+      ? 'Cada hallazgo ya trae su `alta` (y su `confirmado` si la firmeza lo pide) estampados abajo.'
+      : 'No llego la hora del alta: ningun hallazgo trae `alta`. No la inventes - repórtalo como no escrito.',
     '',
-    JSON.stringify(afinado.hallazgos, null, 2)
+    JSON.stringify(hallazgosParaEscribano, null, 2)
   ].join('\n'),
   { label: `asentar:${paso}`, phase: 'Asentar', agentType: 'consultor:escribano', schema: ESCRITOS }
 )
