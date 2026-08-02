@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest'
  * hallazgo, y que la ausencia de la hora se refleje en la ausencia del campo -nunca en un
  * valor inventado.
  *
- * El molino (`.claude/oficios/consultor/workflows/levanta-el-roadmap.js`) no es un modulo
+ * El molino (`.claude/workflows/levanta-el-roadmap.js`) no es un modulo
  * TypeScript importable: lo ejecuta el runtime de Claude Code inyectando `args`, `agent`,
  * `log` y `phase` como si fueran parametros de una funcion. Aqui se reproduce exactamente
  * esa forma de invocacion -sin marcarlo como AsyncFunction el archivo ni siquiera se puede
@@ -22,7 +22,7 @@ import { describe, it, expect } from 'vitest'
  * `agent` de la prueba es una funcion falsa que contesta lo minimo que cada schema exige.
  */
 
-const RUTA_MOLINO = resolve(process.cwd(), '.claude/oficios/consultor/workflows/levanta-el-roadmap.js')
+const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-roadmap.js')
 
 type Hallazgo = {
   regla: string
