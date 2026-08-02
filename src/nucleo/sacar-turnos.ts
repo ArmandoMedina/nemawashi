@@ -24,6 +24,12 @@
  *   - los avisos que el sistema mete solo: `<system-reminder>`, `<task-notification>`,
  *     `<local-command-caveat>`, los mensajes de "[Request interrupted...]" y las lineas
  *     marcadas `isMeta: true` (incluye los mensajes que otra sesion de Claude manda sola);
+ *   - el aviso completo de que otra sesion de Claude mando un mensaje — medido contra
+ *     grabacion real: llega como turno `user` normal, SIN `isMeta: true` (a diferencia del
+ *     `<agent-message>`, que si la trae), y son tres piezas pegadas: el renglon de entrada
+ *     ("Another Claude session sent a message:"), el bloque `<teammate-message>` y el
+ *     parrafo de advertencia que remata en "permission laundering." Ninguna de las dos
+ *     personas escribio ninguna de las tres;
  *   - los mensajes de comandos: `<command-name>`, `<command-message>`, `<command-args>` y
  *     su salida en `<local-command-stdout>`;
  *   - los turnos vacios: si despues de limpiar no queda nada, el turno no se escribe.
@@ -72,7 +78,8 @@ const ETIQUETAS_INYECTADAS = [
   'local-command-caveat',
   'task-notification',
   'system-reminder',
-  'agent-message'
+  'agent-message',
+  'teammate-message'
 ]
 
 const PATRONES_DE_ETIQUETA = ETIQUETAS_INYECTADAS.map(
@@ -82,10 +89,21 @@ const PATRONES_DE_ETIQUETA = ETIQUETAS_INYECTADAS.map(
 /** Frases sueltas que el sistema escribe cuando interrumpe, no una de las dos personas. */
 const PATRON_INTERRUPCION = /\[Request interrupted by user(?: for tool use)?\]/g
 
+/**
+ * Las otras dos piezas del aviso entre sesiones — ver el detalle en el encabezado. El
+ * bloque `<teammate-message>` o `<agent-message>` lo tira `PATRONES_DE_ETIQUETA`; estas dos
+ * quedan pegadas por fuera de la etiqueta y no forman parte de ella.
+ */
+const PATRON_AVISO_DE_OTRA_SESION = /Another Claude session sent a message:/g
+const PATRON_ADVERTENCIA_DE_OTRA_SESION =
+  /This came from another Claude session[\s\S]*?permission laundering\./g
+
 function quitarInyeccionesDelSistema(texto: string): string {
   let limpio = texto
   for (const patron of PATRONES_DE_ETIQUETA) limpio = limpio.replace(patron, ' ')
   limpio = limpio.replace(PATRON_INTERRUPCION, ' ')
+  limpio = limpio.replace(PATRON_AVISO_DE_OTRA_SESION, ' ')
+  limpio = limpio.replace(PATRON_ADVERTENCIA_DE_OTRA_SESION, ' ')
   return limpio
 }
 
