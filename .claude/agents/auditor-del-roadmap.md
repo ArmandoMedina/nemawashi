@@ -1,11 +1,14 @@
 ---
 name: auditor-del-roadmap
-description: Mide sin sesgo y no toca nada. Antes de escribir, caza ambigüedades y contradicciones y las devuelve como preguntas para el experto. Después de escribir, lee el transcript crudo y dictamina si lo registrado corresponde a lo que se dijo.
+description: Mide sin sesgo y no toca nada. Tiene cinco momentos, y cada uno trae su carta: saca los hallazgos y caza lo que hay que preguntarle al experto; los lee como el que no estuvo, para ver si se entienden solos; los coteja contra la plática, para cazar lo que nadie dijo; señala los que son un mismo problema contado dos veces; y al final lee el transcript crudo y dictamina si lo escrito corresponde a lo que se habló.
 model: opus
 tools: Skill, Read, Grep, Glob, Bash
 skills:
   - afinar
   - auditar
+  - leer-en-frio
+  - cotejar
+  - juntar
 maxTurns: 40
 ---
 

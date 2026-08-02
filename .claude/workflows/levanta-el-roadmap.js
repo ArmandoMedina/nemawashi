@@ -5,6 +5,8 @@ export const meta = {
   phases: [
     { title: 'Afinar', detail: 'sacar los hallazgos y cazar lo que no se puede escribir todavia' },
     { title: 'Leer en frio', detail: 'leer los hallazgos como el que no estuvo, antes de que lleguen a disco' },
+    { title: 'Cotejar', detail: 'cotejar cada hallazgo contra la platica que lo produjo, antes de que lleguen a disco' },
+    { title: 'Juntar', detail: 'senalar los hallazgos que son un mismo problema, antes de que lleguen a disco' },
     { title: 'Asentar', detail: 'un archivo por hallazgo' },
     { title: 'Auditar', detail: 'leer el crudo y dictaminar' }
   ]
@@ -112,6 +114,64 @@ const LECTURA_EN_FRIO = {
       }
     },
     itemsLeidos: { type: 'number', description: 'Cuantos items se leyeron en total.' }
+  }
+}
+
+// El cotejador SI ve la platica -a diferencia del lector en frio-, pero igual que el, no
+// decide con que se llena un hueco: solo nombra la frase que la platica no dijo. Por eso su
+// esquema tampoco trae un campo para «que poner en su lugar». Un invento no es solo la
+// mentira grande: un numero que nadie dijo, un motivo que nadie dio, una glosa razonable que
+// nadie sostuvo, tambien lo son.
+const COTEJO = {
+  type: 'object',
+  required: ['inventos', 'hallazgosCotejados'],
+  properties: {
+    inventos: {
+      type: 'array',
+      description: 'Solo los hallazgos que traen algo que la platica NO dijo. Los que si estan dichos no se listan.',
+      items: {
+        type: 'object',
+        required: ['indice', 'frase'],
+        properties: {
+          indice: { type: 'number', description: 'La posicion del hallazgo en el arreglo que se le mando, empezando en 0.' },
+          frase: { type: 'string', description: 'La frase inventada, copiada tal cual del hallazgo.' }
+        }
+      }
+    },
+    hallazgosCotejados: { type: 'number', description: 'Cuantos hallazgos se cotejaron en total.' }
+  }
+}
+
+// Quien junta tampoco ve la platica ni el nombre del paso -igual que el lector en frio-, porque
+// la pregunta se contesta con los hallazgos solos: «alguien podria atender esto sin atender
+// aquello?» es la misma pregunta que ya fija `afinar`. Por eso su esquema tampoco trae un campo
+// para «como quedaria el renglon junto»: quien junta senala el grupo, Afinar -que si tiene la
+// platica- es quien redacta.
+const JUNTAR = {
+  type: 'object',
+  required: ['grupos', 'hallazgosRevisados'],
+  properties: {
+    grupos: {
+      type: 'array',
+      description: 'Solo los grupos de hallazgos que son un mismo problema. Lo que ya esta bien repartido no se lista.',
+      items: {
+        type: 'object',
+        required: ['indices', 'porque'],
+        properties: {
+          indices: {
+            type: 'array',
+            items: { type: 'number' },
+            minItems: 2,
+            description: 'Las posiciones de los hallazgos que son uno solo, en el arreglo que se le mando, empezando en 0.'
+          },
+          porque: {
+            type: 'string',
+            description: 'Por que son el mismo problema, en una linea. No dice como quedaria el renglon junto.'
+          }
+        }
+      }
+    },
+    hallazgosRevisados: { type: 'number', description: 'Cuantos hallazgos se revisaron en total.' }
   }
 }
 
@@ -228,13 +288,27 @@ if (afinado.hallazgos.length === 0) {
   return { estado: 'sin-hallazgos', paso }
 }
 
-// --- Leer en frio ----------------------------------------------------------
-// El tercer auditor, y el unico que no ve el crudo ni la sesion: solo los hallazgos que
-// acaba de sacar Afinar, antes de que nadie los escriba. El auditor de mas abajo ya sabe lo
-// que paso porque lee el crudo - no puede sentir el hueco, lo tapo el mismo al leer. Este
-// llega como llega quien abra el item dentro de seis meses, y por eso corre ANTES de
-// Asentar: lo que marca nunca llega a tocar disco sin pasar primero por una vuelta de
-// arreglo. Ni transcript, ni platica, ni el nombre del paso - solo los hallazgos.
+// --- Leer en frio, Cotejar y Juntar -----------------------------------------
+// Tres auditores mas, y los unicos que corren antes de que nadie escriba nada. Miden cosas
+// distintas y por eso no se funden en uno: el lector en frio no ve el crudo ni la platica -
+// solo los hallazgos que acaba de sacar Afinar, para sentir el hueco que el que ya leyo la
+// sesion no puede sentir. El cotejador si ve la platica, y busca en ella lo que cada
+// hallazgo afirma: lo que no este dicho ahi, es un invento, por sensato que suene. Quien
+// junta tampoco ve la platica -igual que el lector en frio-, y mide otra cosa: si dos o mas
+// hallazgos, aunque cada uno se entienda y este dicho, son el mismo problema contado dos veces.
+//
+// Los tres corren ANTES de Asentar: lo que cualquiera marca nunca llega a tocar disco sin
+// pasar primero por una vuelta de arreglo.
+//
+// La primera vuelta es UNA sola, compartida entre los tres - RM-0009 prohibe una linea que
+// nunca cierra. Pero arreglar un hueco es escribir mas (y siempre se puede escribir mas: una
+// vuelta es el tope sano), y juntar un grupo es fundir dos renglones en uno, mientras que
+// arreglar un invento es QUITAR una frase, y quitar converge. Por eso el cotejo, y solo el
+// cotejo, tiene una segunda vuelta - el riesgo real de esa segunda vuelta es que quien repara
+// invente algo nuevo al reescribir (incluido al fundir un grupo), y esa vuelta caza justo eso.
+// Juntar no dispara su propia segunda vuelta: lo que siga picado tras la vuelta 1 se acepta y
+// se reporta, igual que un hueco que sobrevive. Dos es tope duro, lo impone el codigo y no el
+// agente, igual que el tope de preguntas al experto de mas arriba. Nunca hay una tercera.
 
 phase('Leer en frio')
 
@@ -254,6 +328,36 @@ function promptParaElLector(hallazgos) {
   ].join('\n')
 }
 
+function promptParaElCotejador(hallazgos, platicaDelPaso) {
+  return [
+    'Carga tu carta `cotejar` antes de leer nada.',
+    '',
+    'Coteja estos hallazgos contra la platica que los produjo. Por cada uno, busca en la',
+    'platica lo que el hallazgo afirma: lo que no este dicho ahi, nombralo como invento -no',
+    'importa que suene razonable. No corrijas, no reescribas y no propongas que poner: solo',
+    'senala la frase.',
+    '',
+    '--- La platica ---',
+    platicaDelPaso,
+    '',
+    '--- Los hallazgos ---',
+    JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
+  ].join('\n')
+}
+
+function promptParaJuntar(hallazgos) {
+  return [
+    'Carga tu carta `juntar` antes de leer nada.',
+    '',
+    'Revisa estos hallazgos y nada mas. No sabes de que paso salieron, no hay transcript que',
+    'abrir y no hay platica que consultar: la pregunta se contesta con los hallazgos solos.',
+    'Senala solo los grupos que son un mismo problema -«¿alguien podria atender esto sin',
+    'atender aquello?»-, y no digas como quedaria el renglon junto.',
+    '',
+    JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
+  ].join('\n')
+}
+
 let hallazgosFinales = afinado.hallazgos
 
 let primeraLectura = await agent(promptParaElLector(hallazgosFinales), {
@@ -263,15 +367,51 @@ let primeraLectura = await agent(promptParaElLector(hallazgosFinales), {
   schema: LECTURA_EN_FRIO
 })
 
+phase('Cotejar')
+
+let primerCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+  label: 'cotejar:primera',
+  phase: 'Cotejar',
+  agentType: 'auditor-del-roadmap',
+  schema: COTEJO
+})
+
+phase('Juntar')
+
+let primerJuntar = await agent(promptParaJuntar(hallazgosFinales), {
+  label: 'juntar:primera',
+  phase: 'Juntar',
+  agentType: 'auditor-del-roadmap',
+  schema: JUNTAR
+})
+
 let segundaLectura = null
+let segundoCotejo = null
+let segundoJuntar = null
+
+const huecosIniciales = primeraLectura ? primeraLectura.huecos : []
+const inventosIniciales = primerCotejo ? primerCotejo.inventos : []
+const gruposIniciales = primerJuntar ? primerJuntar.grupos : []
 
 // Una vuelta y ya. El tope lo impone el codigo, no el agente: sin tope, cada revision
 // encuentra algo mas y no se escribe nunca - la misma regla que RM-0009 fija para las
-// preguntas al experto, aplicada aqui a la vuelta interna con Afinar.
-if (primeraLectura && primeraLectura.huecos.length > 0) {
-  log(`${primeraLectura.huecos.length} hallazgo(s) no se entienden solos: una vuelta a Afinar para que los cuente completos.`)
+// preguntas al experto, aplicada aqui a la vuelta interna con Afinar. Las tres revisiones
+// comparten esta unica vuelta: si cualquiera de las tres marco algo, el encargo a Afinar
+// trae los tres tipos juntos, no uno despues del otro.
+if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciales.length > 0) {
+  log(
+    `${huecosIniciales.length} hallazgo(s) no se entienden solos, ${inventosIniciales.length} traen algo inventado ` +
+      `y ${gruposIniciales.length} grupo(s) son el mismo problema contado dos veces: ` +
+      'una vuelta a Afinar para que los cuente completos.'
+  )
 
-  const huecos = primeraLectura.huecos
+  const indicesMarcados = Array.from(
+    new Set([
+      ...huecosIniciales.map((h) => h.indice),
+      ...inventosIniciales.map((i) => i.indice),
+      ...gruposIniciales.flatMap((g) => g.indices)
+    ])
+  ).sort((a, b) => a - b)
 
   phase('Afinar')
 
@@ -279,10 +419,13 @@ if (primeraLectura && primeraLectura.huecos.length > 0) {
     [
       'Carga tu carta `afinar` antes de escribir nada.',
       '',
-      `Estos hallazgos del paso "${paso}" ya los sacaste, pero el lector en frio no los`,
-      'entiende solos: marco el renglon exacto y la forma en que falla. Cuenta el caso',
-      'completo con la platica que ya tienes abajo. **Esta vuelta es interna: no se le',
-      'pregunta nada al experto.**',
+      `Estos hallazgos del paso "${paso}" ya los sacaste, pero tres revisiones marcaron`,
+      'problemas antes de escribir nada: el lector en frio dice que no se entienden solos, el',
+      'cotejador encontro frases que la platica no dijo, y quien junta senalo grupos de',
+      'hallazgos que son un mismo problema contado dos veces -«¿alguien podria atender esto',
+      'sin atender aquello?» contesto que no. Arregla los tres tipos de una vez con la',
+      'platica que ya tienes abajo: donde haya un grupo, escribe el hallazgo unico que junta',
+      'lo que corresponde. **Esta vuelta es interna: no se le pregunta nada al experto.**',
       '',
       '--- La platica ---',
       platica,
@@ -291,10 +434,11 @@ if (primeraLectura && primeraLectura.huecos.length > 0) {
       'cada renglon marcado. `preguntas` va vacio.',
       '',
       JSON.stringify(
-        huecos.map((h) => ({
-          hallazgoOriginal: hallazgosFinales[h.indice],
-          renglonQueNoSeEntendio: h.renglon,
-          forma: h.forma
+        indicesMarcados.map((indice) => ({
+          hallazgoOriginal: hallazgosFinales[indice],
+          huecoMarcado: huecosIniciales.find((h) => h.indice === indice) ?? null,
+          inventoMarcado: inventosIniciales.find((i) => i.indice === indice) ?? null,
+          grupoMarcado: gruposIniciales.find((g) => g.indices.includes(indice)) ?? null
         })),
         null,
         2
@@ -305,7 +449,7 @@ if (primeraLectura && primeraLectura.huecos.length > 0) {
 
   if (arreglo && Array.isArray(arreglo.hallazgos)) {
     hallazgosFinales = hallazgosFinales.map((h, indice) => {
-      const posicion = huecos.findIndex((hueco) => hueco.indice === indice)
+      const posicion = indicesMarcados.indexOf(indice)
       return posicion === -1 ? h : (arreglo.hallazgos[posicion] ?? h)
     })
   }
@@ -318,12 +462,97 @@ if (primeraLectura && primeraLectura.huecos.length > 0) {
     agentType: 'auditor-del-roadmap',
     schema: LECTURA_EN_FRIO
   })
+
+  phase('Cotejar')
+
+  segundoCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+    label: 'cotejar:segunda',
+    phase: 'Cotejar',
+    agentType: 'auditor-del-roadmap',
+    schema: COTEJO
+  })
+
+  phase('Juntar')
+
+  // Corre otra vez para medir si el grupo quedo bien fundido - pero, a diferencia del cotejo,
+  // lo que siga marcando aqui NUNCA dispara la vuelta 2: esa vuelta es solo de inventos, porque
+  // reescribir un grupo puede inventar y ahi el cotejo tiene la ultima palabra, no quien junta.
+  segundoJuntar = await agent(promptParaJuntar(hallazgosFinales), {
+    label: 'juntar:segunda',
+    phase: 'Juntar',
+    agentType: 'auditor-del-roadmap',
+    schema: JUNTAR
+  })
 }
 
-// Lo que siga flaco tras la vuelta se escribe igual mas abajo: perder lo que dijo el
-// experto es peor que tenerlo mal redactado. Esta es la ultima lectura que corrio, y es la
-// que cuenta para el dictamen final.
+let tercerCotejo = null
+
+// La segunda vuelta: solo si el cotejo, ya despues de la primera vuelta, sigue marcando algo.
+// El hueco no la dispara por si solo -no es lo que esta vuelta caza- y su encargo trae SOLO
+// los inventos: lo que el lector en frio haya marcado en este punto ya no se manda, se acepta
+// como esta.
+const inventosTrasRonda1 = segundoCotejo ? segundoCotejo.inventos : []
+
+if (inventosTrasRonda1.length > 0) {
+  log(`${inventosTrasRonda1.length} invento(s) siguen despues de la primera vuelta: segunda y ultima vuelta, solo con los inventos.`)
+
+  phase('Afinar')
+
+  const arreglo2 = await agent(
+    [
+      'Carga tu carta `afinar` antes de escribir nada.',
+      '',
+      `Estos hallazgos del paso "${paso}" ya pasaron por una vuelta de arreglo, pero el`,
+      'cotejador sigue encontrando frases que la platica no dijo. **Esta es la segunda y',
+      'ultima vuelta, y trae SOLO los inventos** - lo que haya marcado el lector en frio en',
+      'este punto no se manda aqui, ya se acepto como esta. Quita la frase inventada con la',
+      'platica que ya tienes abajo. **Esta vuelta es interna: no se le pregunta nada al',
+      'experto.**',
+      '',
+      '--- La platica ---',
+      platica,
+      '',
+      'Reescribe, uno por uno y en el mismo orden, el hallazgo completo que corresponde a',
+      'cada invento marcado. `preguntas` va vacio.',
+      '',
+      JSON.stringify(
+        inventosTrasRonda1.map((i) => ({
+          hallazgoOriginal: hallazgosFinales[i.indice],
+          inventoMarcado: i
+        })),
+        null,
+        2
+      )
+    ].join('\n'),
+    { label: `afinar:arreglo-inventos:${paso}`, phase: 'Afinar', agentType: 'auditor-del-roadmap', schema: HALLAZGOS }
+  )
+
+  if (arreglo2 && Array.isArray(arreglo2.hallazgos)) {
+    hallazgosFinales = hallazgosFinales.map((h, indice) => {
+      const posicion = inventosTrasRonda1.findIndex((i) => i.indice === indice)
+      return posicion === -1 ? h : (arreglo2.hallazgos[posicion] ?? h)
+    })
+  }
+
+  phase('Cotejar')
+
+  tercerCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+    label: 'cotejar:tercera',
+    phase: 'Cotejar',
+    agentType: 'auditor-del-roadmap',
+    schema: COTEJO
+  })
+}
+
+// Lo que siga flaco, inventado o picado tras las vueltas se escribe igual mas abajo: perder lo
+// que dijo el experto es peor que tenerlo mal redactado, y es peor todavia dejar un invento sin
+// avisar o una lista partida sin marcar. `enFrio` es la ultima lectura que corrio -nunca hay
+// segunda vuelta para ella-, `cotejo` es el ultimo cotejo que corrio, que puede ser el de la
+// segunda vuelta, y `juntado` es la ultima medicion de quien junta -tampoco tiene segunda vuelta
+// propia, corre a lo mas dos veces, dentro de la vuelta 1.
 const enFrio = segundaLectura ?? primeraLectura
+const cotejo = tercerCotejo ?? segundoCotejo ?? primerCotejo
+const juntado = segundoJuntar ?? primerJuntar
 
 // --- Asentar -------------------------------------------------------------
 
@@ -380,15 +609,20 @@ const dictamen = await agent(
 // estado como «listo». Diecisiete de cincuenta y nueve items quedaron con la procedencia
 // apodada y nadie se entero. Una medicion que no cuenta es una medicion que no se hizo.
 //
-// Los dos caminos llegan a la misma falla desde lados opuestos: el auditor con el crudo
-// enfrente, el lector en frio sin nada. Basta uno para pararla — el de enfrente cacha lo
-// que se perdio, el de a ciegas cacha lo que solo se entiende habiendo estado.
+// Los cuatro caminos llegan a la misma falla desde lados distintos: el auditor con el crudo
+// enfrente, el lector en frio sin nada, el cotejador con la platica, y quien junta con los
+// hallazgos solos. Basta uno para pararla — el de enfrente cacha lo que se perdio, el de a
+// ciegas cacha lo que solo se entiende habiendo estado, el cotejador cacha lo que nadie dijo,
+// y quien junta cacha lo que se pudo decir en un solo renglon y se dijo en dos.
 const huecos = enFrio ? enFrio.huecos.length : 0
-const noSirve = (dictamen ? dictamen.sirve === false : false) || huecos > 0
+const inventos = cotejo ? cotejo.inventos.length : 0
+const grupos = juntado ? juntado.grupos.length : 0
+const noSirve = (dictamen ? dictamen.sirve === false : false) || huecos > 0 || inventos > 0 || grupos > 0
 
-// Los dos auditores se cuentan por separado: si uno de los dos no contesto, lo que el otro
-// si midio no se puede perder. Sumar en un solo numero que se vuelve null cuando falta el
-// dictamen dejaria pasar en silencio los huecos del lector en frio.
+// Los cuatro auditores se cuentan por separado: si uno no contesto, lo que los otros si
+// midieron no se puede perder. Sumar en un solo numero que se vuelve null cuando falta el
+// dictamen dejaria pasar en silencio lo que si midieron el lector en frio, el cotejador y
+// quien junta.
 const fallasDelCrudo = dictamen
   ? dictamen.inventado.length + dictamen.perdido.length + dictamen.malMarcado.length
   : null
@@ -397,21 +631,37 @@ const fallas = (fallasDelCrudo ?? 0) + (noSirve ? 1 : 0)
 
 if (fallasDelCrudo === null) log('El auditor no dictamino. Lo escrito queda sin medir contra el crudo.')
 if (!enFrio) log('El lector en frio no contesto. Nadie leyo los items como el que no estuvo.')
+if (!cotejo) log('El cotejador no contesto. Nadie coteja los hallazgos contra la platica.')
+if (!juntado) log('Quien junta no contesto. Nadie midio si los hallazgos escritos eran el mismo problema.')
 
-if (fallas === 0 && fallasDelCrudo !== null && enFrio) {
+if (fallas === 0 && fallasDelCrudo !== null && enFrio && cotejo && juntado) {
   log(`Paso "${paso}": ${escritos.archivos.length} hallazgo(s) escrito(s), sin fallas.`)
 } else if (fallas > 0) {
   log(`Paso "${paso}": ${escritos.archivos.length} escrito(s), ${fallas} falla(s) que el consultor tiene que atender.`)
 }
 
-// El porque puede venir de cualquiera de los dos, o de los dos. Se dicen los que haya:
-// un «no sirve» sin el renglon señalado no se puede arreglar.
+// El porque puede venir de cualquiera de los cuatro, o de varios a la vez. Se dicen los que
+// haya: un «no sirve» sin el renglon señalado no se puede arreglar.
 if (noSirve) {
   if (huecos > 0) {
     log(`No le alcanza a quien no estuvo: ${huecos} de ${enFrio.itemsLeidos} item(s) no se entienden solos, incluso despues de la vuelta de arreglo.`)
     for (const h of enFrio.huecos) {
       const ruta = escritos.archivos[h.indice]?.ruta ?? `hallazgo ${h.indice}`
       log(`  ${ruta} — ${h.forma}: «${h.renglon}»`)
+    }
+  }
+  if (inventos > 0) {
+    log(`Tiene lo inventado: ${inventos} de ${cotejo.hallazgosCotejados} hallazgo(s) traen algo que la platica no dijo, incluso despues de la vuelta de arreglo.`)
+    for (const i of cotejo.inventos) {
+      const ruta = escritos.archivos[i.indice]?.ruta ?? `hallazgo ${i.indice}`
+      log(`  ${ruta} — inventado: «${i.frase}»`)
+    }
+  }
+  if (grupos > 0) {
+    log(`Sigue picado: ${grupos} grupo(s) son el mismo problema contado dos veces, incluso despues de la vuelta de arreglo.`)
+    for (const g of juntado.grupos) {
+      const rutas = g.indices.map((indice) => escritos.archivos[indice]?.ruta ?? `hallazgo ${indice}`).join(', ')
+      log(`  ${rutas} — ${g.porque}`)
     }
   }
   if (dictamen?.sirve === false) log(`El auditor del crudo coincide: ${dictamen.porque}`)
@@ -424,5 +674,7 @@ return {
   archivos: escritos.archivos,
   noEscritos: escritos.noEscritos,
   dictamen,
-  enFrio
+  enFrio,
+  cotejo,
+  juntado
 }

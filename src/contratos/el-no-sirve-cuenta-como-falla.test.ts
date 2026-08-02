@@ -55,9 +55,15 @@ const SIN_FALLAS: Dictamen = {
 
 type Hueco = { indice: number; renglon: string; forma: string }
 type Lectura = { huecos: Hueco[]; itemsLeidos: number }
+type Invento = { indice: number; frase: string }
+type Cotejo = { inventos: Invento[]; hallazgosCotejados: number }
+type Grupo = { indices: number[]; porque: string }
+type Juntado = { grupos: Grupo[]; hallazgosRevisados: number }
 type Hallazgo = { regla: string; deDondeSalio: string; firmeza: string }
 
 const SIN_HUECOS: Lectura = { huecos: [], itemsLeidos: 1 }
+const SIN_INVENTOS: Cotejo = { inventos: [], hallazgosCotejados: 1 }
+const SIN_GRUPOS: Juntado = { grupos: [], hallazgosRevisados: 1 }
 const HALLAZGO_INICIAL: Hallazgo = { regla: 'una regla dicha', deDondeSalio: 'el caso contado', firmeza: 'dicho' }
 
 type OpcionesCorrida = {
@@ -65,16 +71,29 @@ type OpcionesCorrida = {
   preguntasDeAfinar?: Array<{ pregunta: string; falla: string }>
   /** Una entrada por cada vez que se llama a «Leer en frio»: la primera, y la de la vuelta si la hay. */
   lecturas?: Array<Lectura | null>
+  /** Una entrada por cada vez que se llama a «Cotejar»: la primera, y la de la vuelta si la hay. */
+  cotejos?: Array<Cotejo | null>
+  /** Una entrada por cada vez que se llama a «Juntar»: la primera, y la de la vuelta si la hay. Nunca hay una tercera. */
+  juntes?: Array<Juntado | null>
   /** Lo que devuelve Afinar en la vuelta de arreglo (segunda llamada con phase «Afinar»). */
   correccion?: Hallazgo[] | null
 }
 
 function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrida = {}): Promise<Corrida> {
-  const { dictamen = SIN_FALLAS, preguntasDeAfinar = [], lecturas = [SIN_HUECOS], correccion = null } = opciones
+  const {
+    dictamen = SIN_FALLAS,
+    preguntasDeAfinar = [],
+    lecturas = [SIN_HUECOS],
+    cotejos = [SIN_INVENTOS],
+    juntes = [SIN_GRUPOS],
+    correccion = null
+  } = opciones
 
   const llamadas: Llamada[] = []
   const dichos: string[] = []
   let lecturasServidas = 0
+  let cotejosServidos = 0
+  let juntesServidos = 0
 
   const agent = async (prompt: string, opts: Record<string, unknown>) => {
     llamadas.push({ prompt, opts })
@@ -89,6 +108,16 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
       const lectura = lecturas[lecturasServidas] ?? null
       lecturasServidas += 1
       return lectura
+    }
+    if (opts.phase === 'Cotejar') {
+      const cotejo = cotejos[cotejosServidos] ?? null
+      cotejosServidos += 1
+      return cotejo
+    }
+    if (opts.phase === 'Juntar') {
+      const junte = juntes[juntesServidos] ?? null
+      juntesServidos += 1
+      return junte
     }
     if (opts.phase === 'Asentar') {
       return { archivos: [{ ruta: 'roadmap/0099-de-prueba.md', regla: 'una regla dicha' }], noEscritos: [] }
@@ -327,5 +356,266 @@ describe('«leer en frio» corre antes de escribir, sobre los hallazgos y no sob
 
     expect(dichos.join('\n')).not.toContain('sin fallas')
     expect(dichos.join('\n')).toContain('lector en frio no contesto')
+  })
+})
+
+describe('«cotejar» corre antes de escribir, y a diferencia del lector en frio si ve la platica', () => {
+  it('el cotejo corre antes de Asentar', async () => {
+    const { llamadas } = await correrMolino(PLATICA)
+
+    const indiceCotejo = llamadas.findIndex((l) => l.opts.phase === 'Cotejar')
+    const indiceAsentar = llamadas.findIndex((l) => l.opts.phase === 'Asentar')
+
+    expect(indiceCotejo).toBeGreaterThanOrEqual(0)
+    expect(indiceAsentar).toBeGreaterThan(indiceCotejo)
+  })
+
+  it('al cotejador SI le llega la platica, a diferencia del lector en frio', async () => {
+    const { llamadas } = await correrMolino(PLATICA)
+    const cotejo = llamadas.find((l) => l.opts.phase === 'Cotejar')
+    if (!cotejo) throw new Error('el molino nunca llego a la fase Cotejar')
+
+    expect(cotejo.prompt).toContain('cotejar')
+    expect(cotejo.prompt).toContain(PLATICA.platica)
+  })
+
+  it('un invento marcado regresa a Afinar con su frase señalada, y lo corregido llega a Asentar', async () => {
+    const { llamadas } = await correrMolino(PLATICA, {
+      cotejos: [{ inventos: [{ indice: 0, frase: 'se le pregunto dos veces' }], hallazgosCotejados: 1 }, SIN_INVENTOS],
+      correccion: [{ ...HALLAZGO_INICIAL, deDondeSalio: 'se le pregunto una vez, sin el invento' }]
+    })
+
+    const vuelta = promptDeFase(llamadas, 'Afinar', 1)
+    expect(vuelta).toContain('se le pregunto dos veces')
+
+    const asentado = promptDeFase(llamadas, 'Asentar')
+    expect(asentado).toContain('se le pregunto una vez, sin el invento')
+  })
+
+  it('cuando las dos revisiones marcan cosas, hay UNA sola vuelta a Afinar, y el encargo trae los dos tipos', async () => {
+    const { llamadas } = await correrMolino(PLATICA, {
+      lecturas: [{ huecos: [{ indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }], itemsLeidos: 1 }, SIN_HUECOS],
+      cotejos: [{ inventos: [{ indice: 0, frase: 'se le pregunto dos veces' }], hallazgosCotejados: 1 }, SIN_INVENTOS]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(2)
+
+    const vuelta = promptDeFase(llamadas, 'Afinar', 1)
+    expect(vuelta).toContain('el caso contado')
+    expect(vuelta).toContain('apodo-de-caso')
+    expect(vuelta).toContain('se le pregunto dos veces')
+  })
+
+  it('sin inventos ni huecos, nada regresa a Afinar y el paso cierra en «listo»', async () => {
+    const { llamadas, salida } = await correrMolino(PLATICA, { lecturas: [SIN_HUECOS], cotejos: [SIN_INVENTOS] })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(1)
+    expect(salida.estado).toBe('listo')
+  })
+
+  it('lo que siga inventado tras las DOS vueltas se escribe igual: se llama a Asentar con ese hallazgo incluido', async () => {
+    const inventoQuePersiste = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { llamadas } = await correrMolino(PLATICA, {
+      cotejos: [
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 }
+      ]
+    })
+
+    const asentar = llamadas.find((l) => l.opts.phase === 'Asentar')
+    expect(asentar).toBeDefined()
+    const hallazgos = JSON.parse(asentar!.prompt.slice(asentar!.prompt.indexOf('['), asentar!.prompt.lastIndexOf(']') + 1))
+    expect(hallazgos).toHaveLength(1)
+  })
+
+  it('lo que sigue inventado tras las dos vueltas se reporta en el log con su archivo y su frase, no solo un conteo', async () => {
+    const inventoQuePersiste = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { salida, dichos } = await correrMolino(PLATICA, {
+      cotejos: [
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersiste], hallazgosCotejados: 1 }
+      ]
+    })
+
+    expect(salida.estado).toBe('no-sirve')
+    expect(dichos.join('\n')).toContain('roadmap/0099-de-prueba.md')
+    expect(dichos.join('\n')).toContain('se le pregunto dos veces')
+  })
+
+  it('si el cotejador no contesta, no se cuenta como que todo salio bien', async () => {
+    const { dichos } = await correrMolino(PLATICA, { cotejos: [null] })
+
+    expect(dichos.join('\n')).not.toContain('sin fallas')
+    expect(dichos.join('\n')).toContain('cotejador no contesto')
+  })
+
+  it('con inventos que sobreviven la primera vuelta, hay una SEGUNDA llamada de arreglo a Afinar, y su encargo trae solo los inventos', async () => {
+    const huecoQuePersiste = { indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }
+    const inventoQuePersisteUnaVuelta = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { llamadas } = await correrMolino(PLATICA, {
+      // El hueco sigue marcado en las dos lecturas: no dispara segunda vuelta por si solo,
+      // y el encargo de la segunda vuelta no lo tiene que traer.
+      lecturas: [{ huecos: [huecoQuePersiste], itemsLeidos: 1 }, { huecos: [huecoQuePersiste], itemsLeidos: 1 }],
+      cotejos: [
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        SIN_INVENTOS
+      ],
+      // El default del mock reescribe con «el caso contado, ya reescrito completo», y esa
+      // frase chocaria con la aserción de abajo por casualidad de las palabras, no por una
+      // falla real. Se manda una reescritura explicita sin esas palabras.
+      correccion: [{ ...HALLAZGO_INICIAL, deDondeSalio: 'reescrito sin la frase inventada' }]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(3)
+
+    const segundaVuelta = promptDeFase(llamadas, 'Afinar', 2)
+    expect(segundaVuelta).toContain('se le pregunto dos veces')
+    expect(segundaVuelta).not.toContain('apodo-de-caso')
+    expect(segundaVuelta).not.toContain('el caso contado')
+  })
+
+  it('nunca hay una tercera vuelta, aunque el cotejo siga marcando despues de la segunda: la linea sigue y escribe', async () => {
+    const inventoQueNuncaSeArregla = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { llamadas, salida } = await correrMolino(PLATICA, {
+      cotejos: [
+        { inventos: [inventoQueNuncaSeArregla], hallazgosCotejados: 1 },
+        { inventos: [inventoQueNuncaSeArregla], hallazgosCotejados: 1 },
+        { inventos: [inventoQueNuncaSeArregla], hallazgosCotejados: 1 }
+      ]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    const llamadasCotejar = llamadas.filter((l) => l.opts.phase === 'Cotejar')
+    const llamadasAsentar = llamadas.filter((l) => l.opts.phase === 'Asentar')
+
+    expect(llamadasAfinar).toHaveLength(3)
+    expect(llamadasCotejar).toHaveLength(3)
+    expect(llamadasAsentar).toHaveLength(1)
+    expect(salida.estado).toBe('no-sirve')
+  })
+
+  it('un hueco que sobrevive la primera vuelta NO provoca segunda vuelta por si solo', async () => {
+    const huecoQuePersiste = { indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }
+    const { llamadas, salida } = await correrMolino(PLATICA, {
+      lecturas: [{ huecos: [huecoQuePersiste], itemsLeidos: 1 }, { huecos: [huecoQuePersiste], itemsLeidos: 1 }],
+      cotejos: [SIN_INVENTOS, SIN_INVENTOS]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(2)
+    expect(salida.estado).toBe('no-sirve')
+  })
+
+  it('sin inventos ni huecos, sigue sin haber ninguna vuelta y el paso cierra en «listo»', async () => {
+    const { llamadas, salida } = await correrMolino(PLATICA, { lecturas: [SIN_HUECOS], cotejos: [SIN_INVENTOS] })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(1)
+    expect(salida.estado).toBe('listo')
+  })
+})
+
+describe('«juntar» señala los hallazgos que son un mismo problema, y corre en la vuelta 1, nunca en la vuelta 2', () => {
+  it('quien junta corre antes de Asentar', async () => {
+    const { llamadas } = await correrMolino(PLATICA)
+
+    const indiceJuntar = llamadas.findIndex((l) => l.opts.phase === 'Juntar')
+    const indiceAsentar = llamadas.findIndex((l) => l.opts.phase === 'Asentar')
+
+    expect(indiceJuntar).toBeGreaterThanOrEqual(0)
+    expect(indiceAsentar).toBeGreaterThan(indiceJuntar)
+  })
+
+  it('a quien junta no le llega la platica ni el nombre del paso', async () => {
+    const { llamadas } = await correrMolino(PLATICA)
+    const juntar = llamadas.find((l) => l.opts.phase === 'Juntar')
+    if (!juntar) throw new Error('el molino nunca llego a la fase Juntar')
+
+    expect(juntar.prompt).toContain('juntar')
+    expect(juntar.prompt).not.toContain(PLATICA.platica)
+    expect(juntar.prompt).not.toContain(PLATICA.paso)
+  })
+
+  it('su esquema pide indices y motivo, y no tiene campo para redactar el renglon junto', async () => {
+    const juntar = (await correrMolino(PLATICA)).llamadas.find((l) => l.opts.phase === 'Juntar')
+    const schema = JSON.stringify(juntar?.opts.schema ?? {})
+
+    expect(schema).toContain('indices')
+    expect(schema).toContain('porque')
+    expect(schema).not.toMatch(/renglonJunto|comoQuedaria|redact|reescri/i)
+  })
+
+  it('un grupo marcado regresa a Afinar en la vuelta 1, en el mismo encargo que los huecos y los inventos', async () => {
+    const { llamadas } = await correrMolino(PLATICA, {
+      lecturas: [{ huecos: [{ indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }], itemsLeidos: 1 }, SIN_HUECOS],
+      cotejos: [{ inventos: [{ indice: 0, frase: 'se le pregunto dos veces' }], hallazgosCotejados: 1 }, SIN_INVENTOS],
+      juntes: [{ grupos: [{ indices: [0, 1], porque: 'son el mismo problema' }], hallazgosRevisados: 2 }, SIN_GRUPOS]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(2)
+
+    const vuelta = promptDeFase(llamadas, 'Afinar', 1)
+    expect(vuelta).toContain('el caso contado')
+    expect(vuelta).toContain('apodo-de-caso')
+    expect(vuelta).toContain('se le pregunto dos veces')
+    expect(vuelta).toContain('son el mismo problema')
+  })
+
+  it('un grupo por si solo, sin huecos ni inventos, tambien dispara la vuelta 1', async () => {
+    const { llamadas } = await correrMolino(PLATICA, {
+      juntes: [{ grupos: [{ indices: [0, 1], porque: 'son el mismo problema' }], hallazgosRevisados: 2 }, SIN_GRUPOS]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(2)
+  })
+
+  it('un grupo que sobrevive la vuelta 1 NO dispara la vuelta 2: esa sigue siendo solo de inventos', async () => {
+    const grupoQuePersiste = { indices: [0, 1], porque: 'son el mismo problema' }
+    const { llamadas, salida } = await correrMolino(PLATICA, {
+      juntes: [{ grupos: [grupoQuePersiste], hallazgosRevisados: 2 }, { grupos: [grupoQuePersiste], hallazgosRevisados: 2 }],
+      cotejos: [SIN_INVENTOS, SIN_INVENTOS]
+    })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(2)
+    expect(salida.estado).toBe('no-sirve')
+  })
+
+  it('lo que sigue picado tras la vuelta se escribe igual y sale en el log con sus archivos', async () => {
+    const grupoQuePersiste = { indices: [0, 1], porque: 'son el mismo problema' }
+    const { llamadas, dichos } = await correrMolino(PLATICA, {
+      juntes: [{ grupos: [grupoQuePersiste], hallazgosRevisados: 2 }, { grupos: [grupoQuePersiste], hallazgosRevisados: 2 }]
+    })
+
+    const asentar = llamadas.find((l) => l.opts.phase === 'Asentar')
+    expect(asentar).toBeDefined()
+    const hallazgos = JSON.parse(asentar!.prompt.slice(asentar!.prompt.indexOf('['), asentar!.prompt.lastIndexOf(']') + 1))
+    expect(hallazgos).toHaveLength(1)
+
+    expect(dichos.join('\n')).toContain('roadmap/0099-de-prueba.md')
+    expect(dichos.join('\n')).toContain('son el mismo problema')
+  })
+
+  it('sin huecos, sin inventos y sin grupos, no hay ninguna vuelta y el paso cierra en «listo»', async () => {
+    const { llamadas, salida } = await correrMolino(PLATICA, { lecturas: [SIN_HUECOS], cotejos: [SIN_INVENTOS], juntes: [SIN_GRUPOS] })
+
+    const llamadasAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar')
+    expect(llamadasAfinar).toHaveLength(1)
+    expect(salida.estado).toBe('listo')
+  })
+
+  it('si quien junta no contesta, no se cuenta como que todo salio bien', async () => {
+    const { dichos } = await correrMolino(PLATICA, { juntes: [null] })
+
+    expect(dichos.join('\n')).not.toContain('sin fallas')
+    expect(dichos.join('\n')).toContain('junta no contesto')
   })
 })
