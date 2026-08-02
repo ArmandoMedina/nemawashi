@@ -1,11 +1,11 @@
 ---
-id: RM-0069
-regla: "El molino copia el registro literal tal como se dijo; el consultor deja de redactarlo."
+id: RM-0109
+regla: "Un programa copia el registro literal del tramo; el consultor deja de redactar el resumen."
 paso: El molino
 firmeza: confirmado
-alta: 2026-08-01T20:22:48-06:00
-confirmado: 2026-08-01T20:22:48-06:00
-puntero: 0002-el-molino-copia-no-redacta.md
+alta: 2026-08-02T10:05:00-06:00
+confirmado: 2026-08-02T10:05:00-06:00
+puntero: 0019-un-programa-copia-el-tramo-no-el-consultor.md
 apetito:
 ---
 

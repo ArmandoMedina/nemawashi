@@ -1,11 +1,11 @@
 ---
-id: RM-0073
-regla: "El consultor delimita el paso disparando la corrida, no escribiendo una marca en la conversación."
+id: RM-0110
+regla: "La marca de firmeza no la pone el agente que conversa: la pone quien mide, leyendo lo grabado."
 paso: El molino
 firmeza: dicho
-alta: 2026-08-01T20:22:48-06:00
+alta: 2026-08-02T10:05:00-06:00
 confirmado:
-puntero: 0003-la-corrida-marca-el-corte-del-paso.md
+puntero: 0020-la-marca-de-firmeza-la-pone-quien-mide.md
 apetito:
 ---
 

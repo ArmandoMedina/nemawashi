@@ -1,11 +1,11 @@
 ---
-id: RM-0107
-regla: "Si a quien redacta los ítems no le llega la hora del alta, no escribe el ítem y lo reporta: nunca la inventa."
+id: RM-0111
+regla: "El tramo se delimita por cuándo se dispara el proceso, no por marcas dentro de la plática."
 paso: El molino
 firmeza: dicho
-alta: 2026-08-02T09:15:00-06:00
+alta: 2026-08-02T10:05:00-06:00
 confirmado:
-puntero: 0018-la-hora-del-alta-no-se-inventa.md
+puntero: 0021-el-tramo-se-delimita-por-la-corrida-no-por-marcas.md
 apetito:
 ---
 

@@ -1,11 +1,11 @@
 ---
-id: RM-0074
-regla: "El sacador de turnos y el rastro de corridas no existen: mientras falten, el arreglo del molino es sólo plan."
+id: RM-0108
+regla: "Si el texto no cabe en el renglón, no se recorta: va entero al documento con puntero; el tope no sube."
 paso: El molino
 firmeza: dicho
-alta: 2026-08-01T20:22:48-06:00
+alta: 2026-08-02T10:05:00-06:00
 confirmado:
-puntero: 0004-dos-piezas-del-molino-no-existen.md
+puntero: 0018-el-tope-de-letras-no-se-sube.md
 apetito:
 ---
 
