@@ -208,6 +208,14 @@ const respuestas = entrada.respuestas
 const transcript = entrada.transcript
 const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
 
+// Las dos son turno del experto y las dos valen igual como respaldo: lo que el cotejador
+// mide contra "lo que se dijo" tiene que incluir la ronda de respuestas, no solo la platica
+// inicial. Sin esto, todo hallazgo que salio de las respuestas le parece inventado al
+// cotejador -no esta en lo unico que el ve- y la vuelta de arreglo lo borra.
+const loQueDijoElExperto = respuestas
+  ? platica + '\n\n--- Lo que el experto contesto despues ---\n' + respuestas
+  : platica
+
 if (!platica.trim()) {
   log('No llego texto de la platica: sin material, no es que el paso no dejara nada.')
   return { estado: 'sin-material', paso, motivo: 'la platica llego vacia o no llego' }
@@ -328,17 +336,17 @@ function promptParaElLector(hallazgos) {
   ].join('\n')
 }
 
-function promptParaElCotejador(hallazgos, platicaDelPaso) {
+function promptParaElCotejador(hallazgos, loQueDijoElExperto) {
   return [
     'Carga tu carta `cotejar` antes de leer nada.',
     '',
-    'Coteja estos hallazgos contra la platica que los produjo. Por cada uno, busca en la',
-    'platica lo que el hallazgo afirma: lo que no este dicho ahi, nombralo como invento -no',
+    'Coteja estos hallazgos contra todo lo que dijo el experto. Por cada uno, busca en ese',
+    'material lo que el hallazgo afirma: lo que no este dicho ahi, nombralo como invento -no',
     'importa que suene razonable. No corrijas, no reescribas y no propongas que poner: solo',
     'senala la frase.',
     '',
-    '--- La platica ---',
-    platicaDelPaso,
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto,
     '',
     '--- Los hallazgos ---',
     JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
@@ -369,7 +377,7 @@ let primeraLectura = await agent(promptParaElLector(hallazgosFinales), {
 
 phase('Cotejar')
 
-let primerCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+let primerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
   label: 'cotejar:primera',
   phase: 'Cotejar',
   agentType: 'auditor-del-roadmap',
@@ -421,14 +429,15 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
       '',
       `Estos hallazgos del paso "${paso}" ya los sacaste, pero tres revisiones marcaron`,
       'problemas antes de escribir nada: el lector en frio dice que no se entienden solos, el',
-      'cotejador encontro frases que la platica no dijo, y quien junta senalo grupos de',
+      'cotejador encontro frases que no estan dichas, y quien junta senalo grupos de',
       'hallazgos que son un mismo problema contado dos veces -«¿alguien podria atender esto',
-      'sin atender aquello?» contesto que no. Arregla los tres tipos de una vez con la',
-      'platica que ya tienes abajo: donde haya un grupo, escribe el hallazgo unico que junta',
-      'lo que corresponde. **Esta vuelta es interna: no se le pregunta nada al experto.**',
+      'sin atender aquello?» contesto que no. Arregla los tres tipos de una vez con lo que',
+      'dijo el experto, que ya tienes abajo: donde haya un grupo, escribe el hallazgo unico',
+      'que junta lo que corresponde. **Esta vuelta es interna: no se le pregunta nada al',
+      'experto.**',
       '',
-      '--- La platica ---',
-      platica,
+      '--- Lo que dijo el experto ---',
+      loQueDijoElExperto,
       '',
       'Reescribe, uno por uno y en el mismo orden, el hallazgo completo que corresponde a',
       'cada renglon marcado. `preguntas` va vacio.',
@@ -465,7 +474,7 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
 
   phase('Cotejar')
 
-  segundoCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+  segundoCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
     label: 'cotejar:segunda',
     phase: 'Cotejar',
     agentType: 'auditor-del-roadmap',
@@ -503,14 +512,14 @@ if (inventosTrasRonda1.length > 0) {
       'Carga tu carta `afinar` antes de escribir nada.',
       '',
       `Estos hallazgos del paso "${paso}" ya pasaron por una vuelta de arreglo, pero el`,
-      'cotejador sigue encontrando frases que la platica no dijo. **Esta es la segunda y',
+      'cotejador sigue encontrando frases que no estan dichas. **Esta es la segunda y',
       'ultima vuelta, y trae SOLO los inventos** - lo que haya marcado el lector en frio en',
-      'este punto no se manda aqui, ya se acepto como esta. Quita la frase inventada con la',
-      'platica que ya tienes abajo. **Esta vuelta es interna: no se le pregunta nada al',
-      'experto.**',
+      'este punto no se manda aqui, ya se acepto como esta. Quita la frase inventada con lo',
+      'que dijo el experto, que ya tienes abajo. **Esta vuelta es interna: no se le pregunta',
+      'nada al experto.**',
       '',
-      '--- La platica ---',
-      platica,
+      '--- Lo que dijo el experto ---',
+      loQueDijoElExperto,
       '',
       'Reescribe, uno por uno y en el mismo orden, el hallazgo completo que corresponde a',
       'cada invento marcado. `preguntas` va vacio.',
@@ -536,7 +545,7 @@ if (inventosTrasRonda1.length > 0) {
 
   phase('Cotejar')
 
-  tercerCotejo = await agent(promptParaElCotejador(hallazgosFinales, platica), {
+  tercerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
     label: 'cotejar:tercera',
     phase: 'Cotejar',
     agentType: 'auditor-del-roadmap',

@@ -521,6 +521,104 @@ describe('«cotejar» corre antes de escribir, y a diferencia del lector en frio
   })
 })
 
+describe('el cotejador ve todo lo que dijo el experto, la platica y las respuestas', () => {
+  const CON_RESPUESTAS = {
+    ...PLATICA,
+    respuestas: 'El experto contesto: la marca de firmeza la pone el auditor, no el escribano.'
+  }
+
+  it('cuando llegan respuestas, el prompt del cotejador las contiene en la primera vuelta y en la de arreglo', async () => {
+    const { llamadas } = await correrMolino(CON_RESPUESTAS, {
+      cotejos: [{ inventos: [{ indice: 0, frase: 'algo inventado' }], hallazgosCotejados: 1 }, SIN_INVENTOS]
+    })
+
+    const primeraVuelta = promptDeFase(llamadas, 'Cotejar', 0)
+    const segundaVuelta = promptDeFase(llamadas, 'Cotejar', 1)
+
+    expect(primeraVuelta).toContain(CON_RESPUESTAS.respuestas)
+    expect(segundaVuelta).toContain(CON_RESPUESTAS.respuestas)
+  })
+
+  it('cuando llegan respuestas, el prompt del lector en frio no las contiene: sigue ciego', async () => {
+    const { llamadas } = await correrMolino(CON_RESPUESTAS)
+    const lector = llamadas.find((l) => l.opts.phase === 'Leer en frio')
+    if (!lector) throw new Error('el molino nunca llego a la fase Leer en frio')
+
+    expect(lector.prompt).not.toContain(CON_RESPUESTAS.respuestas)
+  })
+
+  it('cuando llegan respuestas, a quien junta tampoco le llegan', async () => {
+    const { llamadas } = await correrMolino(CON_RESPUESTAS)
+    const juntar = llamadas.find((l) => l.opts.phase === 'Juntar')
+    if (!juntar) throw new Error('el molino nunca llego a la fase Juntar')
+
+    expect(juntar.prompt).not.toContain(CON_RESPUESTAS.respuestas)
+  })
+
+  it('sin respuestas, el cotejador sigue recibiendo la platica y todo funciona igual que hoy', async () => {
+    const { llamadas } = await correrMolino(PLATICA)
+    const cotejo = llamadas.find((l) => l.opts.phase === 'Cotejar')
+    if (!cotejo) throw new Error('el molino nunca llego a la fase Cotejar')
+
+    expect(cotejo.prompt).toContain(PLATICA.platica)
+  })
+})
+
+describe('las vueltas de arreglo de Afinar ven todo lo que dijo el experto, no solo la platica', () => {
+  const CON_RESPUESTAS = {
+    ...PLATICA,
+    respuestas: 'El experto contesto: la marca de firmeza la pone el auditor, no el escribano.'
+  }
+
+  it('con respuestas, el prompt de la vuelta compartida (huecos/inventos/grupos) las contiene', async () => {
+    const { llamadas } = await correrMolino(CON_RESPUESTAS, {
+      lecturas: [{ huecos: [{ indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }], itemsLeidos: 1 }, SIN_HUECOS],
+      cotejos: [SIN_INVENTOS, SIN_INVENTOS]
+    })
+
+    const vuelta = promptDeFase(llamadas, 'Afinar', 1)
+    expect(vuelta).toContain(CON_RESPUESTAS.respuestas)
+  })
+
+  it('con respuestas, el prompt de la vuelta de solo-inventos las contiene', async () => {
+    const inventoQuePersisteUnaVuelta = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { llamadas } = await correrMolino(CON_RESPUESTAS, {
+      cotejos: [
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        SIN_INVENTOS
+      ]
+    })
+
+    const segundaVuelta = promptDeFase(llamadas, 'Afinar', 2)
+    expect(segundaVuelta).toContain(CON_RESPUESTAS.respuestas)
+  })
+
+  it('sin respuestas, la vuelta compartida sigue recibiendo la platica y nada cambia', async () => {
+    const { llamadas } = await correrMolino(PLATICA, {
+      lecturas: [{ huecos: [{ indice: 0, renglon: 'el caso contado', forma: 'apodo-de-caso' }], itemsLeidos: 1 }, SIN_HUECOS],
+      cotejos: [SIN_INVENTOS, SIN_INVENTOS]
+    })
+
+    const vuelta = promptDeFase(llamadas, 'Afinar', 1)
+    expect(vuelta).toContain(PLATICA.platica)
+  })
+
+  it('sin respuestas, la vuelta de solo-inventos sigue recibiendo la platica y nada cambia', async () => {
+    const inventoQuePersisteUnaVuelta = { indice: 0, frase: 'se le pregunto dos veces' }
+    const { llamadas } = await correrMolino(PLATICA, {
+      cotejos: [
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        { inventos: [inventoQuePersisteUnaVuelta], hallazgosCotejados: 1 },
+        SIN_INVENTOS
+      ]
+    })
+
+    const segundaVuelta = promptDeFase(llamadas, 'Afinar', 2)
+    expect(segundaVuelta).toContain(PLATICA.platica)
+  })
+})
+
 describe('«juntar» señala los hallazgos que son un mismo problema, y corre en la vuelta 1, nunca en la vuelta 2', () => {
   it('quien junta corre antes de Asentar', async () => {
     const { llamadas } = await correrMolino(PLATICA)
