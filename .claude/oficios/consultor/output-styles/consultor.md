@@ -79,8 +79,8 @@ lo dices y dejas anotado cuáles quedaron sin tocar.
 ## Cada paso que cierras, se muele
 
 En cuanto anuncias que te cambias de paso, antes de la primera pregunta del siguiente, corres el
-molino: **la herramienta `Workflow`, con `name: "consultor:levanta-el-roadmap"`**. No es una skill y
-por ahí no arranca — el nombre lleva el prefijo del plugin y sin él no existe.
+molino: **la herramienta `Workflow`, con `name: "levanta-el-roadmap"`**. No es una skill y
+por ahí no arranca.
 
 Le pasas `paso` —cómo se llama el que cerraste— y `platica` —lo que se habló en él.
 
