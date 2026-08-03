@@ -352,6 +352,7 @@
           <button class="secc" type="button" aria-expanded="false"><span class="n">3</span><span>Reglas permanentes</span><span class="car" aria-hidden="true">▸</span></button>
           <div class="subs">
             <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p3a">Fuentes de configuración</button>
+            <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p3c">Arranque limpio</button>
             <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p3b">Lo no disponible</button>
           </div>
         </div>
@@ -371,6 +372,15 @@
             <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p5b">Carpetas</button>
             <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p5c">Navegador y entorno</button>
             <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p5d">Voz</button>
+          </div>
+        </div>
+        <div class="grupo">
+          <button class="secc" type="button" aria-expanded="false"><span class="n">6</span><span>La sesión larga</span><span class="car" aria-hidden="true">▸</span></button>
+          <div class="subs">
+            <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p6a">Memoria de la plática</button>
+            <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p6b">Lo que aprende</button>
+            <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p6c">La espera del experto</button>
+            <button class="subitem" type="button" role="tab" aria-selected="false" data-tab="p6d">Deshacer</button>
           </div>
         </div>
       </nav>
@@ -417,6 +427,50 @@
           </div>
           <span class="hint">Si lo bajas, contesta más rápido y razona menos antes de actuar. Si lo subes a máximo, cada respuesta tarda bastante más y sólo paga en trabajo difícil.</span>
         </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="true" aria-label="Candar la lista de modelos"></button>
+          <div>
+            <b>Candar la lista de modelos</b>
+            <span class="hint">Encendido, sólo se puede elegir de la lista de arriba. Apagado, cualquiera puede correr una entrevista con el modelo más barato y nadie se enteraría hasta leer los hallazgos.</span>
+          </div>
+        </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="true" aria-label="Razona antes de contestar"></button>
+          <div>
+            <b>Razona antes de contestar</b>
+            <span class="hint">Es distinto de cuánto piensa: apagado, no razona nada, y el campo de arriba deja de tener efecto. Sirve para respuestas mecánicas; en una entrevista, no.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="grouplabel">Cómo reparte el pensamiento</span>
+          <div class="seg" role="group" aria-label="Reparto del pensamiento">
+            <button type="button" aria-pressed="true">Como le convenga <span class="def">predeterminado</span></button>
+            <button type="button" aria-pressed="false">Lo mismo siempre</button>
+          </div>
+          <span class="hint">Como le convenga, decide turno por turno y gasta poco en lo fácil. Lo mismo siempre gasta igual en todo — más caro, y más predecible.</span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="largo">Largo máximo de una respuesta</label>
+            <div class="unidad">
+              <input id="largo" type="text" value="32000" />
+              <span class="post">piezas de texto</span>
+            </div>
+            <span class="hint">Si lo pones corto, una respuesta larga se corta a media frase. Si lo dejas en blanco, usa el máximo del modelo.</span>
+          </div>
+          <div class="field">
+            <label for="paciencia">Paciencia con el servidor</label>
+            <div class="unidad">
+              <input id="paciencia" type="text" value="600000" />
+              <span class="post">milisegundos</span>
+            </div>
+            <span class="hint">Cuánto espera una respuesta antes de darla por perdida. De fábrica son diez minutos; bajarlo mucho corta respuestas que sí venían en camino.</span>
+          </div>
+        </div>
       </section>
 
       <section class="panel" id="p1b">
@@ -424,6 +478,16 @@
           <div class="anot">Criterio</div>
           <h2>Instrucciones</h2>
           <p>Con qué arranca antes de que nadie le escriba nada. Vale para todos los flujos — lo propio de cada flujo va en su flujo, no aquí.</p>
+        </div>
+
+        <div class="field">
+          <label for="oficio">Oficio de la sesión</label>
+          <select id="oficio">
+            <option>Consultor — conduce al experto de negocio</option>
+            <option>Desarrollador — conduce a quien va a construir</option>
+            <option>De fábrica — programador</option>
+          </select>
+          <span class="hint">Es el campo que decide de qué trabaja la sesión, y el único que puede <b>quitarle</b> el método de programador. Sin esto, por debajo sigue tratando cada tarea como una tarea de código, y las instrucciones de abajo pelean contra algo que sigue puesto.</span>
         </div>
 
         <div class="field">
@@ -446,6 +510,36 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
             <div><b>Si escribes aquí, se borra la personalidad de fábrica completa.</b>
             Deja de saber cómo usar sus propias herramientas. Casi siempre lo que quieres es el campo de arriba, que suma en vez de reemplazar.</div>
           </div>
+        </div>
+
+        <div class="field">
+          <label for="instr-agentes">Instrucción para todos los agentes</label>
+          <textarea id="instr-agentes" rows="3">Devuelve la ruta o el comando del que salió cada dato.
+Lo que no pudiste medir, dilo — no lo rellenes.</textarea>
+          <span class="hint">Se le suma a cada agente que se llame, además de su propia ficha. Hoy los agentes no comparten nada: lo que quieras que valga para todos, o va aquí o se repite en cada uno y un día dejan de decir lo mismo.</span>
+        </div>
+
+        <div class="field">
+          <div class="listhead">
+            <span class="grouplabel">Reglas permanentes de la sesión</span>
+            <button class="add" type="button" data-simple="regla"><span aria-hidden="true">+</span> Agregar regla</button>
+          </div>
+          <div class="list" data-simple-list="regla">
+            <div class="item"><span class="nm">Cómo se trabaja aquí</span><span class="ds">Siempre, desde el primer momento</span><button class="edit" type="button">Editar</button></div>
+            <div class="item"><span class="nm">Al tocar las maquetas</span><span class="ds">Sólo cuando se abre un archivo de <span class="mono">design/</span></span><button class="edit" type="button">Editar</button></div>
+          </div>
+          <span class="hint">Llegan solas, sin que nadie las invoque, y por eso conviene que sean cortas: lo que está siempre ocupa lugar siempre. Una regla con carpeta entra sólo al tocar esa carpeta; una sin carpeta entra desde el arranque.</span>
+        </div>
+
+        <div class="field">
+          <div class="listhead">
+            <span class="grouplabel">Reglas del repositorio que se ignoran</span>
+            <button class="add" type="button" data-simple="ignora"><span aria-hidden="true">+</span> Agregar ruta</button>
+          </div>
+          <div class="list" data-simple-list="ignora">
+            <div class="item"><span class="nm mono">docs/legado/**</span><span class="ds">Reglas viejas que ya no rigen</span><button class="edit" type="button">Quitar</button></div>
+          </div>
+          <span class="hint">Salta las reglas que el repositorio del cliente ya trae, por ruta y una por una. No apaga los frenos, ni los instructivos, ni el paquete — sólo esas reglas. Lo único que no se puede saltar son las reglas que impone la organización.</span>
         </div>
       </section>
 
@@ -584,31 +678,39 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
         <div class="panelhead">
           <div class="anot">Reglas permanentes</div>
           <h2>Lo no disponible</h2>
-          <p>Tres cosas que este producto necesitaría gobernar y que Claude Code no expone hoy. Se listan con su motivo en vez de esconderse: un hueco declarado se puede planear, uno callado no.</p>
+          <p>Lo que este producto necesitaría gobernar y Claude Code no expone. Se lista con su motivo en vez de esconderse: un hueco declarado se puede planear, uno callado se descubre en producción.</p>
         </div>
 
         <div class="mudo">
           <div class="cab">
-            <span class="nm">Cargar un archivo de reglas propio de la sesión</span>
+            <span class="nm">Tope de gasto por sesión</span>
             <span class="tag">no disponible</span>
           </div>
-          <span class="motivo">Claude Code no tiene forma de decir «lee <b>este</b> archivo como reglas permanentes». Las reglas se descubren por carpeta, así que meterlas exigiría escribir dentro del repositorio del cliente — que es justo lo que este producto promete no hacer.</span>
+          <span class="motivo">El límite de gasto que existe es <b>de la cuenta</b> y lo lleva el servidor; no hay forma de decirle a una sesión «córtate en tantos dólares». Si Nemawashi va a ofrecer este tope, lo tiene que contar el ejecutable y cortar él la sesión — no hay perilla que pedirle a Claude Code.</span>
+        </div>
+      </section>
+
+      <section class="panel" id="p3c">
+        <div class="panelhead">
+          <div class="anot">Reglas permanentes</div>
+          <h2>Arranque limpio</h2>
+          <p>Con qué llega la sesión al repositorio del cliente. De fábrica descubre sola todo lo que encuentra ahí; esto lo apaga.</p>
         </div>
 
-        <div class="mudo">
-          <div class="cab">
-            <span class="nm">Ignorar las reglas que ya trae el repositorio</span>
-            <span class="tag">no disponible</span>
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="true" aria-label="No descubrir nada del repositorio del cliente"></button>
+          <div>
+            <b>No descubrir nada del repositorio del cliente</b>
+            <span class="hint">Encendido, la sesión arranca sin cargar nada de lo que haya ahí: ni sus reglas, ni sus frenos, ni sus plugins, ni lo que la máquina aprendió antes. Todo lo que necesita se le pasa desde aquí. Apagado, el repositorio del cliente puede cambiar el comportamiento de la entrevista sin que nadie lo haya decidido.</span>
           </div>
-          <span class="motivo">Lo único que apaga esas reglas apaga también <b>los frenos, el paquete y los instructivos</b> — es decir, toda la maquinaria de Nemawashi. Las tres casillas de arriba no cubren este caso: gobiernan los archivos de configuración, no las reglas.</span>
         </div>
 
-        <div class="mudo">
-          <div class="cab">
-            <span class="nm">Recordar de una sesión a otra</span>
-            <span class="tag">no disponible</span>
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="false" aria-label="Modo a prueba de fallas"></button>
+          <div>
+            <b>Modo a prueba de fallas</b>
+            <span class="hint">Apaga también todo lo tuyo — agentes, instructivos, frenos y esta configuración entera. No es para trabajar: es para saber si lo que rompe la sesión es algo que pusiste tú.</span>
           </div>
-          <span class="motivo">No hay forma de apagarlo por separado. No estorba: en este método lo que importa se registra como ítem con su procedencia, no como recuerdo de la máquina.</span>
         </div>
       </section>
 
@@ -775,6 +877,16 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
           </div>
           <span class="hint">Si lo dejas en blanco no hay tope, y un flujo enredado puede correr mucho rato sin que nadie mire. Si lo pones muy bajo, la sesión se corta a media entrevista.</span>
         </div>
+
+        <div class="avisocampo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+          </svg>
+          <div><b>Este tope no lo pone Claude Code.</b>
+          El único límite de gasto que existe allá es de la cuenta entera y lo lleva el servidor. Para que este campo signifique algo, lo tiene que contar Nemawashi y cortar él la sesión — mientras eso no exista, el campo promete algo que nadie sostiene. Está anotado en <b>Lo no disponible</b>.</div>
+        </div>
       </section>
 
       <!-- 5 · CONEXIONES -->
@@ -883,6 +995,133 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
         <div class="frontera">
           <div><b>Con un motor de nube, el audio de la sesión sale de tu máquina hacia un servicio externo.</b>
           Con los dos motores en local, nada del audio sale. Este letrero cambia según lo que elijas arriba — es la frontera dicha de frente, no un aviso legal.</div>
+        </div>
+      </section>
+
+      <!-- 6 · LA SESIÓN LARGA -->
+      <section class="panel" id="p6a">
+        <div class="panelhead">
+          <div class="anot">La sesión larga</div>
+          <h2>Memoria de la plática</h2>
+          <p>Una entrevista larga no cabe entera en la cabeza de la IA. Esto decide qué pasa cuando se llena — y no rompe el molino: el molino lee la grabación del disco, donde está todo.</p>
+        </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="true" aria-label="Resumir cuando se llena"></button>
+          <div>
+            <b>Resumir cuando se llena</b>
+            <span class="hint">Encendido de fábrica. Al llenarse, resume la plática y sigue. Apagado, la sesión se detiene y hay que empezar otra — a media entrevista, con el experto delante.</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="pct">A qué tan llena resume</label>
+            <div class="unidad">
+              <input id="pct" type="text" value="92" />
+              <span class="post">por ciento</span>
+            </div>
+            <span class="hint">Más bajo resume antes y más seguido, y cada resumen pierde detalle. Más alto apura el límite y arriesga que se llene a media respuesta.</span>
+          </div>
+          <div class="field">
+            <label for="cap">Con qué capacidad hace la cuenta</label>
+            <div class="unidad">
+              <input id="cap" type="text" value="1000000" />
+              <span class="post">piezas de texto</span>
+            </div>
+            <span class="hint">Si aquí pones más de lo que el modelo aguanta, nunca resume y la sesión se rompe de golpe.</span>
+          </div>
+        </div>
+
+        <div class="avisocampo">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M8 1.6 15 14H1L8 1.6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M8 6v3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="11.6" r=".9" fill="currentColor"/>
+          </svg>
+          <div><b>Al resumir se repone casi todo: las instrucciones, las reglas, lo aprendido y las fuentes.</b>
+          De la lista de instructivos sólo sobreviven los que ya se usaron. Un instructivo que iba a hacer falta después de resumir, ya no está.</div>
+        </div>
+      </section>
+
+      <section class="panel" id="p6b">
+        <div class="panelhead">
+          <div class="anot">La sesión larga</div>
+          <h2>Lo que aprende</h2>
+          <p>Si la IA se guarda cosas de una sesión para la siguiente, y dónde.</p>
+        </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="false" aria-label="Aprende de una sesión a otra"></button>
+          <div>
+            <b>Aprende de una sesión a otra</b>
+            <span class="hint">Encendido de fábrica, y se puede apagar sólo para este proyecto sin tocar nada más. En este método lo que importa se registra como ítem con su procedencia, no como recuerdo de la máquina.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="dondeaprende">Dónde guarda lo aprendido</label>
+          <input id="dondeaprende" type="text" value="C:\Users\usuario\.claude\memoria" />
+          <span class="hint">De fábrica va a la carpeta del usuario, fuera del proyecto. Si lo mueves adentro, lo aprendido se versiona y viaja con el repositorio — decide si eso es lo que quieres.</span>
+        </div>
+      </section>
+
+      <section class="panel" id="p6c">
+        <div class="panelhead">
+          <div class="anot">La sesión larga</div>
+          <h2>La espera del experto</h2>
+          <p>Un experto pensando tarda, y tarda distinto que un programador. Estos números deciden si la sesión lo espera o lo atropella.</p>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="espera">Cuánto espera sin respuesta</label>
+            <div class="unidad">
+              <input id="espera" type="text" value="Nunca — espera para siempre" />
+            </div>
+            <span class="hint">De fábrica espera para siempre, y es lo que conviene con alguien delante. Si le pones un número, pasado ese tiempo sigue sola con lo que tenga — y lo que decida sin él queda escrito como si lo hubiera dicho.</span>
+          </div>
+          <div class="field">
+            <label for="cuenta">Cuándo avisa que va a seguir</label>
+            <div class="unidad">
+              <input id="cuenta" type="text" value="30000" />
+              <span class="post">milisegundos antes</span>
+            </div>
+            <span class="hint">Cuánto antes aparece la cuenta regresiva en pantalla. Sin aviso, el experto ve que la sesión avanzó sola y no entiende por qué.</span>
+          </div>
+        </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="false" aria-label="Mandar solo las tareas largas al fondo"></button>
+          <div>
+            <b>Mandar solo las tareas largas al fondo</b>
+            <span class="hint">Encendido, un proceso lento se va a segundo plano y la plática sigue. Apagado, la entrevista se queda esperando a que termine.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="p6d">
+        <div class="panelhead">
+          <div class="anot">La sesión larga</div>
+          <h2>Deshacer</h2>
+          <p>Si se guardan puntos de retorno para devolver los archivos a como estaban.</p>
+        </div>
+
+        <div class="togrow">
+          <button class="sw" type="button" aria-pressed="true" aria-label="Guardar puntos de retorno"></button>
+          <div>
+            <b>Guardar puntos de retorno</b>
+            <span class="hint">Encendido de fábrica. Permite devolver los archivos a como estaban antes de un cambio, sin depender de que alguien haya guardado en el control de versiones.</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="diassesion">Cuántos días se guardan las sesiones</label>
+          <div class="unidad">
+            <input id="diassesion" type="text" value="30" />
+            <span class="post">días</span>
+          </div>
+          <span class="hint">De fábrica treinta. Es también el plazo en que la grabación de una entrevista sigue existiendo — si lo bajas, el molino ya no la puede volver a leer.</span>
         </div>
       </section>
 
@@ -1005,8 +1244,19 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
         h:'Corta al agente si se enreda. Sin tope, un agente confundido puede dar vueltas mucho rato.' },
       { t:'sep', l:'Qué alcanza' },
       { t:'chips', k:'tools', l:'Herramientas', o:HERRAMIENTAS, on:['Leer','Buscar','Web','Consultar la base'] },
+      { t:'chips', k:'negadas', l:'Herramientas negadas', stop:true, o:HERRAMIENTAS, on:['Escribir'],
+        h:'Se aplica antes que la lista de arriba y le gana. Es lo que de verdad garantiza que un agente que mide no pueda escribir: mientras eso viva sólo en su texto, depende de que obedezca.' },
       { t:'chips', k:'skills', l:'Instructivos que puede usar', o:['redactar-ítem','leer-esquema'], on:['leer-esquema'],
         h:'Sólo estos se le cargan. En blanco: los mismos que la sesión.' },
+      { t:'sel', k:'permisos', l:'Su modo de permisos', o:['El mismo de la sesión','Pregunta siempre','Acepta ediciones','Sólo planea','No pregunta'], par:true,
+        h:'Puede ser más estricto que la sesión. Uno que mide no necesita permiso para nada porque no toca nada; uno que escribe, sí.' },
+      { t:'sep', l:'Cómo corre' },
+      { t:'tog', k:'fondo', l:'Corre de fondo', on:false,
+        h:'Encendido, la plática sigue mientras él trabaja. A cambio pierde herramientas que sí tendría en primer plano: la misma ficha no se comporta igual de los dos lados.' },
+      { t:'tog', k:'aislado', l:'En su propia copia del repositorio', on:false,
+        h:'Para que dos agentes que escriben no se pisen. Cuesta tiempo y disco en cada llamada: enciéndelo sólo si de verdad van en paralelo sobre los mismos archivos.' },
+      { t:'sel', k:'memoria', l:'Memoria propia', o:['Ninguna','Del usuario','Del proyecto','Sólo local'], par:true,
+        h:'Si este agente se guarda cosas de una llamada a la siguiente. En ninguna, cada llamada empieza limpia — que es lo que hace comparables dos corridas.' },
       { t:'sep', l:'Qué dice' },
       { t:'area', k:'primer', l:'Primer mensaje', rows:2,
         h:'Con qué arranca sin que nadie se lo pida. Se deja vacío casi siempre.' },
