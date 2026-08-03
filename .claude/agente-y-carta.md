@@ -14,6 +14,9 @@ que se corrige uno, el otro sigue mintiendo.
 
 ## Cómo se sabe dónde va una frase
 
+> **Sin decidir.** Estas tres preguntas no salieron del dueño del producto: son una forma de aplicar
+> la regla de arriba. Si se rechazan, se borran y no arrastran nada más.
+
 1. ¿Serviría igual si el puesto lo ocupara otro? → carta.
 2. ¿Cambiaría si el método cambiara? → carta.
 3. ¿Es una prohibición o un límite del puesto? → agente.
