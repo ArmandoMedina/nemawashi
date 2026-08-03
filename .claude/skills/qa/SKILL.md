@@ -3,7 +3,13 @@ name: qa
 description: Carta del oficio QA en Nemawashi — las cinco capas, las tres preguntas, el contrato como prueba, y cómo se corre todo. Úsala al escribir, clasificar o juzgar cualquier prueba de este repositorio.
 ---
 
+<carta>
+
+<objetivo>
 # Carta: QA — Nemawashi
+</objetivo>
+
+<metodo>
 
 ## Los dos comandos
 
@@ -46,6 +52,9 @@ Tres preguntas, en orden:
 Clasifica **antes** de escribir. Una prueba escrita primero y clasificada después casi siempre
 quedó en la capa equivocada.
 
+Prefiere la capa más baja que pueda ver el error; abrir la app entera es el último recurso, no el
+primero.
+
 ## Diseño de casos, con técnica y no por ocurrencia
 
 Por cada entrada: identifica particiones → deriva valores límite (el borde y ±1) → si hay reglas
@@ -85,14 +94,23 @@ rechaza.
 
 ## Datos: sintéticos, siempre
 
-`docs/decisions/0002` prohíbe que un dato personal, una cita textual o un identificador de cliente
-entren a este repositorio, **y no exceptúa a las pruebas**. Los datos de prueba se construyen en
-memoria, con un constructor que los arma a la medida del caso. Nunca material real recortado.
+Los datos de prueba se construyen en memoria, con un constructor que los arma a la medida del caso.
+Nunca material real recortado.
 
-Cuando una prueba necesite una ruta de ejemplo, se usa una neutra —`D:\trabajo\proyecto-ejemplo`,
-`C:\Users\usuario\...`— nunca la de una máquina real.
+## El fin de línea no es parte de la verdad
 
-## Reglas duras
+`core.autocrlf` está activo a nivel sistema y lo neutraliza `.gitattributes`. Una prueba que compara
+texto **no debe depender del fin de línea**: pasa en una máquina y falla en la de al lado, y el rojo
+no dice por qué.
+
+## Cómo se nombra una prueba
+
+Por la verdad que sostiene, no por la función que llama: *«la pared cuelga exactamente los mensajes
+de la lista»*, no *«test exposeInMainWorld»*.
+
+</metodo>
+
+<reglas-duras>
 
 - **No apruebas lo que no corriste.** Un veredicto sin comando, salida y código de salida detrás no
   sale de este oficio.
@@ -109,23 +127,14 @@ Cuando una prueba necesite una ruta de ejemplo, se usa una neutra —`D:\trabajo
   `product/arquitectura-diseno.md`.
 - **No re-validas lo que otra capa ya cubre.**
 
-## Trampas del entorno, ya medidas
+</reglas-duras>
 
-- **El antivirus bloquea archivos recién creados.** Al instalar por primera vez, el ejecutable de
-  Electron se descargó completo y se descomprimió a medias **sin error visible**: la instalación se
-  dio por buena y la app no arrancaba. Una instalación que termina «bien» no prueba que la app
-  corra; lo único que lo prueba es abrirla.
-- **`core.autocrlf` está activo a nivel sistema.** Lo neutraliza `.gitattributes`; si una prueba
-  compara texto, no debe depender del fin de línea.
-
-## Idioma
-
-Todo en español, en voz del método (`docs/decisions/0001`): los nombres de las pruebas dicen qué
-verdad sostienen, no qué función llaman. *«la pared cuelga exactamente los mensajes de la lista»*,
-no *«test exposeInMainWorld»*.
-
-## Entregable
+<entregable>
 
 Veredicto por afirmación juzgada, cada uno con su corrida: comando, salida y código de salida.
 Más lo que no pudiste verificar y por qué. Completo cuando ninguna afirmación descansa en tu
 palabra.
+
+</entregable>
+
+</carta>

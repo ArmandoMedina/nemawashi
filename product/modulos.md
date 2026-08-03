@@ -84,8 +84,8 @@ pruébala» es la mitad del valor de M1.
 
 **Depende de:** M1.
 
-**Lo que resuelve:** aquí vive la promesa de no invadir (§0.4.2). Las banderas
-`--plugin-dir`, `--settings` y sobre todo `--setting-sources` son el mecanismo.
+**Lo que resuelve:** aquí vive la promesa de no invadir (§0.4.2). Las banderas `--settings`,
+`--setting-sources` y `--bare` son el mecanismo.
 
 ---
 

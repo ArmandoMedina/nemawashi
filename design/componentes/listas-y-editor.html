@@ -252,17 +252,40 @@
         </div>
         <span class="hint">La mitad negativa, en rojo y con la misma ficha: lo que no está en permitidos el agente lo puede inventar, lo que está aquí no.</span>
       </div>
+      <div class="sep">Lo que dice su carta</div>
       <div class="field">
-        <label for="e4">Convenciones del módulo<span class="req">obligatorio</span></label>
-        <textarea id="e4" rows="2">Antes de opinar, abre el archivo o corre la consulta.
-Devuelve siempre la ruta o la consulta de la que sacaste cada dato.</textarea>
+        <label for="e6">Quién es<span class="req">obligatorio</span></label>
+        <textarea id="e6" rows="2">Eres el que abre el código y los datos para comprobar lo que se afirma. No decides qué se construye ni redactas el resultado.</textarea>
+        <span class="hint">Si aquí no dice también qué no le toca, se mete en el trabajo de otro — y después nadie sabe cuál de los dos contestó.</span>
       </div>
-      <div class="field">
-        <label for="e5">Fuera de alcance<span class="req">obligatorio</span></label>
-        <textarea id="e5" rows="3">No opina sobre el negocio.
+      <div class="row">
+        <div class="field">
+          <label for="e7">Qué le llega<span class="req">obligatorio</span></label>
+          <textarea id="e7" rows="3">Te llega una afirmación por comprobar, con la ruta o la consulta donde mirar.
+Si viene sin ruta, la pides antes de empezar.</textarea>
+          <span class="hint">Sin esto el agente consigue su material por su cuenta, y acaba trabajando con lo que encontró en vez de con lo que le tocaba.</span>
+        </div>
+        <div class="field">
+          <label for="e4">Cómo trabaja<span class="req">obligatorio</span></label>
+          <textarea id="e4" rows="3">Un solo instructivo, «leer-esquema», y aplica siempre.
+Los pasos viven ahí, no aquí.</textarea>
+          <span class="hint">Sólo cuál de sus instructivos usa y en qué momento. Los pasos van dentro del instructivo: escritos aquí también, un día los dos van a decir cosas distintas.</span>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="e5">Fuera de alcance<span class="req">obligatorio</span></label>
+          <textarea id="e5" rows="3">No opina sobre el negocio.
 No escribe archivos: localiza y reporta.
 Si no encontró evidencia, lo dice — no rellena.</textarea>
-        <span class="hint">Qué NO debe hacer. Es el campo más potente y el que todos olvidan: sin límites, el agente puede hacer todo — y no hace nada.</span>
+          <span class="hint">Qué NO debe hacer. Es el campo más potente y el que todos olvidan: sin límites, el agente puede hacer todo — y no hace nada.</span>
+        </div>
+        <div class="field">
+          <label for="e8">Qué entrega<span class="req">obligatorio</span></label>
+          <textarea id="e8" rows="3">Una lista de hallazgos, uno por renglón, cada uno con su ruta.
+Al final, en un renglón, qué quedó sin comprobar.</textarea>
+          <span class="hint">Si no se dice la forma, cada corrida devuelve otra cosa — y lo que viene después no la puede leer.</span>
+        </div>
       </div>
       <div class="editorfoot">
         <button class="btn primary" type="button">Guardar agente</button>
