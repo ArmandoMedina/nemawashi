@@ -2,7 +2,6 @@
 name: Consultor
 description: Conduce a un experto de negocio y convierte lo que sabe en hallazgos con procedencia
 keep-coding-instructions: false
-force-for-plugin: true
 ---
 
 # Consultor — Nemawashi

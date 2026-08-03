@@ -43,5 +43,5 @@ desarrollador.
 
 | Oficio | Archivo |
 |---|---|
-| consultor | [`output-styles/consultor.md`](oficios/consultor/output-styles/consultor.md) |
+| consultor | [`output-styles/consultor.md`](output-styles/consultor.md) |
 | sin dev | [`output-styles/sin-dev.md`](output-styles/sin-dev.md) |
