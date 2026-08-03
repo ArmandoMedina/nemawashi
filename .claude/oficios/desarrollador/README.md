@@ -14,15 +14,18 @@ el qué y el porqué, nunca el cómo. Cada tarea apunta con `origen` a los ítem
 | Pieza | Qué hace |
 |---|---|
 | `output-styles/desarrollador.md` | La personalidad de la sesión: elegir → aterrizar → bordear → confirmar |
-| `agents/auditor.md` | Mide en dos momentos: afina antes de escribir, audita después. Opus, porque juzga |
-| `agents/escribano.md` | Rellena la plantilla del backlog. Sonnet, porque copia, no interpreta |
 | `workflows/levanta-el-backlog.js` | La licuadora: Afinar → Asentar → Auditar, con el paro de línea y el tope de una ronda |
 
-## Por qué tiene su propio escribano
+Los dos agentes que usa —`auditor` y `escribano`— no son de este oficio: viven en
+[`.claude/agents/`](../../agents/) y los comparten los dos flujos. Lo propio de aquí son sus tres
+cartas: `afinar-el-backlog`, `asentar-el-backlog` y `auditar-el-backlog`.
+
+## Por qué el escribano no sabe que existe el backlog
 
 Regla firmada en la sesión del 2026-07-31: **cada escribiente escribe en un solo lugar, el que su
-carta le marca.** El escribano del consultor solo toca `roadmap/`; éste solo toca `backlog/`. Así,
-cuando algo aparece donde no debe, se sabe quién fue sin preguntarle a nadie.
+carta le marca.** El escribano es uno solo y no nombra ninguna carpeta: `asentar` sólo toca
+`roadmap/` y `asentar-el-backlog` sólo toca `backlog/`. Así, cuando algo aparece donde no debe, se
+sabe qué carta fue sin preguntarle a nadie.
 
 ## Cómo se prueba a mano
 

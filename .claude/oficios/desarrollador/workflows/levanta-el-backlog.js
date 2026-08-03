@@ -111,7 +111,7 @@ phase('Afinar')
 
 const afinado = await agent(
   [
-    'Es tu momento uno: afinar, antes de que se escriba.',
+    'Carga tu carta `afinar-el-backlog` antes de medir nada.',
     '',
     `Esto es lo que se hablo en la tanda "${tanda}" con quien construye.`,
     `Items del roadmap trabajados: ${origenes.length ? origenes.join(', ') : 'no declarados - eso ya es una falla de sin-origen'}.`,
@@ -131,7 +131,7 @@ const afinado = await agent(
     platica,
     respuestas ? '\n--- Lo que quien construye contesto despues ---\n' + respuestas : ''
   ].join('\n'),
-  { label: `afinar:${tanda}`, phase: 'Afinar', agentType: 'desarrollador:auditor', schema: TAREAS }
+  { label: `afinar:${tanda}`, phase: 'Afinar', agentType: 'auditor', schema: TAREAS }
 )
 
 if (!afinado) {
@@ -170,13 +170,14 @@ const escritos = await agent(
   [
     `Escribe estas tareas de la tanda "${tanda}". Ya pasaron por el auditor y quien construye las firmo.`,
     '',
-    'Antes de escribir nada, lee `backlog/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
+    'Carga tu carta `asentar-el-backlog` antes de escribir nada: ahi viene donde escribes y con que forma.',
+    'Despues lee `backlog/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
     'Una por archivo, en `backlog/`. Comprueba que cada id de `origen` exista como archivo en `roadmap/`.',
     `La hora de alta es: ${entrada.hora ?? 'NO TE LLEGO - no escribas y reportalo'}`,
     '',
     JSON.stringify(afinado.tareas, null, 2)
   ].join('\n'),
-  { label: `asentar:${tanda}`, phase: 'Asentar', agentType: 'desarrollador:escribano', schema: ESCRITOS }
+  { label: `asentar:${tanda}`, phase: 'Asentar', agentType: 'escribano', schema: ESCRITOS }
 )
 
 if (!escritos) {
@@ -190,14 +191,14 @@ phase('Auditar')
 
 const dictamen = await agent(
   [
-    'Es tu momento dos: auditar, despues de que se escribio.',
+    'Carga tu carta `auditar-el-backlog` antes de abrir nada.',
     '',
     'El orden no se invierte: primero el registro crudo, despues los archivos.',
     transcript ? `El registro crudo de la sesion esta en: ${transcript}` : 'No te dieron la ruta del registro crudo: dilo en transcriptLeido.',
     '',
     `Se acaba de escribir la tanda "${tanda}" en \`backlog/\`. Dictamina lo inventado, lo perdido y lo sin origen real.`
   ].join('\n'),
-  { label: `auditar:${tanda}`, phase: 'Auditar', agentType: 'desarrollador:auditor', schema: DICTAMEN }
+  { label: `auditar:${tanda}`, phase: 'Auditar', agentType: 'auditor', schema: DICTAMEN }
 )
 
 const fallas = dictamen

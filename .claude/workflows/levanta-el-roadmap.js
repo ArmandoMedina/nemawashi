@@ -302,7 +302,7 @@ function promptParaSacar(rutaPedida) {
 const sacado = await agent(promptParaSacar(rutaTranscriptPedida), {
   label: `sacar:${paso}`,
   phase: 'Sacar',
-  agentType: 'auditor-del-roadmap',
+  agentType: 'auditor',
   schema: SACADO
 })
 
@@ -357,7 +357,7 @@ const afinado = await agent(
     platica,
     respuestas ? '\n--- Lo que el experto contesto despues ---\n' + respuestas : ''
   ].join('\n'),
-  { label: `afinar:${paso}`, phase: 'Afinar', agentType: 'auditor-del-roadmap', schema: HALLAZGOS }
+  { label: `afinar:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
 )
 
 if (!afinado) {
@@ -481,7 +481,7 @@ let hallazgosFinales = afinado.hallazgos
 let primeraLectura = await agent(promptParaElLector(hallazgosFinales), {
   label: 'leer-en-frio:primera',
   phase: 'Leer en frio',
-  agentType: 'auditor-del-roadmap',
+  agentType: 'auditor',
   schema: LECTURA_EN_FRIO
 })
 
@@ -490,7 +490,7 @@ phase('Cotejar')
 let primerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
   label: 'cotejar:primera',
   phase: 'Cotejar',
-  agentType: 'auditor-del-roadmap',
+  agentType: 'auditor',
   schema: COTEJO
 })
 
@@ -499,7 +499,7 @@ phase('Juntar')
 let primerJuntar = await agent(promptParaJuntar(hallazgosFinales), {
   label: 'juntar:primera',
   phase: 'Juntar',
-  agentType: 'auditor-del-roadmap',
+  agentType: 'auditor',
   schema: JUNTAR
 })
 
@@ -563,7 +563,7 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
         2
       )
     ].join('\n'),
-    { label: `afinar:arreglo:${paso}`, phase: 'Afinar', agentType: 'auditor-del-roadmap', schema: HALLAZGOS }
+    { label: `afinar:arreglo:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
   )
 
   if (arreglo && Array.isArray(arreglo.hallazgos)) {
@@ -578,7 +578,7 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
   segundaLectura = await agent(promptParaElLector(hallazgosFinales), {
     label: 'leer-en-frio:segunda',
     phase: 'Leer en frio',
-    agentType: 'auditor-del-roadmap',
+    agentType: 'auditor',
     schema: LECTURA_EN_FRIO
   })
 
@@ -587,7 +587,7 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
   segundoCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
     label: 'cotejar:segunda',
     phase: 'Cotejar',
-    agentType: 'auditor-del-roadmap',
+    agentType: 'auditor',
     schema: COTEJO
   })
 
@@ -599,7 +599,7 @@ if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciale
   segundoJuntar = await agent(promptParaJuntar(hallazgosFinales), {
     label: 'juntar:segunda',
     phase: 'Juntar',
-    agentType: 'auditor-del-roadmap',
+    agentType: 'auditor',
     schema: JUNTAR
   })
 }
@@ -643,7 +643,7 @@ if (inventosTrasRonda1.length > 0) {
         2
       )
     ].join('\n'),
-    { label: `afinar:arreglo-inventos:${paso}`, phase: 'Afinar', agentType: 'auditor-del-roadmap', schema: HALLAZGOS }
+    { label: `afinar:arreglo-inventos:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
   )
 
   if (arreglo2 && Array.isArray(arreglo2.hallazgos)) {
@@ -658,7 +658,7 @@ if (inventosTrasRonda1.length > 0) {
   tercerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
     label: 'cotejar:tercera',
     phase: 'Cotejar',
-    agentType: 'auditor-del-roadmap',
+    agentType: 'auditor',
     schema: COTEJO
   })
 }
@@ -683,7 +683,8 @@ const escritos = await agent(
   [
     `Escribe estos hallazgos del paso "${paso}". Ya pasaron por el auditor y el experto cerro sus preguntas.`,
     '',
-    'Antes de escribir nada, lee `roadmap/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
+    'Carga tu carta `asentar` antes de escribir nada: ahi viene donde escribes y con que forma.',
+    'Despues lee `roadmap/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
     'Uno por archivo, en `roadmap/`. La regla no pasa de 120 caracteres y el cuerpo no pasa de 900.',
     '',
     '`deDondeSalio` te llega con el caso contado entero. **No lo recortes y no lo apodes.**',
@@ -696,7 +697,7 @@ const escritos = await agent(
     '',
     JSON.stringify(hallazgosParaEscribano, null, 2)
   ].join('\n'),
-  { label: `asentar:${paso}`, phase: 'Asentar', agentType: 'escribano-del-roadmap', schema: ESCRITOS }
+  { label: `asentar:${paso}`, phase: 'Asentar', agentType: 'escribano', schema: ESCRITOS }
 )
 
 if (!escritos) {
@@ -719,7 +720,7 @@ const dictamen = await agent(
     '',
     `Se acaba de escribir el paso "${paso}" en \`roadmap/\`. Dictamina lo inventado, lo perdido y lo mal marcado.`
   ].join('\n'),
-  { label: `auditar:${paso}`, phase: 'Auditar', agentType: 'auditor-del-roadmap', schema: DICTAMEN }
+  { label: `auditar:${paso}`, phase: 'Auditar', agentType: 'auditor', schema: DICTAMEN }
 )
 
 // El «no sirve» es la cuarta falla y cuenta como las otras tres. Medido el 2026-07-31: el

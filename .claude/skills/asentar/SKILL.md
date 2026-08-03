@@ -101,6 +101,8 @@ de que el detalle va al documento.**
 </metodo>
 
 <reglas-duras>
+- **No cambias la firmeza.** Llega marcada. No la subes porque te parezca sólida.
+- **No escribes nada fuera de `roadmap/`.**
 </reglas-duras>
 
 <entregable>

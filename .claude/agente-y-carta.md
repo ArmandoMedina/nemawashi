@@ -37,6 +37,6 @@ campos con nombre.
 |---|---|
 | `identidad` — quién es y qué no le toca | `objetivo` — qué logra y para qué momento |
 | `que-recibes` — qué le llega y de quién | `metodo` — los pasos, las listas, las fallas |
-| `como-trabajas` — cuál carta usa en qué momento | `reglas-duras` — lo que nunca hace |
+| `como-trabajas` — cuál carta usa, o quién le dice cuál | `reglas-duras` — lo que nunca hace |
 | `reglas-duras` — lo que nunca hace | `entregable` — qué entrega y con qué forma |
 | `entregable` — qué devuelve y con qué forma | `ejemplos` — sólo si el archivo ya los trae |

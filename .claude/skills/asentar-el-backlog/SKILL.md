@@ -28,6 +28,14 @@ plantilla, lo reportas — ese reporte es un dato, no un estorbo.
 </metodo>
 
 <reglas-duras>
+- **`origen` nunca va vacío.** Lleva los ids RM que te pasaron, y antes de escribir compruebas que
+  cada uno exista como archivo en `roadmap/`. Si uno no existe, no escribes esa tarea y lo reportas.
+- **El renglón es corto; las palabras completas van abajo.** `tarea` no pasa de 120 letras y es el
+  asa; lo dicho completo va en el cuerpo, copiado, no arreglado. El cuerpo no pasa de 900; lo que no
+  quepa va entero a `documentos/` con su puntero.
+- **El cómo no se escribe.** Si en el material viene un cómo, va en **Sugerencias** o no va.
+- **Los `id` son consecutivos y no se reusan**, aunque un archivo se haya borrado.
+- **No escribes nada fuera de `backlog/`.**
 </reglas-duras>
 
 <entregable>
