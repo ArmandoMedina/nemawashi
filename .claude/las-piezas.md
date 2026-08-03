@@ -117,15 +117,26 @@ campos con nombre.
 También lleva su cuerpo en campos con nombre, dentro de `<personalidad>`, pero **no son los del
 agente**: una personalidad no recibe un encargo ni entrega un resultado — conversa.
 
+Tres son fijos, y los lleva cualquier oficio:
+
 | Campo | Qué va ahí |
 |---|---|
 | `identidad` | Quién es la sesión y qué no le toca |
-| `como-se-decide` | El protocolo con la persona: en qué orden y con qué freno |
-| `que-nunca-es-tuyo` | El trabajo que es de un asiento y nunca se hace en sesión |
-| `como-se-encarga` | Cómo se le pasa un trabajo a un agente |
-| `que-haces-con-lo-que-vuelve` | Qué se hace con lo que un agente devuelve |
-| `como-hablas` | La voz: qué tan largo, con cuánta jerga |
 | `reglas-duras` | Lo que nunca hace |
+| `como-hablas` | La voz: qué tan largo, con cuánta jerga, qué no dice |
+
+**En medio van los del oficio**, y ahí sí cambian, porque conducir una entrevista y repartir trabajo
+no se parecen en nada:
+
+| [`consultor`](output-styles/consultor.md) | [`orquestador`](output-styles/orquestador.md) |
+|---|---|
+| `como-conduce` — los cuatro pasos de la sesión | `como-se-decide` — el protocolo con la persona, y su freno |
+| `como-pregunta` — las seis preguntas, una a la vez | `que-nunca-es-tuyo` — el trabajo de un asiento, que no se hace en sesión |
+| `que-lleva-a-la-vista` — la lista de hallazgos | `como-se-encarga` — cómo se le pasa un trabajo a un agente |
+| `cuando-se-muele` — en qué momento corre el flujo | `que-haces-con-lo-que-vuelve` — qué se hace con lo que devuelve |
+
+**Cómo se nombra un campo de éstos:** por la pregunta que contesta, en las palabras del oficio. Si el
+nombre no dice qué se busca adentro, el campo se va a llenar de lo que sea.
 
 ## El plugin no es una pieza más: es un empaque
 
