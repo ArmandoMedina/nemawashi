@@ -97,14 +97,11 @@ rechaza.
 Los datos de prueba se construyen en memoria, con un constructor que los arma a la medida del caso.
 Nunca material real recortado.
 
-## Trampas del entorno, ya medidas
+## El fin de línea no es parte de la verdad
 
-- **El antivirus bloquea archivos recién creados.** Al instalar por primera vez, el ejecutable de
-  Electron se descargó completo y se descomprimió a medias **sin error visible**: la instalación se
-  dio por buena y la app no arrancaba. Una instalación que termina «bien» no prueba que la app
-  corra; lo único que lo prueba es abrirla.
-- **`core.autocrlf` está activo a nivel sistema.** Lo neutraliza `.gitattributes`; si una prueba
-  compara texto, no debe depender del fin de línea.
+`core.autocrlf` está activo a nivel sistema y lo neutraliza `.gitattributes`. Una prueba que compara
+texto **no debe depender del fin de línea**: pasa en una máquina y falla en la de al lado, y el rojo
+no dice por qué.
 
 ## Cómo se nombra una prueba
 

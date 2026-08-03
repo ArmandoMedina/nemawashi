@@ -11,6 +11,8 @@ En qué se diferencia cada pieza —plugin, personalidad, regla, agente, carta, 
 | [`escribano`](agents/escribano.md) | sonnet | Escribe lo ya cerrado, donde su carta le marque |
 | [`desarrollador`](agents/desarrollador.md) | sonnet | Implementa con la prueba en el mismo cambio |
 | [`qa`](agents/qa.md) | sonnet | Cierra por medición, nunca por palabra |
+| [`disenador`](agents/disenador.md) | sonnet | Propone la pantalla y deja la corrida para que alguien la mire |
+| [`devops`](agents/devops.md) | sonnet | Que compile, que se empaquete y que arranque en otra máquina |
 
 El auditor y el escribano no declaran cartas en su fichita: quien los llama les dice cuál cargar.
 
@@ -29,6 +31,8 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 | [`asentar-el-backlog`](skills/asentar-el-backlog/SKILL.md) | escribano | Al escribir cualquier tarea o documento del backlog |
 | [`desarrollador`](skills/desarrollador/SKILL.md) | desarrollador | Al implementar cualquier cosa |
 | [`qa`](skills/qa/SKILL.md) | qa | Al escribir, clasificar o juzgar cualquier prueba |
+| [`disenador`](skills/disenador/SKILL.md) | disenador | Al proponer o revisar cualquier pantalla |
+| [`devops`](skills/devops/SKILL.md) | devops | Al tocar CI, compilación, empaque o el arranque de un proceso |
 
 Las tres del backlog no tienen flujo que las llame hoy: el suyo se dio de baja con el oficio
 desarrollador.

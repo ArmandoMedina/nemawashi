@@ -112,6 +112,21 @@ campos con nombre.
 | `reglas-duras` — lo que nunca hace | `entregable` — qué entrega y con qué forma |
 | `entregable` — qué devuelve y con qué forma | `ejemplos` — sólo si el archivo ya los trae |
 
+### Los campos de una personalidad
+
+También lleva su cuerpo en campos con nombre, dentro de `<personalidad>`, pero **no son los del
+agente**: una personalidad no recibe un encargo ni entrega un resultado — conversa.
+
+| Campo | Qué va ahí |
+|---|---|
+| `identidad` | Quién es la sesión y qué no le toca |
+| `como-se-decide` | El protocolo con la persona: en qué orden y con qué freno |
+| `que-nunca-es-tuyo` | El trabajo que es de un asiento y nunca se hace en sesión |
+| `como-se-encarga` | Cómo se le pasa un trabajo a un agente |
+| `que-haces-con-lo-que-vuelve` | Qué se hace con lo que un agente devuelve |
+| `como-hablas` | La voz: qué tan largo, con cuánta jerga |
+| `reglas-duras` | Lo que nunca hace |
+
 ## El plugin no es una pieza más: es un empaque
 
 Un plugin no cambia el comportamiento por sí mismo. Lleva adentro piezas de las de arriba —
