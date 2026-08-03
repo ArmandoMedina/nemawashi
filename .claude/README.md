@@ -53,7 +53,7 @@ No hay `CLAUDE.md`: lo que decía vive aquí, por tema.
 
 ## Las personalidades de sesión
 
-| Oficio | Archivo |
-|---|---|
-| consultor | [`output-styles/consultor.md`](output-styles/consultor.md) |
-| sin dev | [`output-styles/sin-dev.md`](output-styles/sin-dev.md) |
+| Oficio | Archivo | Qué hace |
+|---|---|---|
+| consultor | [`output-styles/consultor.md`](output-styles/consultor.md) | Conduce al experto de negocio y deja hallazgos con procedencia |
+| orquestador | [`output-styles/orquestador.md`](output-styles/orquestador.md) | Decide con el dueño del producto y manda a trabajar |
