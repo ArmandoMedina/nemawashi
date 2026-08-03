@@ -55,7 +55,11 @@ function correrMolino(
 
   const agent = async (prompt: string, opts: Record<string, unknown>) => {
     llamadas.push({ prompt, opts })
+    if (opts.phase === 'Sacar') return { platica: 'algo se dijo en la platica', transcriptLeido: 'sesion.jsonl' }
     if (opts.phase === 'Afinar') return { hallazgos: hallazgosDeAfinar, preguntas: [] }
+    if (opts.phase === 'Leer en frio') return { huecos: [], itemsLeidos: hallazgosDeAfinar.length }
+    if (opts.phase === 'Cotejar') return { inventos: [], hallazgosCotejados: hallazgosDeAfinar.length }
+    if (opts.phase === 'Juntar') return { grupos: [], hallazgosRevisados: hallazgosDeAfinar.length }
     if (opts.phase === 'Asentar') {
       return { archivos: [{ ruta: 'roadmap/0099-de-prueba.md', regla: 'una regla dicha en la platica' }], noEscritos: [] }
     }
@@ -87,7 +91,7 @@ describe('la hora del alta le llega al escribano estampada en cada hallazgo', ()
   it('cuando args.hora llega, cada hallazgo trae su propia `alta` con esa hora', async () => {
     const { llamadas } = await correrMolino({
       paso: 'paso de prueba',
-      platica: 'algo se dijo en la platica',
+      transcript: 'sesion.jsonl',
       hora: '2026-07-31T09:20:00-06:00'
     })
 
@@ -99,7 +103,7 @@ describe('la hora del alta le llega al escribano estampada en cada hallazgo', ()
   it('el hallazgo `confirmado` ademas trae `confirmado` con esa misma hora; el `dicho` no', async () => {
     const { llamadas } = await correrMolino({
       paso: 'paso de prueba',
-      platica: 'algo se dijo en la platica',
+      transcript: 'sesion.jsonl',
       hora: '2026-07-31T09:20:00-06:00'
     })
 
@@ -113,7 +117,7 @@ describe('la hora del alta le llega al escribano estampada en cada hallazgo', ()
   it('cuando args.hora no llega, ningun hallazgo trae `alta` inventada: el campo se queda ausente', async () => {
     const { llamadas } = await correrMolino({
       paso: 'paso de prueba',
-      platica: 'algo se dijo en la platica'
+      transcript: 'sesion.jsonl'
     })
 
     const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
@@ -127,7 +131,7 @@ describe('la hora del alta le llega al escribano estampada en cada hallazgo', ()
   it('una hora vacia o solo de espacios cuenta como no recibida, no como una hora real', async () => {
     const { llamadas } = await correrMolino({
       paso: 'paso de prueba',
-      platica: 'algo se dijo en la platica',
+      transcript: 'sesion.jsonl',
       hora: '   '
     })
 
@@ -143,7 +147,7 @@ describe('la hora del alta le llega al escribano estampada en cada hallazgo', ()
     }))
 
     const { llamadas } = await correrMolino(
-      { paso: 'un dia usando nemawashi', platica: 'una sesion larga', hora: '2026-07-31T15:05:52-06:00' },
+      { paso: 'un dia usando nemawashi', transcript: 'sesion.jsonl', hora: '2026-07-31T15:05:52-06:00' },
       muchos
     )
 

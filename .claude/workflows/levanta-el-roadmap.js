@@ -3,6 +3,7 @@ export const meta = {
   description: 'Muele lo platicado en un paso de la sesion, lo deja escrito como hallazgos y lo audita contra el registro crudo.',
   whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan preguntas por cerrar; se vuelve a correr con las respuestas.',
   phases: [
+    { title: 'Sacar', detail: 'leer la grabacion de la sesion y sacar la platica limpia con el sacador' },
     { title: 'Afinar', detail: 'sacar los hallazgos y cazar lo que no se puede escribir todavia' },
     { title: 'Leer en frio', detail: 'leer los hallazgos como el que no estuvo, antes de que lleguen a disco' },
     { title: 'Cotejar', detail: 'cotejar cada hallazgo contra la platica que lo produjo, antes de que lleguen a disco' },
@@ -13,11 +14,19 @@ export const meta = {
 }
 
 // Lo que recibe:
-//   args.paso      - como se llama el paso del mapa que se cerro
-//   args.platica   - el texto de lo que se hablo en ese paso
+//   args.paso       - como se llama el paso del mapa que se cerro
+//   args.transcript - opcional. Ruta del .jsonl de la sesion. De ahi se saca la platica -con
+//                      el sacador que ya existe en src/nucleo/sacar-turnos.ts- y contra ese
+//                      mismo archivo se audita despues. Si no llega, «Sacar» resuelve la
+//                      grabacion de la sesion en curso; el molino no la adivina por su cuenta,
+//                      no tiene `process` ni `fs` para hacerlo.
 //   args.respuestas - opcional. Lo que el experto contesto a las preguntas de una corrida anterior
-//   args.transcript - opcional. Ruta del .jsonl de la sesion
 //   args.hora      - la hora real del alta, ISO 8601 con huso. Al escribano se le pasa, nunca la inventa.
+//
+// Ya NO recibe `args.platica`. Antes, quien llamaba tecleaba el texto de la platica dentro de
+// la llamada, y esa mano acababa siendo el filtro -medido en corrida real: una version
+// recortada de la conversacion se colo como argumento y el auditor marco «perdido» material
+// que nunca llego a entrar. Ahora el molino lee la grabacion el mismo, con el sacador.
 
 const HALLAZGOS = {
   type: 'object',
@@ -72,6 +81,32 @@ const ESCRITOS = {
       }
     },
     noEscritos: { type: 'array', items: { type: 'string' }, description: 'Lo que no se pudo escribir y por que. Vacio si nada.' }
+  }
+}
+
+// «Sacar» no juzga nada: lee la grabacion y corre el sacador que ya existe. Por eso su
+// esquema no trae `sospechas` ni `porque` en el sentido de los otros dos auditores - solo
+// lo que saco y de donde, y `noSePudo` cuando no hubo manera de sacar nada. Reusa el nombre
+// `transcriptLeido` que ya usa DICTAMEN mas abajo: es el mismo archivo, y quien lo audita al
+// final usa esta misma ruta, no una que adivine por su cuenta.
+const SACADO = {
+  type: 'object',
+  required: ['platica', 'transcriptLeido'],
+  properties: {
+    platica: {
+      type: 'string',
+      description:
+        'La salida de `platicaComoTexto(sacarTurnos(crudo))`, tal cual la imprimio el comando. ' +
+        'Vacia si no se pudo leer el archivo o correr el sacador -nunca un resumen ni un invento.'
+    },
+    transcriptLeido: {
+      type: 'string',
+      description: 'La ruta del `.jsonl` que se leyo. Vacia si no se pudo determinar ni leer.'
+    },
+    noSePudo: {
+      type: 'string',
+      description: 'Por que no se pudo leer el archivo o correr el sacador. Vacio si si se pudo.'
+    }
   }
 }
 
@@ -175,16 +210,17 @@ const JUNTAR = {
   }
 }
 
-// Quien llama puede mandar los argumentos como datos o como texto. Las dos formas
-// se han visto en corrida real, y leer texto como si fuera dato deja `platica`
-// vacia - que se lee igual que "el paso no dejo nada". Aqui se aclara la entrada
-// una sola vez, antes de que nadie la use.
+// Quien llama puede mandar los argumentos como datos o como texto JSON - las dos formas
+// se han visto en corrida real. Aqui se aclara la entrada una sola vez, antes de que nadie
+// la use. Un texto que no es JSON valido ya no tiene donde caer -no hay `platica` que
+// rescatar-, asi que se trata como entrada vacia: sin `paso` ni `transcript`, «Sacar» lo va
+// a reportar como material que no se pudo determinar, en vez de perderlo en silencio.
 function comoDatos(entrada) {
   if (typeof entrada === 'string') {
     try {
       return JSON.parse(entrada)
     } catch (e) {
-      return { platica: entrada }
+      return {}
     }
   }
   return entrada ?? {}
@@ -203,10 +239,84 @@ function conLaHoraEstampada(hallazgo, hora) {
 const entrada = comoDatos(args)
 
 const paso = entrada.paso ?? 'sin nombre'
-const platica = typeof entrada.platica === 'string' ? entrada.platica : ''
 const respuestas = entrada.respuestas
-const transcript = entrada.transcript
+const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
 const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
+
+// --- Sacar -----------------------------------------------------------------
+// El unico paso que corre antes que Afinar y no mide nada: lee la grabacion cruda y saca la
+// platica limpia con el sacador que ya existe (`sacarTurnos` / `platicaComoTexto` en
+// `src/nucleo/sacar-turnos.ts`) - no se reescribe esa logica aqui ni se le pide al agente que
+// la invente. Va al agente y no al propio script porque el script no tiene `fs` ni `process`
+// para abrir un archivo o correr un comando; el agente si, con `Bash` y `Read`.
+//
+// Si no llega `args.transcript`, el propio agente resuelve la grabacion de esta sesion: la
+// variable de entorno `CLAUDE_CODE_SESSION_ID` trae el id de la sesion en curso, y ese mismo
+// id nombra su `.jsonl` dentro de `~/.claude/projects/`. Medido en esta maquina: el id de la
+// variable coincide exactamente con el nombre del archivo de la sesion que lo consulta. Lo
+// que no se mide desde aqui es que un agente disparado dentro de un workflow -no una sesion
+// de equipo- herede la misma variable; por eso, si no la encuentra o no hay archivo con ese
+// nombre, el agente lo reporta en `noSePudo` en vez de adivinar una ruta.
+
+phase('Sacar')
+
+function promptParaSacar(rutaPedida) {
+  return [
+    'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
+    '',
+    rutaPedida
+      ? `Lee con tu herramienta Read el archivo \`${rutaPedida}\`: es la grabacion de la sesion.`
+      : [
+          'No te dieron la ruta de la grabacion. Para encontrar la de esta misma sesion:',
+          '',
+          '1. Con Bash, corre `echo $CLAUDE_CODE_SESSION_ID` para sacar el id de esta sesion.',
+          '2. Busca un archivo `<ese-id>.jsonl` dentro de `~/.claude/projects/` -con Bash o con Glob-.',
+          '3. Lee ese archivo.',
+          '',
+          '**No inventes una ruta.** Si la variable no esta, o no hay archivo con ese nombre, no',
+          'sigas: reportalo en `noSePudo` y deja `platica` y `transcriptLeido` vacios.'
+        ].join('\n'),
+    '',
+    'Con el contenido crudo del `.jsonl` ya leido, saca la platica limpia corriendo -con Bash,',
+    'desde la raiz del repositorio- el sacador que ya existe. No escribas tu propio extractor',
+    'ni repitas su logica a mano; corre exactamente esto, sustituyendo la ruta del archivo que',
+    'leiste, y borra el script temporal al terminar:',
+    '',
+    '```',
+    "cat > ./_sacar_platica_tmp.mts << 'SACADOR_EOF'",
+    "import { readFileSync } from 'node:fs'",
+    "import { sacarTurnos, platicaComoTexto } from './src/nucleo/sacar-turnos.ts'",
+    "const crudo = readFileSync(process.argv[2], 'utf8')",
+    'console.log(platicaComoTexto(sacarTurnos(crudo)))',
+    'SACADOR_EOF',
+    'npx tsx ./_sacar_platica_tmp.mts "<la ruta del .jsonl que leiste>"',
+    'rm ./_sacar_platica_tmp.mts',
+    '```',
+    '',
+    'Regresa la salida de ese comando tal cual en `platica`, y la ruta del `.jsonl` que usaste',
+    'en `transcriptLeido`. Si no pudiste leer el archivo o correr el comando, `platica` y',
+    '`transcriptLeido` van vacios y `noSePudo` dice por que -no inventes contenido ni ruta.'
+  ].join('\n')
+}
+
+const sacado = await agent(promptParaSacar(rutaTranscriptPedida), {
+  label: `sacar:${paso}`,
+  phase: 'Sacar',
+  agentType: 'auditor-del-roadmap',
+  schema: SACADO
+})
+
+if (!sacado) {
+  log('El sacador no contesto. No hay material que afinar.')
+  return { estado: 'sin-medicion', paso }
+}
+
+const platica = typeof sacado.platica === 'string' ? sacado.platica : ''
+// El transcript contra el que se audita al final es este, el que «Sacar» de verdad resolvio y
+// leyo -no el que se pidio-, para que los dos pasos que necesitan el archivo usen siempre el
+// mismo. Si «Sacar» no lo reporto, el transcript pedido sirve de respaldo.
+const transcript =
+  typeof sacado.transcriptLeido === 'string' && sacado.transcriptLeido.trim() ? sacado.transcriptLeido : rutaTranscriptPedida
 
 // Las dos son turno del experto y las dos valen igual como respaldo: lo que el cotejador
 // mide contra "lo que se dijo" tiene que incluir la ronda de respuestas, no solo la platica
@@ -217,8 +327,8 @@ const loQueDijoElExperto = respuestas
   : platica
 
 if (!platica.trim()) {
-  log('No llego texto de la platica: sin material, no es que el paso no dejara nada.')
-  return { estado: 'sin-material', paso, motivo: 'la platica llego vacia o no llego' }
+  log(`No se pudo sacar la platica: ${sacado.noSePudo || 'el sacador la devolvio vacia sin decir por que'}.`)
+  return { estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' }
 }
 
 // --- Afinar --------------------------------------------------------------

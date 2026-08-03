@@ -98,6 +98,7 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
   const agent = async (prompt: string, opts: Record<string, unknown>) => {
     llamadas.push({ prompt, opts })
 
+    if (opts.phase === 'Sacar') return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
     if (opts.phase === 'Afinar') {
       const llamadasDeAfinar = llamadas.filter((l) => l.opts.phase === 'Afinar').length
       if (llamadasDeAfinar === 1) return { hallazgos: [HALLAZGO_INICIAL], preguntas: preguntasDeAfinar }
@@ -134,7 +135,8 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
   }))
 }
 
-const PLATICA = { paso: 'paso de prueba', platica: 'algo se dijo', hora: '2026-07-31T16:40:00-06:00' }
+const PLATICA_TEXTO = 'algo se dijo'
+const PLATICA = { paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: '2026-07-31T16:40:00-06:00' }
 
 function promptDeFase(llamadas: Llamada[], fase: string, ocurrencia = 0): string {
   const dela = llamadas.filter((l) => l.opts.phase === fase)
@@ -272,7 +274,7 @@ describe('«leer en frio» corre antes de escribir, sobre los hallazgos y no sob
     if (!lector) throw new Error('el molino nunca llego a la fase Leer en frio')
 
     expect(lector.prompt).toContain('leer-en-frio')
-    expect(lector.prompt).not.toContain(PLATICA.platica)
+    expect(lector.prompt).not.toContain(PLATICA_TEXTO)
     expect(lector.prompt).not.toContain(PLATICA.paso)
   })
 
@@ -376,7 +378,7 @@ describe('«cotejar» corre antes de escribir, y a diferencia del lector en frio
     if (!cotejo) throw new Error('el molino nunca llego a la fase Cotejar')
 
     expect(cotejo.prompt).toContain('cotejar')
-    expect(cotejo.prompt).toContain(PLATICA.platica)
+    expect(cotejo.prompt).toContain(PLATICA_TEXTO)
   })
 
   it('un invento marcado regresa a Afinar con su frase señalada, y lo corregido llega a Asentar', async () => {
@@ -560,7 +562,7 @@ describe('el cotejador ve todo lo que dijo el experto, la platica y las respuest
     const cotejo = llamadas.find((l) => l.opts.phase === 'Cotejar')
     if (!cotejo) throw new Error('el molino nunca llego a la fase Cotejar')
 
-    expect(cotejo.prompt).toContain(PLATICA.platica)
+    expect(cotejo.prompt).toContain(PLATICA_TEXTO)
   })
 })
 
@@ -601,7 +603,7 @@ describe('las vueltas de arreglo de Afinar ven todo lo que dijo el experto, no s
     })
 
     const vuelta = promptDeFase(llamadas, 'Afinar', 1)
-    expect(vuelta).toContain(PLATICA.platica)
+    expect(vuelta).toContain(PLATICA_TEXTO)
   })
 
   it('sin respuestas, la vuelta de solo-inventos sigue recibiendo la platica y nada cambia', async () => {
@@ -615,7 +617,7 @@ describe('las vueltas de arreglo de Afinar ven todo lo que dijo el experto, no s
     })
 
     const segundaVuelta = promptDeFase(llamadas, 'Afinar', 2)
-    expect(segundaVuelta).toContain(PLATICA.platica)
+    expect(segundaVuelta).toContain(PLATICA_TEXTO)
   })
 })
 
@@ -636,7 +638,7 @@ describe('«juntar» señala los hallazgos que son un mismo problema, y corre en
     if (!juntar) throw new Error('el molino nunca llego a la fase Juntar')
 
     expect(juntar.prompt).toContain('juntar')
-    expect(juntar.prompt).not.toContain(PLATICA.platica)
+    expect(juntar.prompt).not.toContain(PLATICA_TEXTO)
     expect(juntar.prompt).not.toContain(PLATICA.paso)
   })
 

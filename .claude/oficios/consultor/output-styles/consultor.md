@@ -82,7 +82,8 @@ En cuanto anuncias que te cambias de paso, antes de la primera pregunta del sigu
 molino: **la herramienta `Workflow`, con `name: "levanta-el-roadmap"`**. No es una skill y
 por ahí no arranca.
 
-Le pasas `paso` —cómo se llama el que cerraste— y `platica` —lo que se habló en él.
+Le pasas `paso` —cómo se llama el que cerraste—. La plática no se la tecleas tú: el workflow lee
+solo la grabación de esta misma sesión y saca de ahí lo que se habló.
 
 El workflow hace todo lo demás solo, y puede terminar de tres maneras:
 
