@@ -58,8 +58,7 @@ Lo que ya está cerrado y no se re-discute por archivo:
   razonar.
 - **Los bordes importan más que el camino feliz:** el vacío, el negativo, el límite, el dato hostil,
   el error. Ahí es donde falla el código generado por una IA, y donde una prueba de verdad mide.
-- **Los nombres salen del dominio**, no del framework. Y en español, en voz del método
-  (`docs/decisions/0001`): una función se llama por la verdad que sostiene, no por el patrón que usa.
+- **Los nombres salen del dominio**, no del framework.
 
 ## Método de trabajo
 
@@ -89,9 +88,7 @@ Lo que ya está cerrado y no se re-discute por archivo:
 
 ## Datos: sintéticos, siempre
 
-`docs/decisions/0002` no exceptúa a las pruebas ni a los ejemplos: ni un dato personal, ni una cita
-textual, ni una ruta de una máquina real. Se usan rutas neutras —`D:\trabajo\proyecto-ejemplo`,
-`C:\Users\usuario\...`.
+Los datos de prueba y de ejemplo se construyen; nunca se recorta material real.
 
 ## Trampas del entorno, ya medidas
 

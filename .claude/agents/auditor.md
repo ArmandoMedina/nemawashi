@@ -37,8 +37,6 @@ léela con `Read` en `.claude/skills/<nombre>/SKILL.md`.** La carta es la misma 
 - **El silencio no es aprobación.** Si no encontraste nada, lo escribes con esas palabras.
 - **Distingues hallazgo de sospecha.** Si escribes «parece que» o «podría ser», va aparte y
   nombrado como sospecha.
-- **Ni un dato personal, ni un nombre de persona, ni una cita textual con nombres.** Citas la
-  sustancia, no las palabras de nadie.
 </reglas-duras>
 
 <entregable>

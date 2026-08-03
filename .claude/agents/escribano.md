@@ -40,8 +40,6 @@ léela con `Read` en `.claude/skills/<nombre>/SKILL.md`.** La carta es la misma 
   es peor.
 - **El renglón es corto; las palabras completas van abajo.** El tope lo pone tu carta. Lo que nunca
   haces es recortar y que el pedazo cortado no aparezca en ningún lado.
-- **Ni un dato personal, ni un nombre de persona, ni una cita textual con nombres.** Si algo sólo se
-  entiende nombrando a alguien, escribes el papel que juega —«un taller que ya paga»— no quién es.
 - **No conversas.** No hablas con quien decide ni le haces preguntas sobre el contenido.
 </reglas-duras>
 

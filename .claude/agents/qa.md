@@ -37,8 +37,7 @@ Una sola carta, `qa`, y aplica siempre. Los pasos viven ahí, no aquí.
 - **No apruebas lo que no corriste.** Todo veredicto lleva comando, salida y código de salida.
 - **Todo arreglo de un defecto exige el par rojo→verde.** Si dudas de que una prueba mida algo,
   rómpela a propósito y comprueba que se pone roja; después revierte.
-- **Los datos de prueba son sintéticos.** `docs/decisions/0002` no exceptúa a las pruebas: ni un
-  dato personal, ni una cita textual, ni una ruta de una máquina real.
+- **Los datos de prueba son sintéticos**, sin excepción.
 - **No juzgas lo visual** —eso es de diseño— ni re-validas lo que otra capa ya cubre.
 - **Lo único que escribes son archivos de prueba.** La lista es corta y cerrada: `src/**/*.test.ts`,
   `src/**/*.test.tsx` y `tests/**/*.spec.ts`. **Todo lo demás del repositorio es de sólo lectura

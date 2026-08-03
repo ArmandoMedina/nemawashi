@@ -23,7 +23,7 @@ freno         →  lo único que de verdad obliga
 |---|---|---|---|---|
 | **Plugin** | El programa | Al arrancar el proceso | Empaqueta lo de un oficio y lo mete de golpe | Una carpeta con su `plugin.json` |
 | **Personalidad** | La sesión | Se elige, o el plugin la fuerza | **Reemplaza** quién es la sesión | `output-styles/*.md` |
-| **Regla** | La sesión | Sola, sin que nadie la pida | **Agrega** cómo se trabaja | `rules/*.md` |
+| **Regla** | La sesión **y cada agente** | Sola, sin que nadie la pida | **Agrega** cómo se trabaja | `rules/*.md` |
 | **Agente** | Él mismo | Cuando alguien lo llama | El puesto y el carácter | `agents/*.md` |
 | **Carta** | El agente | Cuando alguien la nombra | El método de un trabajo | `skills/<nombre>/SKILL.md` |
 | **Flujo** | El programa | Cuando alguien lo corre | Quién se llama, en qué orden, con qué carta | `workflows/*.js` |
@@ -53,6 +53,10 @@ Las dos son texto que llega a la sesión principal. Se diferencian en cuatro cos
 
 Una regla conviene corta, porque lo que está siempre ocupa lugar siempre.
 
+**Medido el 2026-08-03:** una regla llega también a cada subagente, en el mismo bloque que
+`CLAUDE.md` y citando su ruta. Por eso lo que vale para todos se escribe **una vez** ahí, y no se
+repite en las fichas ni en las cartas.
+
 ## Regla y carta — el otro par que se parece
 
 Las dos son método escrito. La diferencia es quién decide que entren:
@@ -60,7 +64,7 @@ Las dos son método escrito. La diferencia es quién decide que entren:
 | | Regla | Carta |
 |---|---|---|
 | **Quién la mete** | Nadie: llega sola | Alguien la nombra: el flujo, el agente, o el modelo por su descripción |
-| **Quién la lee** | La sesión principal | Quien hace el trabajo, casi siempre un agente |
+| **Quién la lee** | La sesión principal **y todos los agentes** | Sólo quien hace ese trabajo |
 | **De qué habla** | Cómo se trabaja aquí, sea cual sea la tarea | Los pasos de un trabajo concreto |
 | **Cuánto puede medir** | Corta | Larga: sólo pesa cuando entra |
 

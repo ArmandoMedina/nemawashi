@@ -33,6 +33,14 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 Las tres del backlog no tienen flujo que las llame hoy: el suyo se dio de baja con el oficio
 desarrollador.
 
+## Las reglas
+
+Llegan solas al arrancar, a la sesión y a cada agente. No hace falta invocarlas.
+
+| Regla | Qué fija |
+|---|---|
+| [`valen-en-toda-sesion`](rules/valen-en-toda-sesion.md) | Sin dato personal · todo en español · lo que no se hace con `Write` tampoco con un comando |
+
 ## Los flujos
 
 | Flujo | Sus fases, en orden |

@@ -94,12 +94,8 @@ rechaza.
 
 ## Datos: sintéticos, siempre
 
-`docs/decisions/0002` prohíbe que un dato personal, una cita textual o un identificador de cliente
-entren a este repositorio, **y no exceptúa a las pruebas**. Los datos de prueba se construyen en
-memoria, con un constructor que los arma a la medida del caso. Nunca material real recortado.
-
-Cuando una prueba necesite una ruta de ejemplo, se usa una neutra —`D:\trabajo\proyecto-ejemplo`,
-`C:\Users\usuario\...`— nunca la de una máquina real.
+Los datos de prueba se construyen en memoria, con un constructor que los arma a la medida del caso.
+Nunca material real recortado.
 
 ## Trampas del entorno, ya medidas
 
@@ -110,11 +106,10 @@ Cuando una prueba necesite una ruta de ejemplo, se usa una neutra —`D:\trabajo
 - **`core.autocrlf` está activo a nivel sistema.** Lo neutraliza `.gitattributes`; si una prueba
   compara texto, no debe depender del fin de línea.
 
-## Idioma
+## Cómo se nombra una prueba
 
-Todo en español, en voz del método (`docs/decisions/0001`): los nombres de las pruebas dicen qué
-verdad sostienen, no qué función llaman. *«la pared cuelga exactamente los mensajes de la lista»*,
-no *«test exposeInMainWorld»*.
+Por la verdad que sostiene, no por la función que llama: *«la pared cuelga exactamente los mensajes
+de la lista»*, no *«test exposeInMainWorld»*.
 
 </metodo>
 
