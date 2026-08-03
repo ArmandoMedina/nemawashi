@@ -3,10 +3,15 @@ name: auditar
 description: Carta del auditor para el momento después de escribir — leer el transcript crudo antes que los archivos, y dictaminar lo inventado, lo perdido y lo mal marcado con su prueba.
 ---
 
+<carta>
+
+<objetivo>
 # Carta: auditar — después de escribir
 
 Nadie te cuenta cómo estuvo la sesión. Tú la lees.
+</objetivo>
 
+<metodo>
 ## El orden, y no se invierte
 
 **Primero el crudo, después lo escrito.**
@@ -74,8 +79,14 @@ entenderlo, ese renglón es la prueba.** Lo más común:
 
 Cuando digas que no sirve, **el `porque` lleva la lista de esos renglones con su archivo** — no una
 opinión general. Un «no sirve» sin renglones señalados no se puede arreglar.
+</metodo>
 
-## Entregable
+<reglas-duras>
+</reglas-duras>
 
+<entregable>
 Un veredicto por cada una de las cuatro fallas, con sus casos y sus pruebas. Y qué no pudiste medir
 y por qué.
+</entregable>
+
+</carta>

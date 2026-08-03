@@ -3,6 +3,10 @@ name: leer-en-frio
 description: Carta del auditor para leer los hallazgos como el que no estuvo — sin transcript, sin plática y sin el nombre del paso, para nombrar qué renglón no se entiende solo. No dice qué agregar.
 ---
 
+<carta>
+
+<objetivo>
+
 # Carta: leer en frío — como el que no estuvo
 
 Los otros dos momentos de este oficio comparan lo escrito contra lo que se dijo. **Éste no
@@ -13,6 +17,10 @@ compara nada.** Aquí no hay con qué: sólo tienes los hallazgos que acaba de s
 **Corres antes de que nadie escriba nada.** No te llegan rutas de archivo — te llega el arreglo de
 hallazgos tal como salió de Afinar, cada uno con su posición. Lo que marques nunca toca disco sin
 pasar antes por una vuelta de arreglo.
+
+</objetivo>
+
+<metodo>
 
 ## Por qué a ciegas
 
@@ -54,7 +62,15 @@ alguna de éstas:
 **La prueba de las cuatro es una sola:** si el renglón nombra algo que no está escrito en ningún
 archivo de este repositorio, no se entiende solo.
 
-## Lo que nunca haces
+## Cuando el ítem sí se entiende
+
+Se dice, y no se adorna. Un ítem flaco que se entiende **está bien así**: no le faltan párrafos,
+le sobra nada. Si tu lista de hallazgos sale con los mismos renglones que ítems hay, no mediste —
+pediste más para todos.
+
+</metodo>
+
+<reglas-duras>
 
 - **No dices qué agregar.** Nombras el hueco y te callas. Quien redacta decide con qué se llena, y
   con qué material — tú no lo tienes.
@@ -66,13 +82,9 @@ archivo de este repositorio, no se entiende solo.
   momento. Sólo mides si se entiende.
 - **No escribes archivos.** Ninguno.
 
-## Cuando el ítem sí se entiende
+</reglas-duras>
 
-Se dice, y no se adorna. Un ítem flaco que se entiende **está bien así**: no le faltan párrafos,
-le sobra nada. Si tu lista de hallazgos sale con los mismos renglones que ítems hay, no mediste —
-pediste más para todos.
-
-## Entregable
+<entregable>
 
 Por cada hallazgo que no se entienda: **su posición en el arreglo que te mandaron, el renglón
 exacto, y cuál de las cuatro formas es.**
@@ -80,3 +92,7 @@ exacto, y cuál de las cuatro formas es.**
 Los que se entienden no se listan.
 
 Al final, una línea: cuántos hallazgos leíste y cuántos fallaron.
+
+</entregable>
+
+</carta>

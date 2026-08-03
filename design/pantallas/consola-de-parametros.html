@@ -1010,6 +1010,11 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
       { t:'sep', l:'Qué dice' },
       { t:'area', k:'primer', l:'Primer mensaje', rows:2,
         h:'Con qué arranca sin que nadie se lo pida. Se deja vacío casi siempre.' },
+      { t:'sep', l:'Quién es y qué recibe' },
+      { t:'area', k:'identidad', l:'Quién es', rows:2, req:true,
+        h:'Quién es el agente y, en la misma frase, qué no le toca. Sin esa segunda mitad se mete a hacer el trabajo del de al lado.' },
+      { t:'area', k:'que-recibes', l:'Qué le llega', rows:2, req:true,
+        h:'Qué material recibe, de quién, y cómo sabe cuál de sus momentos toca. Si no lo sabe, arranca pidiendo lo que ya tenía enfrente.' },
       { t:'sep', l:'Qué sabe, acotado' },
       { t:'chips', k:'paradigma', l:'Paradigma', o:['Orientado a objetos','Funcional','Procedural'], on:['Orientado a objetos'], req:true,
         h:'Vienen sugeridos los que más pesan — corrígelos si tu módulo rige otro. Se puede encender más de uno: eso es un reparto, y entonces conviene escribir la regla del reparto abajo. Si no acotas, cada sesión elige uno distinto.' },
@@ -1019,10 +1024,14 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
       { t:'chips', k:'prohibidos', l:'Patrones prohibidos', stop:true, req:true,
         o:['Singleton','Herencia de más de un nivel','Estado global'], on:['Singleton','Herencia de más de un nivel'],
         h:'La mitad negativa, y pesa igual que la de arriba: un patrón que no está en la lista de permitidos el agente lo puede inventar, uno que está aquí no. Vienen sugeridos los dos que más cuestan de deshacer.' },
-      { t:'area', k:'convenciones', l:'Convenciones del módulo', rows:2, req:true,
-        h:'Nombres, formatos y reglas propias del módulo del que este agente es responsable.' },
-      { t:'area', k:'alcance', l:'Fuera de alcance', rows:2, req:true,
-        h:'Qué NO debe hacer. Es el campo más potente y el que todos olvidan: sin límites, el agente puede hacer todo — y no hace nada.' }
+      { t:'sep', l:'Su método y sus límites' },
+      { t:'area', k:'como-trabajas', l:'Cómo trabaja', rows:4, req:true,
+        h:'Sólo cuál de sus instructivos usa y en qué momento. Los pasos van dentro del instructivo: escritos aquí también, un día los dos van a decir cosas distintas.' },
+      { t:'area', k:'reglas-duras', l:'Fuera de alcance', rows:2, req:true,
+        h:'Qué nunca hace y qué siempre hace. Es el campo más potente y el que todos olvidan: sin límites, el agente puede hacer todo — y no hace nada.' },
+      { t:'sep', l:'Con qué cierra' },
+      { t:'area', k:'entregable', l:'Qué entrega', rows:2, req:true,
+        h:'Qué devuelve y con qué forma. Sin forma acordada, cada corrida entrega otra cosa y no hay con qué compararla.' }
     ]},
     instructivo: { titulo: 'instructivo', campos: [
       { t:'text', k:'nombre', l:'Nombre' },
@@ -1046,7 +1055,15 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
       { t:'text', k:'licencia', l:'Licencia', v:'MIT', par:true,
         h:'Si lo compartes con el cliente, esto decide qué puede hacer con él.' },
       { t:'sep', l:'Qué enseña' },
-      { t:'area', k:'cuerpo', l:'El contenido', rows:4 }
+      { t:'area', k:'objetivo', l:'Qué logra', rows:2,
+        h:'Qué consigue esta carta y para qué momento sirve. Si hacen falta dos frases sin relación, son dos instructivos.' },
+      { t:'area', k:'metodo', l:'Cómo se hace', rows:4,
+        h:'Los pasos, las listas y las fallas que se buscan. Es lo que se sigue al pie de la letra: si aquí va un resumen, cada quien completa lo que falta a su modo.' },
+      { t:'sep', l:'Sus límites y su cierre' },
+      { t:'area', k:'reglas-duras', l:'Fuera de alcance', rows:2,
+        h:'Qué nunca hace y qué siempre hace. Sin esto, el instructivo se estira a decidir cosas que no le tocaban.' },
+      { t:'area', k:'entregable', l:'Qué entrega', rows:2,
+        h:'Qué entrega y con qué forma. Si no se fija, cada vez devuelve otra cosa y no hay con qué compararla.' }
     ]},
     comando: { titulo: 'comando', campos: [
       { t:'text', k:'nombre', l:'Cómo se escribe', h:'Si lo cambias, quien ya se sabía el anterior deja de encontrarlo. Se teclea con una barra al inicio.' },
@@ -1120,8 +1137,8 @@ Cita el archivo o el dato del que sacaste cada afirmación.</textarea>
   var EJEMPLOS = {
     explorador: {
       desc: 'Cuando haga falta ubicar archivos, símbolos o referencias antes de afirmar algo',
-      convenciones: 'Antes de opinar, abre el archivo o corre la consulta.\nDevuelve siempre la ruta o la consulta de la que sacaste cada dato.',
-      alcance: 'No opina sobre el negocio.\nNo escribe archivos: localiza y reporta.\nSi no encontró evidencia, lo dice — no rellena.'
+      'como-trabajas': 'Antes de opinar, abre el archivo o corre la consulta.\nDevuelve siempre la ruta o la consulta de la que sacaste cada dato.',
+      'reglas-duras': 'No opina sobre el negocio.\nNo escribe archivos: localiza y reporta.\nSi no encontró evidencia, lo dice — no rellena.'
     },
     'cosecha antes de cerrar': {
       desc: 'Que no queden hallazgos de la sesión sin registrar como ítem',

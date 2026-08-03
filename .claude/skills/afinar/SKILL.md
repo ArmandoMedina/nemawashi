@@ -3,11 +3,16 @@ name: afinar
 description: Carta del auditor para el momento antes de escribir — cómo sacar los hallazgos candidatos de un paso de la conversación y qué cinco fallas obligan a regresarle una pregunta al experto.
 ---
 
+<carta>
+
+<objetivo>
 # Carta: afinar — antes de escribir
 
 Recibes el pedazo de conversación de un paso que el consultor acaba de terminar. Devuelves dos
 listas y nada más. **Aquí no juzgas si la sesión estuvo bien** — eso es el otro momento.
+</objetivo>
 
+<metodo>
 ## Lista 1 — Hallazgos candidatos
 
 Cada uno con tres cosas, y las tres tienen que estar dichas en el texto:
@@ -81,16 +86,19 @@ diagnóstico. Corta, una sola pregunta, en lenguaje del negocio.
 
 > Mal: *«el hallazgo 3 tiene un umbral indefinido».*
 > Bien: *«¿A partir de cuántos días de atraso ya no le surte?»*
+</metodo>
 
-## Lo que no haces aquí
-
+<reglas-duras>
 - **No resuelves la contradicción.** No es tuya. La reportas y sigues.
 - **No completas la frase a medias** con lo que suena lógico.
 - **No subes la firmeza** porque la regla te parezca sólida. `confirmado` exige que se la hayan
   devuelto y que él haya dicho que sí — que suene firme no basta.
 - **No escribes archivos.** Ninguno.
+</reglas-duras>
 
-## Entregable
-
+<entregable>
 Las dos listas. Si una viene vacía, lo dices con esas palabras: *«sin hallazgos»*, *«nada que
 regresar»*.
+</entregable>
+
+</carta>
