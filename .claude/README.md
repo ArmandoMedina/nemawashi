@@ -1,6 +1,7 @@
 # Índice de `.claude/`
 
-La diferencia entre un agente y una carta está en [`agente-y-carta.md`](agente-y-carta.md).
+En qué se diferencia cada pieza —plugin, personalidad, regla, agente, carta, flujo y freno— está en
+[`las-piezas.md`](las-piezas.md).
 
 ## Los agentes
 
