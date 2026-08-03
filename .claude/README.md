@@ -29,16 +29,18 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 | [`desarrollador`](skills/desarrollador/SKILL.md) | desarrollador | Al implementar cualquier cosa |
 | [`qa`](skills/qa/SKILL.md) | qa | Al escribir, clasificar o juzgar cualquier prueba |
 
+Las tres del backlog no tienen flujo que las llame hoy: el suyo se dio de baja con el oficio
+desarrollador.
+
 ## Los flujos
 
 | Flujo | Sus fases, en orden |
 |---|---|
 | [`levanta-el-roadmap`](workflows/levanta-el-roadmap.js) | Sacar · Afinar · Leer en frío · Cotejar · Juntar · Asentar · Auditar |
-| [`levanta-el-backlog`](oficios/desarrollador/workflows/levanta-el-backlog.js) | Afinar · Asentar · Auditar |
 
 ## Las personalidades de sesión
 
 | Oficio | Archivo |
 |---|---|
 | consultor | [`output-styles/consultor.md`](oficios/consultor/output-styles/consultor.md) |
-| desarrollador | [`output-styles/desarrollador.md`](oficios/desarrollador/output-styles/desarrollador.md) |
+| sin dev | [`output-styles/sin-dev.md`](output-styles/sin-dev.md) |
