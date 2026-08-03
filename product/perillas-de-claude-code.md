@@ -923,6 +923,24 @@ enfrente:**
 10. **El dato personal necesita un freno**, no un campo. Es la única de las tres que no tiene
     perilla y sí tiene solución.
 
+**Lo que salió de armar los oficios el 2026-08-03, y no estaba en la lista de arriba:**
+
+1. **`observeSubagents` puede poner al auditor a medir en paralelo, no después.** Hoy el auditor
+   dictamina cuando el escribano ya escribió; ese campo lo pondría a vigilar mientras trabaja. Si
+   funciona, cambia el diseño del molino — el freno dejaría de ser un paso y sería una compañía.
+2. **`CLAUDE_COWORK_MEMORY_GUIDELINES` es la vía para decirle qué no recordar de una entrevista.**
+   Complementa el punto 10, no lo reemplaza: el freno protege lo versionado; esto protege lo que la
+   máquina se guarda. La regla de «sin dato personal» ya existe en `.claude/rules/` y hoy nadie se la
+   pasa por ahí.
+3. **Reconciliar el plugin con la personalidad.** El 2026-08-03 se quitó el plugin del consultor
+   porque lo único que compraba era que la personalidad llegara sin elegirla, y eso lo hace el ajuste
+   `outputStyle`. Esta auditoría apunta a `--plugin-dir` con `force-for-plugin` como vía viable, y
+   deja `CLAUDE_CODE_MANAGED_SETTINGS_PATH` sin ruta practicable. **Las dos lecturas no se han
+   confrontado**, y el ejecutable no debería construirse sobre una sin cerrar la otra.
+4. **El punto 4 de arriba ya tiene cuerpo:** la consola quedó con unos treinta campos nuevos, y cada
+   uno es una clave que puede fallar en silencio. Un interruptor apagado en pantalla con la sesión
+   corriendo prendida es justo el error que la consola existe para evitar.
+
 **Lo que se dejó fuera a propósito, con su motivo:**
 
 - **La ventana de un millón** — en la maqueta se elige como parte del modelo; un segundo control diría lo mismo dos veces.
