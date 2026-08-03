@@ -26,16 +26,10 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 | [`juntar`](skills/juntar/SKILL.md) | auditor | Antes de escribir: señalar los que son un mismo problema |
 | [`auditar`](skills/auditar/SKILL.md) | auditor | Después de escribir: contra el registro crudo |
 | [`asentar`](skills/asentar/SKILL.md) | escribano | Al escribir cualquier ítem o documento del roadmap |
-| [`afinar-el-backlog`](skills/afinar-el-backlog/SKILL.md) | auditor | Antes de escribir: las cinco fallas de una tarea candidata |
-| [`auditar-el-backlog`](skills/auditar-el-backlog/SKILL.md) | auditor | Después de escribir: contra el registro crudo |
-| [`asentar-el-backlog`](skills/asentar-el-backlog/SKILL.md) | escribano | Al escribir cualquier tarea o documento del backlog |
 | [`desarrollador`](skills/desarrollador/SKILL.md) | desarrollador | Al implementar cualquier cosa |
 | [`qa`](skills/qa/SKILL.md) | qa | Al escribir, clasificar o juzgar cualquier prueba |
 | [`disenador`](skills/disenador/SKILL.md) | disenador | Al proponer o revisar cualquier pantalla |
 | [`devops`](skills/devops/SKILL.md) | devops | Al tocar CI, compilación, empaque o el arranque de un proceso |
-
-Las tres del backlog no tienen flujo que las llame hoy: el suyo se dio de baja con el oficio
-desarrollador.
 
 ## Las reglas
 
