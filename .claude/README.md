@@ -37,8 +37,12 @@ desarrollador.
 
 Llegan solas al arrancar, a la sesión y a cada agente. No hace falta invocarlas.
 
+No hay `CLAUDE.md`: lo que decía vive aquí, por tema.
+
 | Regla | Qué fija |
 |---|---|
+| [`de-que-va-y-a-quien-se-llama`](rules/de-que-va-y-a-quien-se-llama.md) | Qué es Nemawashi, dónde está cada cosa, y que a un oficio se le llama en vez de leerle la carta |
+| [`la-arquitectura-ya-decidida`](rules/la-arquitectura-ya-decidida.md) | Paradigma, patrones, la pared entre los dos mundos, los valores de diseño |
 | [`valen-en-toda-sesion`](rules/valen-en-toda-sesion.md) | Sin dato personal · todo en español · lo que no se hace con `Write` tampoco con un comando |
 
 ## Los flujos

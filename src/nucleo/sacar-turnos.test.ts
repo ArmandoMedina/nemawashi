@@ -4,7 +4,7 @@ import { sacarTurnos, platicaComoTexto, type Turno } from './sacar-turnos'
 /**
  * Todo el material de este archivo es sintetico, armado a mano con la forma real del
  * `.jsonl` de Claude Code que se verifico al construir el sacador — nunca un recorte del
- * registro real (`docs/decisions/0002`, `CLAUDE.md`).
+ * registro real (`docs/decisions/0002`).
  */
 
 /** Arma un renglon de `.jsonl` con lo minimo que el sacador necesita ver. */

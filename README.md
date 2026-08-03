@@ -28,7 +28,7 @@ cobro por token.
 
 ## El gate anti dato personal
 
-Este repositorio es público. [`.claude/CLAUDE.md`](.claude/CLAUDE.md) prohíbe dato personal, cita textual o identificador de
+Este repositorio es público. [`.claude/rules/valen-en-toda-sesion.md`](.claude/rules/valen-en-toda-sesion.md) prohíbe dato personal, cita textual o identificador de
 cliente en cualquier archivo versionado, sin excepción para pruebas ni ejemplos — y
 [`src/contratos/sin-dato-personal.test.ts`](src/contratos/sin-dato-personal.test.ts) es el muro que
 lo hace cumplir, no la prosa que lo pide. Corre en CI en cada *pull request* y en cada push a

@@ -53,9 +53,10 @@ Las dos son texto que llega a la sesión principal. Se diferencian en cuatro cos
 
 Una regla conviene corta, porque lo que está siempre ocupa lugar siempre.
 
-**Medido el 2026-08-03:** una regla llega también a cada subagente, en el mismo bloque que
-`CLAUDE.md` y citando su ruta. Por eso lo que vale para todos se escribe **una vez** ahí, y no se
-repite en las fichas ni en las cartas.
+**Medido el 2026-08-03:** una regla llega también a cada subagente, en el bloque de instrucciones
+del proyecto y citando su ruta. Por eso lo que vale para todos se escribe **una vez** ahí, y no se
+repite en las fichas ni en las cartas — y por eso este repositorio ya no tiene `CLAUDE.md`: lo que
+decía son reglas, y como reglas llegan igual y se pueden leer por tema.
 
 ## Regla y carta — el otro par que se parece
 
