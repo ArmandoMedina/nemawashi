@@ -3,34 +3,21 @@ import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 
 /**
- * El contrato de RM-0012: la hora del alta se le pasa al escribano, nunca la deduce el
- * molino ni la inventa el escribano.
+ * El contrato: la hora del alta le llega al escribano estampada pieza por pieza, nunca deducida.
  *
- * Medido en corrida real (seis corridas seguidas sin escribir nada): una hora suelta en el
- * texto del prompt no basta. El escribano lee `alta` -y `confirmado`, cuando la firmeza lo
- * pide- del propio objeto de cada hallazgo, no de una linea de prosa aparte. Por eso este
- * contrato no se conforma con que la hora aparezca en algun lado del prompt: verifica que
- * el arreglo de hallazgos que se manda a Asentar traiga el campo estampado, hallazgo por
- * hallazgo, y que la ausencia de la hora se refleje en la ausencia del campo -nunca en un
- * valor inventado.
+ * Medido el 2026-07-31: quince items salieron con `12:00:00` porque la plantilla exige hora y a
+ * quien escribia no le llegaba ninguna. Obedecio la forma inventando el contenido, y una hora
+ * inventada se ve igual de bien que una real -esa es justo la razon por la que es peor.
  *
- * El molino (`.claude/workflows/levanta-el-roadmap.js`) no es un modulo
- * TypeScript importable: lo ejecuta el runtime de Claude Code inyectando `args`, `agent`,
- * `log` y `phase` como si fueran parametros de una funcion. Aqui se reproduce exactamente
- * esa forma de invocacion -sin marcarlo como AsyncFunction el archivo ni siquiera se puede
- * correr-, y no se prueba nada mas: no se abre ventana, no se llama a Claude de verdad, el
- * `agent` de la prueba es una funcion falsa que contesta lo minimo que cada schema exige.
+ * El molino tampoco la calcula: no tiene reloj. Entra por `args.hora` y el codigo la estampa en
+ * cada pieza antes de mandarla, junto con el `paso`. Un campo que el agente pudiera llenar es un
+ * campo que el agente puede perder.
+ *
+ * Igual que los otros contratos del molino: no es un modulo TypeScript importable, lo ejecuta el
+ * runtime de Claude Code inyectando `args`, `agent`, `log` y `phase`.
  */
 
 const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-roadmap.js')
-
-type Hallazgo = {
-  regla: string
-  deDondeSalio: string
-  firmeza: 'dicho' | 'confirmado' | 'abierto'
-  alta?: string
-  confirmado?: string
-}
 
 type Llamada = { prompt: string; opts: Record<string, unknown> }
 
@@ -42,30 +29,56 @@ function cargarMolino(): (...args: unknown[]) => Promise<unknown> {
   return new AsyncFunction('args', 'agent', 'log', 'phase', fuente)
 }
 
-const HALLAZGOS_DE_PRUEBA: Hallazgo[] = [
-  { regla: 'una regla dicha en la platica', deDondeSalio: 'la platica', firmeza: 'dicho' },
-  { regla: 'una regla que el experto confirmo', deDondeSalio: 'la platica', firmeza: 'confirmado' }
-]
+const HORA = '2026-07-31T09:20:00-06:00'
 
-function correrMolino(
-  entrada: Record<string, unknown>,
-  hallazgosDeAfinar: Hallazgo[] = HALLAZGOS_DE_PRUEBA
-): Promise<{ llamadas: Llamada[] }> {
+type Pieza = Record<string, unknown>
+
+function regla(id: string, firmeza: string): Pieza {
+  return {
+    id,
+    renglon: `una regla ${firmeza}`,
+    capacidades: [],
+    firmeza,
+    origen: 'escuchado',
+    enSusPalabras: 'lo que se dijo, entero',
+    deDondeSalio: 'el caso contado entero',
+    queQuedaAbierto: 'nada'
+  }
+}
+
+const REGLAS_DE_PRUEBA = [regla('REG-1', 'dicho'), regla('REG-2', 'confirmado')]
+
+function correrMolino(entrada: Record<string, unknown>, reglas: Pieza[] = REGLAS_DE_PRUEBA): Promise<{ llamadas: Llamada[] }> {
   const llamadas: Llamada[] = []
 
   const agent = async (prompt: string, opts: Record<string, unknown>) => {
     llamadas.push({ prompt, opts })
+    const label = String(opts.label ?? '')
+
     if (opts.phase === 'Sacar') return { platica: 'algo se dijo en la platica', transcriptLeido: 'sesion.jsonl' }
-    if (opts.phase === 'Afinar') return { hallazgos: hallazgosDeAfinar, preguntas: [] }
-    if (opts.phase === 'Leer en frio') return { huecos: [], itemsLeidos: hallazgosDeAfinar.length }
-    if (opts.phase === 'Cotejar') return { inventos: [], hallazgosCotejados: hallazgosDeAfinar.length }
-    if (opts.phase === 'Juntar') return { grupos: [], hallazgosRevisados: hallazgosDeAfinar.length }
-    if (opts.phase === 'Asentar') {
-      return { archivos: [{ ruta: 'roadmap/0099-de-prueba.md', regla: 'una regla dicha en la platica' }], noEscritos: [] }
+    if (opts.phase === 'Levantar el examen') return { preguntas: ['algo que contestar?'] }
+    if (opts.phase === 'Construir') return { capacidades: [], modulos: [], reglas, dudas: [], senaladas: [] }
+    if (opts.phase === 'Medir') {
+      if (label.startsWith('leer-en-frio')) return { huecos: [], piezasLeidas: reglas.length }
+      if (label.startsWith('cotejar')) return { inventos: [], piezasCotejadas: reglas.length }
+      return { respuestas: [{ pregunta: 'algo que contestar?', veredicto: 'contestada' }], senaladas: [], sinPieza: [] }
+    }
+    if (opts.phase === 'Registrar') {
+      return {
+        archivos: reglas.map((r, i) => ({
+          ruta: `product/conocimiento/reglas/000${i + 1}-de-prueba.md`,
+          id: `REG-000${i + 1}`,
+          idDeTrabajo: r.id,
+          estado: 'completa'
+        })),
+        noEscritos: [],
+        senalesSinPieza: []
+      }
     }
     if (opts.phase === 'Auditar') {
-      return { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'x' }
+      return { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'sesion.jsonl' }
     }
+    if (opts.phase === 'Armar lo que falta') return { deEstePaso: [], deAntes: [], archivosRecorridos: reglas.length }
     return null
   }
 
@@ -73,86 +86,75 @@ function correrMolino(
   return molino(entrada, agent, () => {}, () => {}).then(() => ({ llamadas }))
 }
 
-function promptDeAsentar(llamadas: Llamada[]): string {
-  const llamada = llamadas.find((l) => l.opts.phase === 'Asentar')
-  if (!llamada) throw new Error('el molino nunca llego a la fase Asentar')
+function promptDeRegistrar(llamadas: Llamada[]): string {
+  const llamada = llamadas.find((l) => l.opts.phase === 'Registrar')
+  if (!llamada) throw new Error('el molino nunca llego a la fase Registrar')
   return llamada.prompt
 }
 
-/** El JSON de hallazgos es el ultimo bloque del prompt: de su primer `[` a su ultimo `]`. */
-function hallazgosDelPrompt(prompt: string): Hallazgo[] {
-  const inicio = prompt.indexOf('[')
-  const fin = prompt.lastIndexOf(']')
-  if (inicio === -1 || fin === -1) throw new Error('el prompt de Asentar no trae un arreglo de hallazgos')
-  return JSON.parse(prompt.slice(inicio, fin + 1))
+/** Las reglas son el ultimo bloque del prompt: de su `--- Las reglas ---` al final. */
+function reglasDelPrompt(prompt: string): Pieza[] {
+  const marca = prompt.indexOf('--- Las reglas ---')
+  if (marca === -1) throw new Error('el prompt de Registrar no trae el bloque de reglas')
+  const resto = prompt.slice(marca)
+  return JSON.parse(resto.slice(resto.indexOf('['), resto.lastIndexOf(']') + 1))
 }
 
-describe('la hora del alta le llega al escribano estampada en cada hallazgo', () => {
-  it('cuando args.hora llega, cada hallazgo trae su propia `alta` con esa hora', async () => {
-    const { llamadas } = await correrMolino({
-      paso: 'paso de prueba',
-      transcript: 'sesion.jsonl',
-      hora: '2026-07-31T09:20:00-06:00'
-    })
+describe('la hora del alta le llega al escribano estampada en cada pieza', () => {
+  it('cuando `args.hora` llega, cada pieza trae su propia `alta` con esa hora', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: HORA })
 
-    const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
-    expect(hallazgos).toHaveLength(HALLAZGOS_DE_PRUEBA.length)
-    for (const h of hallazgos) expect(h.alta).toBe('2026-07-31T09:20:00-06:00')
+    const reglas = reglasDelPrompt(promptDeRegistrar(llamadas))
+    expect(reglas).toHaveLength(2)
+    for (const r of reglas) expect(r.alta).toBe(HORA)
   })
 
-  it('el hallazgo `confirmado` ademas trae `confirmado` con esa misma hora; el `dicho` no', async () => {
-    const { llamadas } = await correrMolino({
-      paso: 'paso de prueba',
-      transcript: 'sesion.jsonl',
-      hora: '2026-07-31T09:20:00-06:00'
-    })
+  it('la pieza `confirmado` ademas trae `confirmado` con esa misma hora; la `dicho` no', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: HORA })
 
-    const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
-    const confirmado = hallazgos.find((h) => h.firmeza === 'confirmado')
-    const dicho = hallazgos.find((h) => h.firmeza === 'dicho')
-    expect(confirmado?.confirmado).toBe('2026-07-31T09:20:00-06:00')
-    expect(dicho?.confirmado).toBeUndefined()
+    const reglas = reglasDelPrompt(promptDeRegistrar(llamadas))
+    const confirmada = reglas.find((r) => r.firmeza === 'confirmado')
+    const dicha = reglas.find((r) => r.firmeza === 'dicho')
+
+    expect(confirmada?.confirmado).toBe(HORA)
+    expect(dicha?.confirmado).toBeUndefined()
   })
 
-  it('cuando args.hora no llega, ningun hallazgo trae `alta` inventada: el campo se queda ausente', async () => {
-    const { llamadas } = await correrMolino({
-      paso: 'paso de prueba',
-      transcript: 'sesion.jsonl'
-    })
+  it('cuando `args.hora` no llega, ninguna pieza trae `alta` inventada: el campo se queda ausente', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl' })
 
-    const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
-    for (const h of hallazgos) {
-      expect(h.alta).toBeUndefined()
-      expect(h.confirmado).toBeUndefined()
-    }
-    expect(promptDeAsentar(llamadas).toLowerCase()).toContain('no llego la hora')
+    const prompt = promptDeRegistrar(llamadas)
+    for (const r of reglasDelPrompt(prompt)) expect(r.alta).toBeUndefined()
+    expect(prompt).toContain('No llego la hora del alta')
   })
 
   it('una hora vacia o solo de espacios cuenta como no recibida, no como una hora real', async () => {
-    const { llamadas } = await correrMolino({
-      paso: 'paso de prueba',
-      transcript: 'sesion.jsonl',
-      hora: '   '
-    })
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: '   ' })
 
-    const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
-    for (const h of hallazgos) expect(h.alta).toBeUndefined()
+    const prompt = promptDeRegistrar(llamadas)
+    for (const r of reglasDelPrompt(prompt)) expect(r.alta).toBeUndefined()
+    expect(prompt).toContain('No llego la hora del alta')
   })
 
-  it('30 hallazgos en una sola corrida salen los 30 con su `alta`, no solo el primero', async () => {
-    const muchos: Hallazgo[] = Array.from({ length: 30 }, (_, i) => ({
-      regla: `regla numero ${i}`,
-      deDondeSalio: 'la platica',
-      firmeza: 'dicho'
-    }))
+  it('30 piezas en una sola corrida salen las 30 con su `alta`, no solo la primera', async () => {
+    const muchas = Array.from({ length: 30 }, (_, i) => regla(`REG-${i + 1}`, 'dicho'))
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: HORA }, muchas)
 
-    const { llamadas } = await correrMolino(
-      { paso: 'un dia usando nemawashi', transcript: 'sesion.jsonl', hora: '2026-07-31T15:05:52-06:00' },
-      muchos
-    )
+    const reglas = reglasDelPrompt(promptDeRegistrar(llamadas))
+    expect(reglas).toHaveLength(30)
+    for (const r of reglas) expect(r.alta).toBe(HORA)
+  })
 
-    const hallazgos = hallazgosDelPrompt(promptDeAsentar(llamadas))
-    expect(hallazgos).toHaveLength(30)
-    expect(hallazgos.every((h) => h.alta === '2026-07-31T15:05:52-06:00')).toBe(true)
+  it('el `paso` tambien se estampa, y es el que llego por `args`, no uno que el agente ponga', async () => {
+    const { llamadas } = await correrMolino({ paso: 'el paso que se cerro', transcript: 'sesion.jsonl', hora: HORA })
+
+    for (const r of reglasDelPrompt(promptDeRegistrar(llamadas))) expect(r.paso).toBe('el paso que se cerro')
+  })
+
+  it('a quien construye se le prohibe poner la hora y el paso: los estampa el codigo', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: HORA })
+    const construir = llamadas.find((l) => l.opts.phase === 'Construir')
+
+    expect(construir?.prompt).toContain('No pongas `paso`, `alta`, `confirmado` ni `estado`')
   })
 })

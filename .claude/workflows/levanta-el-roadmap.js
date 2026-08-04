@@ -1,94 +1,38 @@
 export const meta = {
   name: 'levanta-el-roadmap',
-  description: 'Muele lo platicado en un paso de la sesion, lo deja escrito como hallazgos y lo audita contra el registro crudo.',
-  whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan preguntas por cerrar; se vuelve a correr con las respuestas.',
+  description: 'Muele lo platicado en un paso de la sesion y lo deja escrito como capacidades, modulos y reglas enlazadas, medidas contra el examen que se levanto antes de construirlas.',
+  whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan dudas por cerrar; se vuelve a correr con las respuestas.',
   phases: [
     { title: 'Sacar', detail: 'leer la grabacion de la sesion y sacar la platica limpia con el sacador' },
-    { title: 'Afinar', detail: 'sacar los hallazgos y cazar lo que no se puede escribir todavia' },
-    { title: 'Leer en frio', detail: 'leer los hallazgos como el que no estuvo, antes de que lleguen a disco' },
-    { title: 'Cotejar', detail: 'cotejar cada hallazgo contra la platica que lo produjo, antes de que lleguen a disco' },
-    { title: 'Juntar', detail: 'senalar los hallazgos que son un mismo problema, antes de que lleguen a disco' },
-    { title: 'Asentar', detail: 'un archivo por hallazgo' },
-    { title: 'Auditar', detail: 'leer el crudo y dictaminar' }
+    { title: 'Levantar el examen', detail: 'las preguntas que el registro va a tener que contestar, antes de que exista una sola pieza' },
+    { title: 'Construir', detail: 'armar capacidades, modulos y reglas enlazadas, y cazar lo que no se puede escribir todavia' },
+    { title: 'Medir', detail: 'leer en frio, cotejar contra la platica y contestar el examen, las tres a la vez' },
+    { title: 'Corregir', detail: 'volver sobre lo que las mediciones marcaron, antes de que llegue a disco' },
+    { title: 'Registrar', detail: 'un archivo por pieza, con la marca de lo que quedo a medias' },
+    { title: 'Auditar', detail: 'leer el crudo y dictaminar' },
+    { title: 'Armar lo que falta', detail: 'lo que hay que preguntarle al experto la proxima vez' }
   ]
 }
 
 // Lo que recibe:
-//   args.paso       - como se llama el paso del mapa que se cerro
-//   args.transcript - opcional. Ruta del .jsonl de la sesion. De ahi se saca la platica -con
-//                      el sacador que ya existe en src/nucleo/sacar-turnos.ts- y contra ese
-//                      mismo archivo se audita despues. Si no llega, «Sacar» resuelve la
-//                      grabacion de la sesion en curso; el molino no la adivina por su cuenta,
-//                      no tiene `process` ni `fs` para hacerlo.
-//   args.respuestas - opcional. Lo que el experto contesto a las preguntas de una corrida anterior
-//   args.hora      - la hora real del alta, ISO 8601 con huso. Al escribano se le pasa, nunca la inventa.
+//   args.paso        - como se llamo el tramo de sesion. Va al campo `paso` de cada pieza.
+//   args.transcript  - opcional. La ruta del `.jsonl`. Si no llega, «Sacar» resuelve la de
+//                      esta misma sesion; el molino no la adivina -no tiene `fs` ni `process`.
+//   args.hora        - la hora real del alta, ISO 8601 con huso. Se estampa pieza por pieza.
+//                      El molino no la calcula: no tiene reloj.
+//   args.respuestas  - opcional. Lo que el experto contesto a las dudas de una corrida
+//                      anterior. Su presencia es lo que marca la segunda corrida.
 //
-// Ya NO recibe `args.platica`. Antes, quien llamaba tecleaba el texto de la platica dentro de
-// la llamada, y esa mano acababa siendo el filtro -medido en corrida real: una version
-// recortada de la conversacion se colo como argumento y el auditor marco «perdido» material
-// que nunca llego a entrar. Ahora el molino lee la grabacion el mismo, con el sacador.
+// Ya NO recibe `args.platica`. Antes, quien llamaba tecleaba el texto dentro de la llamada, y
+// esa mano acababa siendo el filtro -medido en corrida real: una version recortada se colo
+// como argumento y el auditor marco «perdido» material que nunca llego a entrar.
 
-const HALLAZGOS = {
-  type: 'object',
-  required: ['hallazgos', 'preguntas'],
-  properties: {
-    hallazgos: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['regla', 'deDondeSalio', 'firmeza'],
-        properties: {
-          regla: { type: 'string', description: 'Una linea, en palabras del negocio' },
-          deDondeSalio: {
-            type: 'string',
-            description:
-              'El caso CONTADO, no su apodo: que paso, con que se toparon, que se decidio. ' +
-              'Quien no estuvo en la sesion tiene que entenderlo sin preguntarle a nadie. ' +
-              'Un apodo -«el pleito de la tercera falla», «la pregunta 2», «el caso del molino ' +
-              'trabado»- es referencia sin cerrar y no vale. No lo recortes para que quepa: si no ' +
-              'cabe en el item, el escribano lo manda al documento y le pone puntero.'
-          },
-          firmeza: { type: 'string', enum: ['dicho', 'confirmado', 'abierto'] },
-          preguntaPendiente: { type: 'string', description: 'Solo si la firmeza es abierto: que quedo sin contestar' }
-        }
-      }
-    },
-    preguntas: {
-      type: 'array',
-      description: 'Ya convertidas en la pregunta que se le va a hacer al experto. Vacio si no hay nada que cerrar.',
-      items: {
-        type: 'object',
-        required: ['pregunta', 'falla'],
-        properties: {
-          pregunta: { type: 'string' },
-          falla: { type: 'string', enum: ['ambiguedad', 'contradiccion', 'frase-a-medias', 'referencia-sin-cerrar', 'umbral-sin-numero'] }
-        }
-      }
-    }
-  }
-}
-
-const ESCRITOS = {
-  type: 'object',
-  required: ['archivos', 'noEscritos'],
-  properties: {
-    archivos: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['ruta', 'regla'],
-        properties: { ruta: { type: 'string' }, regla: { type: 'string' } }
-      }
-    },
-    noEscritos: { type: 'array', items: { type: 'string' }, description: 'Lo que no se pudo escribir y por que. Vacio si nada.' }
-  }
-}
+// --- Los esquemas ----------------------------------------------------------
 
 // «Sacar» no juzga nada: lee la grabacion y corre el sacador que ya existe. Por eso su
-// esquema no trae `sospechas` ni `porque` en el sentido de los otros dos auditores - solo
-// lo que saco y de donde, y `noSePudo` cuando no hubo manera de sacar nada. Reusa el nombre
-// `transcriptLeido` que ya usa DICTAMEN mas abajo: es el mismo archivo, y quien lo audita al
-// final usa esta misma ruta, no una que adivine por su cuenta.
+// esquema no trae veredicto -solo lo que saco y de donde, y `noSePudo` cuando no hubo manera.
+// `transcriptLeido` es el mismo nombre que usa DICTAMEN mas abajo: es el mismo archivo, y
+// quien audita al final usa esta ruta, no una que adivine por su cuenta.
 const SACADO = {
   type: 'object',
   required: ['platica', 'transcriptLeido'],
@@ -110,111 +54,302 @@ const SACADO = {
   }
 }
 
-const DICTAMEN = {
+// El examen no lleva nada mas que las preguntas. Ni categorias, ni prioridad, ni a que
+// capacidad apuntan: en este momento no existe ninguna capacidad, y ese es justo el punto. Un
+// examen que supiera contra que se va a medir seria un examen escrito despues.
+const EXAMEN = {
   type: 'object',
-  required: ['inventado', 'perdido', 'malMarcado', 'sirve', 'porque', 'transcriptLeido'],
+  required: ['preguntas'],
   properties: {
-    inventado: { type: 'array', items: { type: 'string' }, description: 'Escrito sin que nadie lo dijera. Cada uno con su prueba.' },
-    perdido: { type: 'array', items: { type: 'string' }, description: 'Dicho y no escrito. Cada uno con su prueba.' },
-    malMarcado: { type: 'array', items: { type: 'string' }, description: 'La firmeza no corresponde. Cada uno con su prueba.' },
-    sospechas: { type: 'array', items: { type: 'string' } },
-    sirve: { type: 'boolean', description: 'Le alcanza a alguien que no estuvo en la sesion para entender las reglas' },
-    porque: { type: 'string', description: 'Si `sirve` es false, cada renglon que no se entiende sin haber estado, con su archivo.' },
-    transcriptLeido: { type: 'string', description: 'Que archivo se leyo. Si no se pudo, decirlo aqui.' }
+    preguntas: {
+      type: 'array',
+      description:
+        'Lo que alguien del negocio querria contestar mirando el registro. Ya partidas -una sola ' +
+        'respuesta por pregunta- y sin nombres propios. Vacio si la platica no dio ninguna.',
+      items: { type: 'string' }
+    }
   }
 }
 
-// El lector en frio no compara nada: solo tiene los items. Por eso su hallazgo nombra el
-// renglon y la forma de fallar, y NO lleva un campo para «que agregar» - el que dice que
-// falta no es quien decide con que se llena, y ademas no tiene el material para hacerlo.
-// Un esquema que le abriera ese campo lo convertiria en el agente que engorda cada item.
-const LECTURA_EN_FRIO = {
+// El registro enlazado. Cuatro campos que este esquema NO tiene, cada uno por su razon:
+//
+//   `paso` y `alta`  - los estampa el codigo al salir de aqui, pieza por pieza. Un campo que
+//                      el agente pudiera llenar es un campo que el agente puede perder, y una
+//                      hora inventada se ve igual de bien que una real.
+//   `confirmado`     - se deriva de la firmeza y de la hora, y eso lo hace el codigo.
+//   `estado`         - lo pone el escribano traduciendo los reportes de las mediciones, que
+//                      todavia no han corrido. Producirlo desde dos lados es la falla que hace
+//                      que una marca borre a la otra sin que nadie se entere.
+//
+// Los `id` son de trabajo -`CAP-1`, `REG-2`- y valen solo dentro de esta corrida. Los
+// definitivos salen de numerar la carpeta, y eso pasa al escribir.
+const CAMPOS_DE_PIEZA = {
+  id: { type: 'string', description: 'De trabajo, no de carpeta: CAP-1, MOD-1, REG-1. No inventes un numero de archivo.' },
+  renglon: { type: 'string', description: 'Una linea, en palabras del negocio. Tope de 120 caracteres.' },
+  firmeza: { type: 'string', enum: ['dicho', 'confirmado', 'abierto'] },
+  origen: {
+    type: 'string',
+    enum: ['escuchado', 'propuesto'],
+    description: 'Otro eje: no sustituye a la firmeza y no se deriva de ella. Solo lo `escuchado` se coteja contra la platica.'
+  },
+  enSusPalabras: {
+    type: 'string',
+    description:
+      'Lo que se dijo, entero y sin recortar. Aqui no hay tope: el pedazo cortado no aparece en ningun ' +
+      'lado. Si el origen es `propuesto`, va el caso que se conto y en seguida lo que se saco de el.'
+  },
+  deDondeSalio: {
+    type: 'string',
+    description:
+      'Que pregunta lo destapo o de que caso concreto. CONTADO, no apodado: un apodo -«el pleito de la ' +
+      'tercera falla», «la pregunta 2»- nombra algo que no esta escrito en ningun archivo. Si el origen ' +
+      'es `propuesto`, aqui va por que el conjunto no cerraba sin esta pieza.'
+  },
+  queQuedaAbierto: {
+    type: 'string',
+    description: 'La pregunta pendiente si la firmeza es `abierto`. Si no queda nada, la palabra «nada» -el silencio no se interpreta.'
+  }
+}
+
+const REQUERIDOS_DE_PIEZA = ['id', 'renglon', 'firmeza', 'origen', 'enSusPalabras', 'deDondeSalio', 'queQuedaAbierto']
+
+const REGISTRO = {
   type: 'object',
-  required: ['huecos', 'itemsLeidos'],
+  required: ['capacidades', 'modulos', 'reglas', 'dudas', 'senaladas'],
   properties: {
-    huecos: {
+    capacidades: {
       type: 'array',
-      description: 'Solo los items que NO se entienden solos. Los que si se entienden no se listan.',
       items: {
         type: 'object',
-        required: ['indice', 'renglon', 'forma'],
-        properties: {
-          indice: { type: 'number', description: 'La posicion del hallazgo en el arreglo que se le mando, empezando en 0. No hay archivo: esto corre antes de que se escriba nada.' },
-          renglon: { type: 'string', description: 'El renglon exacto que no se entiende, copiado.' },
-          forma: {
+        required: REQUERIDOS_DE_PIEZA.concat(['modulo', 'reglas']),
+        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+          modulo: { type: 'string', description: 'El id de trabajo del modulo que la contiene. Ese modulo tiene que nombrarla de vuelta.' },
+          reglas: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las reglas que la sostienen. Vacio es un hueco, no un error.' }
+        })
+      }
+    },
+    modulos: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: REQUERIDOS_DE_PIEZA.concat(['capacidades', 'queAgrupa']),
+        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+          capacidades: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las capacidades que contiene.' },
+          queAgrupa: {
             type: 'string',
-            enum: ['apodo-de-caso', 'puntero-a-la-nada', 'procedencia-de-relleno', 'palabra-sin-definir']
+            description: 'Que cae dentro Y QUE NO. La segunda mitad es la que sirve: sin ella no se puede decidir donde va una capacidad nueva.'
+          }
+        })
+      }
+    },
+    reglas: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: REQUERIDOS_DE_PIEZA.concat(['capacidades']),
+        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+          capacidades: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las capacidades que sostiene. Una regla puede sostener mas de una.' }
+        })
+      }
+    },
+    dudas: {
+      type: 'array',
+      description:
+        'Ya convertidas en la pregunta que se le va a hacer al experto. Esto es lo unico que puede parar ' +
+        'la corrida antes de escribir. Vacio si no hay nada que cerrar -y vacio de verdad, no sin llenar.',
+      items: {
+        type: 'object',
+        required: ['pregunta', 'falla'],
+        properties: {
+          pregunta: { type: 'string' },
+          falla: {
+            type: 'string',
+            enum: ['ambiguedad', 'contradiccion', 'frase-a-medias', 'referencia-sin-cerrar', 'umbral-sin-numero', 'reglas-que-chocan', 'capacidad-sin-casa']
           }
         }
       }
     },
-    itemsLeidos: { type: 'number', description: 'Cuantos items se leyeron en total.' }
+    senaladas: {
+      type: 'array',
+      description:
+        'Los ids de trabajo de las piezas que quedaron sin cerrar. Es un reporte mas: el escribano lo ' +
+        'traduce a `estado: con-huecos`. Vacio si ninguna.',
+      items: { type: 'string' }
+    }
+  }
+}
+
+// El lector en frio no compara nada: solo tiene las piezas. Por eso su hallazgo nombra el
+// renglon y la forma de fallar, y NO lleva un campo para «que agregar» - el que dice que falta
+// no es quien decide con que se llena, y ademas no tiene el material para hacerlo.
+const LECTURA_EN_FRIO = {
+  type: 'object',
+  required: ['huecos', 'piezasLeidas'],
+  properties: {
+    huecos: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['id', 'renglon', 'forma'],
+        properties: {
+          id: { type: 'string', description: 'El id de trabajo de la pieza que no se entiende sola.' },
+          renglon: { type: 'string', description: 'El renglon exacto, copiado.' },
+          forma: { type: 'string', enum: ['apodo-de-caso', 'puntero-a-la-nada', 'procedencia-de-relleno', 'palabra-sin-definir'] }
+        }
+      }
+    },
+    piezasLeidas: { type: 'number' }
   }
 }
 
 // El cotejador SI ve la platica -a diferencia del lector en frio-, pero igual que el, no
-// decide con que se llena un hueco: solo nombra la frase que la platica no dijo. Por eso su
-// esquema tampoco trae un campo para «que poner en su lugar». Un invento no es solo la
-// mentira grande: un numero que nadie dijo, un motivo que nadie dio, una glosa razonable que
-// nadie sostuvo, tambien lo son.
+// decide con que se llena un hueco: solo nombra la frase que la platica no dijo. Y coteja SOLO
+// lo de origen `escuchado`: lo `propuesto` nadie lo dijo, asi que buscarlo daria que no
+// siempre, y reportarlo todo dejaria una lista tan larga que los inventos de verdad se pierden
+// entre ellos.
 const COTEJO = {
   type: 'object',
-  required: ['inventos', 'hallazgosCotejados'],
+  required: ['inventos', 'piezasCotejadas'],
   properties: {
     inventos: {
       type: 'array',
-      description: 'Solo los hallazgos que traen algo que la platica NO dijo. Los que si estan dichos no se listan.',
       items: {
         type: 'object',
-        required: ['indice', 'frase'],
+        required: ['id', 'frase'],
         properties: {
-          indice: { type: 'number', description: 'La posicion del hallazgo en el arreglo que se le mando, empezando en 0.' },
-          frase: { type: 'string', description: 'La frase inventada, copiada tal cual del hallazgo.' }
+          id: { type: 'string', description: 'El id de trabajo de la pieza.' },
+          frase: { type: 'string', description: 'La frase inventada, copiada tal cual.' }
         }
       }
     },
-    hallazgosCotejados: { type: 'number', description: 'Cuantos hallazgos se cotejaron en total.' }
+    piezasCotejadas: { type: 'number' }
   }
 }
 
-// Quien junta tampoco ve la platica ni el nombre del paso -igual que el lector en frio-, porque
-// la pregunta se contesta con los hallazgos solos: «alguien podria atender esto sin atender
-// aquello?» es la misma pregunta que ya fija `afinar`. Por eso su esquema tampoco trae un campo
-// para «como quedaria el renglon junto»: quien junta senala el grupo, Afinar -que si tiene la
-// platica- es quien redacta.
-const JUNTAR = {
+// Quien contesta el examen mide lo que las otras dos no alcanzan: si el conjunto sirve para
+// algo. Por eso su esquema separa dos listas que se confunden facil -y la segunda no tiene
+// `id` a proposito: una pregunta que ninguna pieza tocaba no tiene pieza a la que senalar, y
+// el escribano no la puede marcar en ningun archivo.
+const EXAMEN_CONTESTADO = {
   type: 'object',
-  required: ['grupos', 'hallazgosRevisados'],
+  required: ['respuestas', 'senaladas', 'sinPieza'],
   properties: {
-    grupos: {
+    respuestas: {
       type: 'array',
-      description: 'Solo los grupos de hallazgos que son un mismo problema. Lo que ya esta bien repartido no se lista.',
       items: {
         type: 'object',
-        required: ['indices', 'porque'],
+        required: ['pregunta', 'veredicto'],
         properties: {
-          indices: {
+          pregunta: { type: 'string' },
+          veredicto: { type: 'string', enum: ['contestada', 'a-medias', 'sin-contestar'] },
+          respuesta: { type: 'string', description: 'La respuesta armada, si la hubo.' },
+          camino: {
             type: 'array',
-            items: { type: 'number' },
-            minItems: 2,
-            description: 'Las posiciones de los hallazgos que son uno solo, en el arreglo que se le mando, empezando en 0.'
-          },
-          porque: {
-            type: 'string',
-            description: 'Por que son el mismo problema, en una linea. No dice como quedaria el renglon junto.'
+            items: { type: 'string' },
+            description: 'Los ids de trabajo por los que pasaste. Una respuesta sin camino no se puede revisar.'
           }
         }
       }
     },
-    hallazgosRevisados: { type: 'number', description: 'Cuantos hallazgos se revisaron en total.' }
+    senaladas: {
+      type: 'array',
+      description: 'Los ids de trabajo de las piezas que salieron en una respuesta `a-medias` o `sin-contestar`.',
+      items: { type: 'string' }
+    },
+    sinPieza: {
+      type: 'array',
+      description:
+        'Las preguntas que ninguna pieza tocaba, tal como venian en el examen. Sin id, porque no hay ' +
+        'pieza. No propongas la pieza que faltaria: eso seria proponer el arreglo, y quien mide no arregla.',
+      items: { type: 'string' }
+    }
   }
 }
 
-// Quien llama puede mandar los argumentos como datos o como texto JSON - las dos formas
-// se han visto en corrida real. Aqui se aclara la entrada una sola vez, antes de que nadie
-// la use. Un texto que no es JSON valido ya no tiene donde caer -no hay `platica` que
-// rescatar-, asi que se trata como entrada vacia: sin `paso` ni `transcript`, «Sacar» lo va
-// a reportar como material que no se pudo determinar, en vez de perderlo en silencio.
+// El escribano devuelve la correspondencia porque sin ella los reportes quedan huerfanos: las
+// mediciones citaron `CAP-1` y en disco quedo `CAP-0007`. Y devuelve aparte las senales que no
+// correspondian a ninguna pieza, porque no las puede marcar en ningun archivo.
+const ESCRITOS = {
+  type: 'object',
+  required: ['archivos', 'noEscritos'],
+  properties: {
+    archivos: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['ruta', 'id', 'idDeTrabajo', 'estado'],
+        properties: {
+          ruta: { type: 'string' },
+          id: { type: 'string', description: 'El definitivo, el que quedo dentro del archivo: CAP-0007.' },
+          idDeTrabajo: { type: 'string', description: 'El que traia al llegar: CAP-1.' },
+          estado: { type: 'string', enum: ['completa', 'con-huecos'] }
+        }
+      }
+    },
+    noEscritos: { type: 'array', items: { type: 'string' }, description: 'Que no se pudo escribir y por que.' },
+    senalesSinPieza: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Lo que un reporte senalo y no correspondia a ninguna pieza. Se pasa tal cual, sin traducir.'
+    }
+  }
+}
+
+const DICTAMEN = {
+  type: 'object',
+  required: ['inventado', 'perdido', 'malMarcado', 'sirve', 'porque', 'transcriptLeido'],
+  properties: {
+    inventado: { type: 'array', items: { type: 'string' }, description: 'Escrito y nadie lo dijo. Con su archivo.' },
+    perdido: { type: 'array', items: { type: 'string' }, description: 'Dicho y no quedo escrito.' },
+    malMarcado: { type: 'array', items: { type: 'string' }, description: 'La firmeza o el origen no corresponden, o un enlace apunta a la nada.' },
+    sospechas: { type: 'array', items: { type: 'string' } },
+    sirve: { type: 'boolean', description: 'Le alcanza a alguien que no estuvo? Un `false` cuenta como falla igual que las otras tres.' },
+    porque: { type: 'string', description: 'Si no sirve, la lista de renglones con su archivo. Nunca una opinion general.' },
+    transcriptLeido: { type: 'string' }
+  }
+}
+
+// Lo que abre la sesion siguiente. Los dos bloques van separados a proposito: un hueco de hace
+// tres semanas que sigue abierto sigue siendo un hueco, y si solo se mira el paso de hoy la
+// lista se ve corta y el registro se pudre por abajo.
+const LO_QUE_FALTA = {
+  type: 'object',
+  required: ['deEstePaso', 'deAntes', 'archivosRecorridos'],
+  properties: {
+    deEstePaso: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['pregunta'],
+        properties: {
+          pregunta: { type: 'string', description: 'La pregunta que se le hace al experto, no el diagnostico.' },
+          id: { type: 'string', description: 'El id del archivo que se cierra al contestarla. Vacio si no hay pieza.' }
+        }
+      }
+    },
+    deAntes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['pregunta'],
+        properties: {
+          pregunta: { type: 'string' },
+          id: { type: 'string' },
+          paso: { type: 'string', description: 'De que paso viene.' }
+        }
+      }
+    },
+    archivosRecorridos: { type: 'number' }
+  }
+}
+
+// --- Los ayudantes ---------------------------------------------------------
+
+// Quien llama puede mandar los argumentos como datos o como texto JSON - las dos formas se han
+// visto en corrida real. Aqui se aclara la entrada una sola vez, antes de que nadie la use. Un
+// texto que no es JSON valido ya no tiene donde caer, asi que se trata como entrada vacia:
+// «Sacar» lo va a reportar como material que no se pudo determinar, en vez de perderlo en
+// silencio.
 function comoDatos(entrada) {
   if (typeof entrada === 'string') {
     try {
@@ -226,39 +361,42 @@ function comoDatos(entrada) {
   return entrada ?? {}
 }
 
-// El escribano lee `alta` (y `confirmado`, si la firmeza lo pide) del propio objeto del
-// hallazgo, no de una linea suelta en el prompt - medido en corrida real: una hora en
-// prosa se queda en el aire y cada hallazgo sigue sin el campo que la plantilla exige.
-// Por eso la hora se estampa aqui, en el dato, antes de que nadie escriba nada.
-function conLaHoraEstampada(hallazgo, hora) {
-  if (!hora) return hallazgo
-  const conAlta = { ...hallazgo, alta: hora }
-  return conAlta.firmeza === 'confirmado' ? { ...conAlta, confirmado: hora } : conAlta
+// El paso y la hora se estampan aqui y no los pone el agente. Un campo que el agente pudiera
+// llenar es un campo que el agente puede perder, y una hora inventada se ve igual de bien que
+// una real. `confirmado` se deriva: solo existe si la firmeza lo pide, y lleva la misma hora,
+// porque el si del experto ocurrio dentro de esta corrida.
+function conElPasoYLaHora(pieza, paso, hora) {
+  const estampada = Object.assign({}, pieza, { paso })
+  if (hora) {
+    estampada.alta = hora
+    if (pieza.firmeza === 'confirmado') estampada.confirmado = hora
+  }
+  return estampada
 }
 
-const entrada = comoDatos(args)
+function todasLasPiezas(registro) {
+  return registro.capacidades.concat(registro.modulos, registro.reglas)
+}
 
-const paso = entrada.paso ?? 'sin nombre'
-const respuestas = entrada.respuestas
-const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
-const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
+// Una pieza senalada por cualquier reporte se escribe `con-huecos`. **Basta uno:** cada
+// medicion mira algo que las otras no ven, y perdonar la senal porque las demas salieron
+// limpias es como no haber medido. La union se arma aqui, en el codigo, y no en el escribano:
+// si cada reporte le llegara suelto, el que escribe tendria que decidir cual pesa mas, y esa
+// decision es justo la que hace que una marca borre a la otra.
+function idsSenalados(senaladasDelRegistro, enFrio, cotejo, contestado) {
+  const ids = []
+  for (const id of senaladasDelRegistro) ids.push(id)
+  if (enFrio) for (const h of enFrio.huecos) ids.push(h.id)
+  if (cotejo) for (const i of cotejo.inventos) ids.push(i.id)
+  if (contestado) for (const id of contestado.senaladas) ids.push(id)
+  return ids.filter((id, i) => ids.indexOf(id) === i)
+}
 
-// --- Sacar -----------------------------------------------------------------
-// El unico paso que corre antes que Afinar y no mide nada: lee la grabacion cruda y saca la
-// platica limpia con el sacador que ya existe (`sacarTurnos` / `platicaComoTexto` en
-// `src/nucleo/sacar-turnos.ts`) - no se reescribe esa logica aqui ni se le pide al agente que
-// la invente. Va al agente y no al propio script porque el script no tiene `fs` ni `process`
-// para abrir un archivo o correr un comando; el agente si, con `Bash` y `Read`.
-//
-// Si no llega `args.transcript`, el propio agente resuelve la grabacion de esta sesion: la
-// variable de entorno `CLAUDE_CODE_SESSION_ID` trae el id de la sesion en curso, y ese mismo
-// id nombra su `.jsonl` dentro de `~/.claude/projects/`. Medido en esta maquina: el id de la
-// variable coincide exactamente con el nombre del archivo de la sesion que lo consulta. Lo
-// que no se mide desde aqui es que un agente disparado dentro de un workflow -no una sesion
-// de equipo- herede la misma variable; por eso, si no la encuentra o no hay archivo con ese
-// nombre, el agente lo reporta en `noSePudo` en vez de adivinar una ruta.
+function piezasPorId(registro, ids) {
+  return todasLasPiezas(registro).filter((p) => ids.indexOf(p.id) !== -1)
+}
 
-phase('Sacar')
+// --- Los prompts -----------------------------------------------------------
 
 function promptParaSacar(rutaPedida) {
   return [
@@ -299,6 +437,282 @@ function promptParaSacar(rutaPedida) {
   ].join('\n')
 }
 
+function promptParaElExamen(paso, platica) {
+  return [
+    'Carga tu carta `levantar-el-examen` antes de leer nada.',
+    '',
+    `Esto es lo que se hablo en el paso "${paso}" de una sesion con un experto de negocio.`,
+    'Saca las preguntas que el registro va a tener que poder contestar.',
+    '',
+    '**Todavia no existe ninguna capacidad, ninguna regla y ningun modulo, y eso es a proposito.**',
+    'Un examen escrito despues de ver el resultado siempre lo aprueba. Este es el unico momento',
+    'en que se puede levantar sin haber visto contra que se va a medir.',
+    '',
+    '--- La platica ---',
+    platica
+  ].join('\n')
+}
+
+function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Arma el registro enlazado del paso "${paso}": las reglas dichas, y las capacidades y los`,
+    'modulos que se sacan de ellas, ligados en los dos sentidos.',
+    '',
+    segundaCorrida
+      ? [
+          'El experto YA contesto las dudas de una corrida anterior - vienen abajo.',
+          '',
+          '**Esta es la segunda y ultima corrida: no devuelvas dudas.** Lo que siga sin cerrar',
+          'despues de sus respuestas se marca con firmeza `abierto`, con lo que falto en',
+          '`queQuedaAbierto`, y su id va en `senaladas`. Un hueco registrado sirve; una pregunta',
+          'que nadie contesta detiene la linea para siempre.'
+        ].join('\n')
+      : 'Esta es la primera corrida: si quedan dudas, la corrida se para y se le llevan al experto.',
+    '',
+    '**Los `id` son de trabajo y valen solo aqui:** CAP-1, MOD-1, REG-1. Los numeros de carpeta',
+    'salen de numerar `product/conocimiento/`, y eso pasa al escribir, despues de las mediciones.',
+    'Si adivinas un numero de carpeta, el registro apunta a la pieza de otra sesion.',
+    '',
+    '**No pongas `paso`, `alta`, `confirmado` ni `estado`.** Los tres primeros se estampan al',
+    'salir de aqui; el `estado` lo pone el escribano traduciendo lo que senalen las mediciones,',
+    'que todavia no han corrido.',
+    '',
+    '--- El examen que ya se levanto, y no lo puedes tocar ---',
+    examen.preguntas.map((p, i) => `${i + 1}. ${p}`).join('\n'),
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto
+  ].join('\n')
+}
+
+// Al lector en frio se le manda el registro pelado: sin platica, sin el nombre del paso y sin
+// el examen. En cuanto se entera de lo que paso, deja de servir para esto -tapa el hueco el
+// mismo al leer, igual que el que audita con el transcript enfrente. Tampoco lleva `firmeza` ni
+// `origen`: esas marcas dicen de donde salio la pieza, y saberlo es enterarse.
+function registroParaElLector(registro) {
+  const pelar = (p) => ({
+    id: p.id,
+    renglon: p.renglon,
+    enSusPalabras: p.enSusPalabras,
+    deDondeSalio: p.deDondeSalio,
+    queQuedaAbierto: p.queQuedaAbierto
+  })
+  return {
+    capacidades: registro.capacidades.map((c) => Object.assign(pelar(c), { modulo: c.modulo, reglas: c.reglas })),
+    modulos: registro.modulos.map((m) => Object.assign(pelar(m), { capacidades: m.capacidades, queAgrupa: m.queAgrupa })),
+    reglas: registro.reglas.map((r) => Object.assign(pelar(r), { capacidades: r.capacidades }))
+  }
+}
+
+function promptParaElLector(registro) {
+  return [
+    'Carga tu carta `leer-en-frio` antes de leer nada.',
+    '',
+    'Lee este registro y nada mas. No sabes de que paso salio, no hay transcript que abrir y no',
+    'hay platica que consultar: en cuanto te enteres de lo que paso, dejas de servir para esto.',
+    '',
+    '**Cada pieza se lee sola, no apoyada en su vecina.** Entender la capacidad porque recuerdas',
+    'la regla que leiste hace un momento es el mismo autoengano: quien abra ese archivo dentro de',
+    'seis meses va a abrir uno, no todos.',
+    '',
+    JSON.stringify(registroParaElLector(registro), null, 2)
+  ].join('\n')
+}
+
+// Al cotejador se le manda el registro CON el origen, porque el origen es lo que decide que
+// coteja. Sin ese campo reportaria como invento todo lo propuesto -que nadie dijo, por
+// definicion- y la lista saldria tan larga que los inventos de verdad se pierden entre ellos.
+function registroParaElCotejador(registro) {
+  return todasLasPiezas(registro).map((p) => ({
+    id: p.id,
+    renglon: p.renglon,
+    enSusPalabras: p.enSusPalabras,
+    deDondeSalio: p.deDondeSalio,
+    firmeza: p.firmeza,
+    origen: p.origen
+  }))
+}
+
+function promptParaElCotejador(registro, loQueDijoElExperto) {
+  return [
+    'Carga tu carta `cotejar` antes de leer nada.',
+    '',
+    'Coteja estas piezas contra todo lo que dijo el experto. Lo que no este dicho ahi, nombralo',
+    'como invento -no importa que suene razonable. No corrijas, no reescribas y no propongas que',
+    'poner: solo senala la frase.',
+    '',
+    '**Cada pieza trae su `origen`, y eso decide que cotejas:** solo lo `escuchado`. Lo `propuesto`',
+    'lo armo el agente para que el conjunto cerrara y nadie lo dijo, asi que buscarlo daria que no',
+    'siempre. No lo reportes como invento: se mide en otro lado, contestando el examen.',
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto,
+    '',
+    '--- Las piezas ---',
+    JSON.stringify(registroParaElCotejador(registro), null, 2)
+  ].join('\n')
+}
+
+function promptParaContestarElExamen(registro, examen) {
+  return [
+    'Carga tu carta `contestar-el-examen` antes de leer nada.',
+    '',
+    'Intenta contestar cada una de estas preguntas usando solo el registro de abajo. **No pidas la',
+    'platica, no la busques y no la abras si la tienes a la mano:** si contestas con algo que',
+    'recuerdas de la conversacion en vez de con lo que esta escrito, la medicion se rompe y nadie',
+    'se entera.',
+    '',
+    'Las piezas todavia no estan en disco -esto corre antes de escribir-, asi que se citan por su',
+    '`id` de trabajo. No hay rutas.',
+    '',
+    '--- El examen ---',
+    examen.preguntas.map((p, i) => `${i + 1}. ${p}`).join('\n'),
+    '',
+    '--- El registro ---',
+    JSON.stringify(registroParaElLector(registro), null, 2)
+  ].join('\n')
+}
+
+function promptParaCorregir(paso, loQueDijoElExperto, marcadas, enFrio, cotejo, contestado, esLaSegundaVuelta) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Estas piezas del paso "${paso}" salieron marcadas por las mediciones. Devuelvelas corregidas,`,
+    'con los mismos `id` de trabajo y la misma forma. Las que no vienen abajo no se tocan.',
+    '',
+    esLaSegundaVuelta
+      ? '**Esta es la segunda y ultima vuelta.** Lo que siga marcado despues se escribe con su marca, no se corrige otra vez.'
+      : 'Si algo no se puede arreglar sin preguntarle al experto, dejalo con firmeza `abierto` y su id en `senaladas`.',
+    '',
+    '--- Lo que marco el lector en frio (no se entiende solo) ---',
+    enFrio ? JSON.stringify(enFrio.huecos, null, 2) : 'nada',
+    '',
+    '--- Lo que marco el cotejador (no esta dicho) ---',
+    cotejo ? JSON.stringify(cotejo.inventos, null, 2) : 'nada',
+    '',
+    '--- Lo que quedo sin contestar del examen ---',
+    contestado ? JSON.stringify(contestado.respuestas.filter((r) => r.veredicto !== 'contestada'), null, 2) : 'nada',
+    '',
+    '--- Las piezas marcadas ---',
+    JSON.stringify(marcadas, null, 2),
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto
+  ].join('\n')
+}
+
+function promptParaRegistrar(paso, registro, senaladas, sinPieza, hora) {
+  const conEstado = (p) => Object.assign({}, p, { estado: senaladas.indexOf(p.id) === -1 ? 'completa' : 'con-huecos' })
+  return [
+    `Escribe este registro del paso "${paso}". Ya paso por las tres mediciones.`,
+    '',
+    'Carga tu carta `registrar-el-conocimiento` antes de escribir nada: ahi viene donde escribes',
+    'y con que forma. Despues lee las tres plantillas de `product/conocimiento/*/0000-plantilla.md`:',
+    'la forma la mandan ellas, no tu carta.',
+    '',
+    '**Los `id` que traen son de trabajo.** Numera las carpetas, arma la correspondencia completa,',
+    '**traduce tambien los enlaces** -una capacidad que llega apuntando a REG-1 se escribe apuntando',
+    'al definitivo- y hasta entonces escribe. Un enlace sin traducir apunta a la nada, o peor, a la',
+    'pieza de otra sesion que casualmente tiene ese numero.',
+    '',
+    '**El `estado` ya viene puesto en cada pieza.** Lo pusieron las mediciones, no tu lectura: una',
+    'pieza senalada por cualquier reporte va `con-huecos`, basta uno. No lo cambies.',
+    '',
+    hora
+      ? 'Cada pieza ya trae su `alta` (y su `confirmado` si la firmeza lo pide) estampados abajo.'
+      : 'No llego la hora del alta: ninguna pieza trae `alta`. No la inventes - reportalo en `noEscritos`.',
+    '',
+    sinPieza.length > 0
+      ? [
+          '**Esto lo senalo una medicion y NO corresponde a ninguna pieza** -son preguntas que el',
+          'registro entero no rozaba. No tienen archivo donde marcarse y no son tuyas: pasalas tal',
+          'cual en `senalesSinPieza`, sin traducirlas a nada y sin inventar la pieza que faltaria.',
+          '',
+          JSON.stringify(sinPieza, null, 2)
+        ].join('\n')
+      : '',
+    '',
+    '--- Las capacidades ---',
+    JSON.stringify(registro.capacidades.map(conEstado), null, 2),
+    '',
+    '--- Los modulos ---',
+    JSON.stringify(registro.modulos.map(conEstado), null, 2),
+    '',
+    '--- Las reglas ---',
+    JSON.stringify(registro.reglas.map(conEstado), null, 2)
+  ].join('\n')
+}
+
+function promptParaAuditar(paso, rutaTranscript, escritos) {
+  return [
+    'Carga tu carta `auditar` antes de abrir nada.',
+    '',
+    `Se acaba de escribir el paso "${paso}" en \`product/conocimiento/\` -las tres carpetas:`,
+    '`capacidades/`, `modulos/` y `reglas/`. **Ese es el lugar; no lo adivines y no busques en**',
+    '`roadmap/`, que es de otro molino.',
+    '',
+    rutaTranscript
+      ? `El crudo de la sesion esta en \`${rutaTranscript}\`. **Leelo antes de abrir un solo archivo escrito.**`
+      : 'No te dieron la ruta del crudo: toma el `.jsonl` mas reciente de la carpeta del proyecto, declara cual usaste, y leelo antes de abrir un solo archivo escrito.',
+    '',
+    'Estas piezas traen `origen` ademas de firmeza, y las dos marcas se auditan por separado. Lo',
+    '`escuchado` se prueba en el crudo como lo inventado; que lo `propuesto` no aparezca en el',
+    'crudo NO es falla -es lo que el campo declara.',
+    '',
+    '--- Lo que se escribio ---',
+    JSON.stringify(escritos.archivos, null, 2)
+  ].join('\n')
+}
+
+function promptParaArmarLoQueFalta(paso, escritos, senalesSinPieza) {
+  return [
+    'Carga tu carta `armar-lo-que-falta` antes de leer nada.',
+    '',
+    `Se acaba de cerrar el paso "${paso}". Arma la lista de lo que hay que preguntarle al experto`,
+    'la proxima vez: es la primera plana de la sesion que viene, no un resumen de esta.',
+    '',
+    'El registro esta en `product/conocimiento/capacidades/`, `/modulos/` y `/reglas/`. **Recorrelo',
+    'con tus herramientas de lectura y busqueda** -un comando escrito para otro sistema operativo',
+    'falla callado y devuelve cero, que se lee igual que «no hay huecos».',
+    '',
+    '**Las tres carpetas guardan todos los pasos, no solo el de hoy.** Separa lo de este paso de lo',
+    'que sigue abierto de antes. Un hueco de hace tres semanas que nadie vuelve a nombrar no se',
+    'cierra nunca.',
+    '',
+    senalesSinPieza && senalesSinPieza.length > 0
+      ? [
+          '**Esto lo senalo una medicion y no quedo marcado en ningun archivo**, porque no habia',
+          'pieza que marcar. Es la cuarta fuente de tu carta y se pierde si no la recoges aqui:',
+          '',
+          JSON.stringify(senalesSinPieza, null, 2)
+        ].join('\n')
+      : '',
+    '',
+    '--- Lo que se acaba de escribir ---',
+    JSON.stringify(escritos.archivos, null, 2)
+  ].join('\n')
+}
+
+// --- La corrida ------------------------------------------------------------
+
+const entrada = comoDatos(args)
+
+const paso = entrada.paso ?? 'sin nombre'
+const respuestas = entrada.respuestas
+const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
+const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
+
+// --- Sacar -----------------------------------------------------------------
+
+// Va al agente y no al propio script porque el script no tiene `fs` ni `process` para abrir un
+// archivo o correr un comando; el agente si, con `Bash` y `Read`. Y corre el sacador que ya
+// existe en vez de reimplementarlo: dos extractores divergen, y el que diverge en silencio es
+// el que nadie mira.
+
+phase('Sacar')
+
 const sacado = await agent(promptParaSacar(rutaTranscriptPedida), {
   label: `sacar:${paso}`,
   phase: 'Sacar',
@@ -307,494 +721,294 @@ const sacado = await agent(promptParaSacar(rutaTranscriptPedida), {
 })
 
 if (!sacado) {
-  log('El sacador no contesto. No hay material que afinar.')
+  log('El sacador no contesto. No hay material que moler.')
   return { estado: 'sin-medicion', paso }
 }
 
-const platica = typeof sacado.platica === 'string' ? sacado.platica : ''
-// El transcript contra el que se audita al final es este, el que «Sacar» de verdad resolvio y
-// leyo -no el que se pidio-, para que los dos pasos que necesitan el archivo usen siempre el
-// mismo. Si «Sacar» no lo reporto, el transcript pedido sirve de respaldo.
-const transcript =
-  typeof sacado.transcriptLeido === 'string' && sacado.transcriptLeido.trim() ? sacado.transcriptLeido : rutaTranscriptPedida
-
-// Las dos son turno del experto y las dos valen igual como respaldo: lo que el cotejador
-// mide contra "lo que se dijo" tiene que incluir la ronda de respuestas, no solo la platica
-// inicial. Sin esto, todo hallazgo que salio de las respuestas le parece inventado al
-// cotejador -no esta en lo unico que el ve- y la vuelta de arreglo lo borra.
-const loQueDijoElExperto = respuestas
-  ? platica + '\n\n--- Lo que el experto contesto despues ---\n' + respuestas
-  : platica
+const platica = sacado.platica ?? ''
+const rutaTranscript = sacado.transcriptLeido || rutaTranscriptPedida
 
 if (!platica.trim()) {
   log(`No se pudo sacar la platica: ${sacado.noSePudo || 'el sacador la devolvio vacia sin decir por que'}.`)
   return { estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' }
 }
 
-// --- Afinar --------------------------------------------------------------
-// El auditor mide el material contra si mismo. Todavia no escribe nadie.
+// Las respuestas de una corrida anterior son turno del experto igual que la platica, y valen
+// igual como respaldo. Van juntas a todo lo que compara contra lo dicho, para que una pieza que
+// sale de sus respuestas no parezca inventada.
+const loQueDijoElExperto = respuestas ? `${platica}\n\n--- Lo que el experto contesto despues ---\n${respuestas}` : platica
 
-phase('Afinar')
+const segundaCorrida = Boolean(respuestas && String(respuestas).trim())
 
-const afinado = await agent(
-  [
-    'Carga tu carta `afinar` antes de medir nada.',
-    '',
-    `Este es lo que se hablo en el paso "${paso}" de una sesion con un experto de negocio.`,
-    'Saca los hallazgos candidatos y las preguntas que hay que cerrar con el.',
-    '',
-    respuestas
-      ? [
-          'El experto YA contesto las preguntas de una corrida anterior - vienen abajo.',
-          '',
-          '**Esta es la segunda y ultima ronda: no devuelvas preguntas.** Lo que siga sin cerrar',
-          'despues de sus respuestas se marca `abierto`, con lo que falto en `preguntaPendiente`.',
-          'Un hueco registrado sirve; una pregunta que nadie contesta detiene la linea para siempre.'
-        ].join('\n')
-      : '',
-    '',
-    '--- La platica ---',
-    platica,
-    respuestas ? '\n--- Lo que el experto contesto despues ---\n' + respuestas : ''
-  ].join('\n'),
-  { label: `afinar:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
-)
+// --- Levantar el examen ----------------------------------------------------
 
-if (!afinado) {
-  log('El auditor no devolvio nada. No se escribe nada.')
-  return { estado: 'sin-medicion' }
+// Va antes de construir y no se puede mover. No hay archivo que pruebe despues que el examen se
+// levanto primero -el examen no toca disco nunca-: **el orden de estas llamadas es la unica
+// garantia.** Un examen escrito con el resultado enfrente pregunta lo que si esta, y el registro
+// saca diez de diez sin que nadie haya medido nada.
+
+phase('Levantar el examen')
+
+const examen = await agent(promptParaElExamen(paso, platica), {
+  label: `examen:${paso}`,
+  phase: 'Levantar el examen',
+  agentType: 'auditor',
+  schema: EXAMEN
+})
+
+if (!examen) {
+  log('Nadie levanto el examen. Sin el no hay con que medir lo que se construya.')
+  return { estado: 'sin-medicion', paso }
 }
 
-// El andon para la linea una vez, no para siempre. Medido en corrida real: sin
-// tope, cada ronda de respuestas destapa preguntas nuevas y nunca se escribe
-// nada. Un freno que no se levanta no es freno, es candado.
-const segundaRonda = Boolean(respuestas && String(respuestas).trim())
+if (examen.preguntas.length === 0) {
+  log('La platica no dio ninguna pregunta que el registro tenga que contestar. No hay examen que aplicar.')
+  return { estado: 'sin-examen', paso }
+}
 
-if (afinado.preguntas.length > 0 && !segundaRonda) {
-  log(`${afinado.preguntas.length} pregunta(s) por cerrar con el experto. No se escribe todavia.`)
+log(`${examen.preguntas.length} pregunta(s) levantadas. Contra eso se va a medir lo que se construya.`)
+
+// --- Construir -------------------------------------------------------------
+
+phase('Construir')
+
+const construido = await agent(promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida), {
+  label: `construir:${paso}`,
+  phase: 'Construir',
+  agentType: 'auditor',
+  schema: REGISTRO
+})
+
+if (!construido) {
+  log('Nadie construyo el registro. No hay nada que medir ni que escribir.')
+  return { estado: 'sin-medicion', paso }
+}
+
+// El andon para la linea una vez, no para siempre. Sin tope, cada corrida de respuestas destapa
+// dudas nuevas y nunca se escribe nada. Un freno que no se levanta no es freno, es candado. En
+// la segunda corrida el codigo ignora las dudas -y el prompt ya le dijo al agente que no las
+// devuelva-, porque el agente ya demostro que siempre encuentra una mas.
+if (construido.dudas.length > 0 && !segundaCorrida) {
+  log(`${construido.dudas.length} duda(s) por cerrar con el experto. No se escribe todavia.`)
   return {
-    estado: 'faltan-preguntas',
+    estado: 'dudas-devueltas',
     paso,
-    preguntas: afinado.preguntas,
-    hallazgosEnEspera: afinado.hallazgos
+    dudas: construido.dudas,
+    registroEnEspera: construido
   }
 }
 
-// Segunda ronda: lo que siga sin cerrar se registra como hueco y no vuelve a
-// parar nada. Lo hace el codigo y no el agente, porque el agente ya demostro
-// que siempre encuentra una pregunta mas.
-if (afinado.preguntas.length > 0) {
-  for (const p of afinado.preguntas) {
-    afinado.hallazgos.push({
-      regla: `Sin cerrar: ${p.pregunta}`,
-      // La procedencia que escribe el codigo se mide con la misma vara que la del agente:
-      // tiene que entenderse sin haber estado. Por eso nombra el paso y repite la pregunta
-      // completa, en vez de apoyarse en que quien lea ya sepa de que ronda se habla.
-      deDondeSalio:
-        `Se le pregunto al experto en el paso "${paso}" y siguio sin cerrarse despues de las dos ` +
-        `rondas que permite el molino. La pregunta que se le hizo fue: «${p.pregunta}». ` +
-        `El material fallaba por ${p.falla}.`,
-      firmeza: 'abierto',
-      preguntaPendiente: p.pregunta
-    })
-  }
-  log(`${afinado.preguntas.length} pregunta(s) sin cerrar: se escriben como hallazgo abierto.`)
+if (todasLasPiezas(construido).length === 0) {
+  log('El registro salio vacio: ninguna capacidad, ningun modulo y ninguna regla.')
+  return { estado: 'sin-material', paso, motivo: 'el registro salio sin una sola pieza' }
 }
 
-if (afinado.hallazgos.length === 0) {
-  log(`El paso "${paso}" no dejo hallazgos. No es un fracaso: todavia no llegan a nada firme.`)
-  return { estado: 'sin-hallazgos', paso }
-}
+let registro = construido
 
-// --- Leer en frio, Cotejar y Juntar -----------------------------------------
-// Tres auditores mas, y los unicos que corren antes de que nadie escriba nada. Miden cosas
-// distintas y por eso no se funden en uno: el lector en frio no ve el crudo ni la platica -
-// solo los hallazgos que acaba de sacar Afinar, para sentir el hueco que el que ya leyo la
-// sesion no puede sentir. El cotejador si ve la platica, y busca en ella lo que cada
-// hallazgo afirma: lo que no este dicho ahi, es un invento, por sensato que suene. Quien
-// junta tampoco ve la platica -igual que el lector en frio-, y mide otra cosa: si dos o mas
-// hallazgos, aunque cada uno se entienda y este dicho, son el mismo problema contado dos veces.
+// --- Medir -----------------------------------------------------------------
+
+// Las tres corren a la vez porque son independientes y miran cosas distintas: el que lee en frio
+// no tiene con que comparar, el que coteja tiene la platica, y el que contesta el examen tiene
+// las preguntas que se levantaron antes de que existiera una sola pieza. En fila tardarian la
+// suma; juntas, lo que la mas lenta.
 //
-// Los tres corren ANTES de Asentar: lo que cualquiera marca nunca llega a tocar disco sin
-// pasar primero por una vuelta de arreglo.
-//
-// La primera vuelta es UNA sola, compartida entre los tres - RM-0009 prohibe una linea que
-// nunca cierra. Pero arreglar un hueco es escribir mas (y siempre se puede escribir mas: una
-// vuelta es el tope sano), y juntar un grupo es fundir dos renglones en uno, mientras que
-// arreglar un invento es QUITAR una frase, y quitar converge. Por eso el cotejo, y solo el
-// cotejo, tiene una segunda vuelta - el riesgo real de esa segunda vuelta es que quien repara
-// invente algo nuevo al reescribir (incluido al fundir un grupo), y esa vuelta caza justo eso.
-// Juntar no dispara su propia segunda vuelta: lo que siga picado tras la vuelta 1 se acepta y
-// se reporta, igual que un hueco que sobrevive. Dos es tope duro, lo impone el codigo y no el
-// agente, igual que el tope de preguntas al experto de mas arriba. Nunca hay una tercera.
+// Se usa `Promise.all` y no el `parallel()` del harness a proposito: asi el molino corre con
+// solo los cuatro identificadores que el runtime inyecta -args, agent, log, phase- y se puede
+// ejecutar entero desde una prueba sin montar el resto de la maquinaria.
 
-phase('Leer en frio')
+phase('Medir')
 
-function hallazgosParaElLector(hallazgos) {
-  return hallazgos.map((h, indice) => ({ indice, regla: h.regla, deDondeSalio: h.deDondeSalio, firmeza: h.firmeza }))
-}
+const [primeraLectura, primerCotejo, primerExamen] = await Promise.all([
+  agent(promptParaElLector(registro), { label: 'leer-en-frio:primera', phase: 'Medir', agentType: 'auditor', schema: LECTURA_EN_FRIO }),
+  agent(promptParaElCotejador(registro, loQueDijoElExperto), { label: 'cotejar:primera', phase: 'Medir', agentType: 'auditor', schema: COTEJO }),
+  agent(promptParaContestarElExamen(registro, examen), { label: 'contestar-examen:primera', phase: 'Medir', agentType: 'auditor', schema: EXAMEN_CONTESTADO })
+])
 
-function promptParaElLector(hallazgos) {
-  return [
-    'Carga tu carta `leer-en-frio` antes de leer nada.',
-    '',
-    'Lee estos hallazgos y nada mas. No sabes de que paso salieron, no hay transcript que',
-    'abrir y no hay platica que consultar: en cuanto te enteres de lo que paso, dejas de',
-    'servir para esto.',
-    '',
-    JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
-  ].join('\n')
-}
+let enFrio = primeraLectura
+let cotejo = primerCotejo
+let contestado = primerExamen
 
-function promptParaElCotejador(hallazgos, loQueDijoElExperto) {
-  return [
-    'Carga tu carta `cotejar` antes de leer nada.',
-    '',
-    'Coteja estos hallazgos contra todo lo que dijo el experto. Por cada uno, busca en ese',
-    'material lo que el hallazgo afirma: lo que no este dicho ahi, nombralo como invento -no',
-    'importa que suene razonable. No corrijas, no reescribas y no propongas que poner: solo',
-    'senala la frase.',
-    '',
-    '--- Lo que dijo el experto ---',
-    loQueDijoElExperto,
-    '',
-    '--- Los hallazgos ---',
-    JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
-  ].join('\n')
-}
+// --- Corregir --------------------------------------------------------------
 
-function promptParaJuntar(hallazgos) {
-  return [
-    'Carga tu carta `juntar` antes de leer nada.',
-    '',
-    'Revisa estos hallazgos y nada mas. No sabes de que paso salieron, no hay transcript que',
-    'abrir y no hay platica que consultar: la pregunta se contesta con los hallazgos solos.',
-    'Senala solo los grupos que son un mismo problema -«¿alguien podria atender esto sin',
-    'atender aquello?»-, y no digas como quedaria el renglon junto.',
-    '',
-    JSON.stringify(hallazgosParaElLector(hallazgos), null, 2)
-  ].join('\n')
-}
+// Dos vueltas y ya. **El tope lo impone el codigo, no el agente:** sin tope, cada revision
+// encuentra algo mas y no se escribe nunca. Lo que siga marcado despues de la segunda se escribe
+// con su marca -escrito no es lo mismo que listo, y para eso existe el campo `estado`.
 
-let hallazgosFinales = afinado.hallazgos
+const marcadasVuelta1 = idsSenalados([], primeraLectura, primerCotejo, primerExamen)
 
-let primeraLectura = await agent(promptParaElLector(hallazgosFinales), {
-  label: 'leer-en-frio:primera',
-  phase: 'Leer en frio',
-  agentType: 'auditor',
-  schema: LECTURA_EN_FRIO
-})
+if (marcadasVuelta1.length > 0) {
+  log(`${marcadasVuelta1.length} pieza(s) marcadas por las mediciones: una vuelta para corregirlas.`)
 
-phase('Cotejar')
+  phase('Corregir')
 
-let primerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
-  label: 'cotejar:primera',
-  phase: 'Cotejar',
-  agentType: 'auditor',
-  schema: COTEJO
-})
-
-phase('Juntar')
-
-let primerJuntar = await agent(promptParaJuntar(hallazgosFinales), {
-  label: 'juntar:primera',
-  phase: 'Juntar',
-  agentType: 'auditor',
-  schema: JUNTAR
-})
-
-let segundaLectura = null
-let segundoCotejo = null
-let segundoJuntar = null
-
-const huecosIniciales = primeraLectura ? primeraLectura.huecos : []
-const inventosIniciales = primerCotejo ? primerCotejo.inventos : []
-const gruposIniciales = primerJuntar ? primerJuntar.grupos : []
-
-// Una vuelta y ya. El tope lo impone el codigo, no el agente: sin tope, cada revision
-// encuentra algo mas y no se escribe nunca - la misma regla que RM-0009 fija para las
-// preguntas al experto, aplicada aqui a la vuelta interna con Afinar. Las tres revisiones
-// comparten esta unica vuelta: si cualquiera de las tres marco algo, el encargo a Afinar
-// trae los tres tipos juntos, no uno despues del otro.
-if (huecosIniciales.length > 0 || inventosIniciales.length > 0 || gruposIniciales.length > 0) {
-  log(
-    `${huecosIniciales.length} hallazgo(s) no se entienden solos, ${inventosIniciales.length} traen algo inventado ` +
-      `y ${gruposIniciales.length} grupo(s) son el mismo problema contado dos veces: ` +
-      'una vuelta a Afinar para que los cuente completos.'
+  const corregido = await agent(
+    promptParaCorregir(paso, loQueDijoElExperto, piezasPorId(registro, marcadasVuelta1), primeraLectura, primerCotejo, primerExamen, false),
+    { label: `corregir:vuelta-1:${paso}`, phase: 'Corregir', agentType: 'auditor', schema: REGISTRO }
   )
 
-  const indicesMarcados = Array.from(
-    new Set([
-      ...huecosIniciales.map((h) => h.indice),
-      ...inventosIniciales.map((i) => i.indice),
-      ...gruposIniciales.flatMap((g) => g.indices)
+  if (corregido) {
+    registro = corregido
+
+    phase('Medir')
+
+    const [segundaLectura, segundoCotejo, segundoExamen] = await Promise.all([
+      agent(promptParaElLector(registro), { label: 'leer-en-frio:segunda', phase: 'Medir', agentType: 'auditor', schema: LECTURA_EN_FRIO }),
+      agent(promptParaElCotejador(registro, loQueDijoElExperto), { label: 'cotejar:segunda', phase: 'Medir', agentType: 'auditor', schema: COTEJO }),
+      agent(promptParaContestarElExamen(registro, examen), { label: 'contestar-examen:segunda', phase: 'Medir', agentType: 'auditor', schema: EXAMEN_CONTESTADO })
     ])
-  ).sort((a, b) => a - b)
 
-  phase('Afinar')
+    enFrio = segundaLectura ?? enFrio
+    cotejo = segundoCotejo ?? cotejo
+    contestado = segundoExamen ?? contestado
 
-  const arreglo = await agent(
-    [
-      'Carga tu carta `afinar` antes de escribir nada.',
-      '',
-      `Estos hallazgos del paso "${paso}" ya los sacaste, pero tres revisiones marcaron`,
-      'problemas antes de escribir nada: el lector en frio dice que no se entienden solos, el',
-      'cotejador encontro frases que no estan dichas, y quien junta senalo grupos de',
-      'hallazgos que son un mismo problema contado dos veces -«¿alguien podria atender esto',
-      'sin atender aquello?» contesto que no. Arregla los tres tipos de una vez con lo que',
-      'dijo el experto, que ya tienes abajo: donde haya un grupo, escribe el hallazgo unico',
-      'que junta lo que corresponde. **Esta vuelta es interna: no se le pregunta nada al',
-      'experto.**',
-      '',
-      '--- Lo que dijo el experto ---',
-      loQueDijoElExperto,
-      '',
-      'Reescribe, uno por uno y en el mismo orden, el hallazgo completo que corresponde a',
-      'cada renglon marcado. `preguntas` va vacio.',
-      '',
-      JSON.stringify(
-        indicesMarcados.map((indice) => ({
-          hallazgoOriginal: hallazgosFinales[indice],
-          huecoMarcado: huecosIniciales.find((h) => h.indice === indice) ?? null,
-          inventoMarcado: inventosIniciales.find((i) => i.indice === indice) ?? null,
-          grupoMarcado: gruposIniciales.find((g) => g.indices.includes(indice)) ?? null
-        })),
-        null,
-        2
+    // La segunda vuelta va SOLO por lo que el cotejador siga marcando. Lo que no se entiende
+    // solo y lo que el examen no contesta se registran como hueco y se cierran con el experto en
+    // la sesion siguiente; una frase que nadie dijo, no: esa no se arregla preguntando despues,
+    // y mientras siga escrita se lee como respaldada.
+    const inventosVuelta2 = segundoCotejo ? segundoCotejo.inventos.map((i) => i.id) : []
+
+    if (inventosVuelta2.length > 0) {
+      log(`${inventosVuelta2.length} pieza(s) siguen con algo que nadie dijo: segunda y ultima vuelta.`)
+
+      phase('Corregir')
+
+      const recorregido = await agent(
+        promptParaCorregir(paso, loQueDijoElExperto, piezasPorId(registro, inventosVuelta2), null, segundoCotejo, null, true),
+        { label: `corregir:vuelta-2:${paso}`, phase: 'Corregir', agentType: 'auditor', schema: REGISTRO }
       )
-    ].join('\n'),
-    { label: `afinar:arreglo:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
-  )
 
-  if (arreglo && Array.isArray(arreglo.hallazgos)) {
-    hallazgosFinales = hallazgosFinales.map((h, indice) => {
-      const posicion = indicesMarcados.indexOf(indice)
-      return posicion === -1 ? h : (arreglo.hallazgos[posicion] ?? h)
-    })
+      if (recorregido) {
+        registro = recorregido
+
+        phase('Medir')
+
+        const tercerCotejo = await agent(promptParaElCotejador(registro, loQueDijoElExperto), {
+          label: 'cotejar:tercera',
+          phase: 'Medir',
+          agentType: 'auditor',
+          schema: COTEJO
+        })
+
+        cotejo = tercerCotejo ?? cotejo
+      }
+    }
   }
-
-  phase('Leer en frio')
-
-  segundaLectura = await agent(promptParaElLector(hallazgosFinales), {
-    label: 'leer-en-frio:segunda',
-    phase: 'Leer en frio',
-    agentType: 'auditor',
-    schema: LECTURA_EN_FRIO
-  })
-
-  phase('Cotejar')
-
-  segundoCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
-    label: 'cotejar:segunda',
-    phase: 'Cotejar',
-    agentType: 'auditor',
-    schema: COTEJO
-  })
-
-  phase('Juntar')
-
-  // Corre otra vez para medir si el grupo quedo bien fundido - pero, a diferencia del cotejo,
-  // lo que siga marcando aqui NUNCA dispara la vuelta 2: esa vuelta es solo de inventos, porque
-  // reescribir un grupo puede inventar y ahi el cotejo tiene la ultima palabra, no quien junta.
-  segundoJuntar = await agent(promptParaJuntar(hallazgosFinales), {
-    label: 'juntar:segunda',
-    phase: 'Juntar',
-    agentType: 'auditor',
-    schema: JUNTAR
-  })
 }
 
-let tercerCotejo = null
+// --- Registrar -------------------------------------------------------------
 
-// La segunda vuelta: solo si el cotejo, ya despues de la primera vuelta, sigue marcando algo.
-// El hueco no la dispara por si solo -no es lo que esta vuelta caza- y su encargo trae SOLO
-// los inventos: lo que el lector en frio haya marcado en este punto ya no se manda, se acepta
-// como esta.
-const inventosTrasRonda1 = segundoCotejo ? segundoCotejo.inventos : []
+const senaladas = idsSenalados(registro.senaladas, enFrio, cotejo, contestado)
+const sinPieza = contestado ? contestado.sinPieza : []
 
-if (inventosTrasRonda1.length > 0) {
-  log(`${inventosTrasRonda1.length} invento(s) siguen despues de la primera vuelta: segunda y ultima vuelta, solo con los inventos.`)
-
-  phase('Afinar')
-
-  const arreglo2 = await agent(
-    [
-      'Carga tu carta `afinar` antes de escribir nada.',
-      '',
-      `Estos hallazgos del paso "${paso}" ya pasaron por una vuelta de arreglo, pero el`,
-      'cotejador sigue encontrando frases que no estan dichas. **Esta es la segunda y',
-      'ultima vuelta, y trae SOLO los inventos** - lo que haya marcado el lector en frio en',
-      'este punto no se manda aqui, ya se acepto como esta. Quita la frase inventada con lo',
-      'que dijo el experto, que ya tienes abajo. **Esta vuelta es interna: no se le pregunta',
-      'nada al experto.**',
-      '',
-      '--- Lo que dijo el experto ---',
-      loQueDijoElExperto,
-      '',
-      'Reescribe, uno por uno y en el mismo orden, el hallazgo completo que corresponde a',
-      'cada invento marcado. `preguntas` va vacio.',
-      '',
-      JSON.stringify(
-        inventosTrasRonda1.map((i) => ({
-          hallazgoOriginal: hallazgosFinales[i.indice],
-          inventoMarcado: i
-        })),
-        null,
-        2
-      )
-    ].join('\n'),
-    { label: `afinar:arreglo-inventos:${paso}`, phase: 'Afinar', agentType: 'auditor', schema: HALLAZGOS }
-  )
-
-  if (arreglo2 && Array.isArray(arreglo2.hallazgos)) {
-    hallazgosFinales = hallazgosFinales.map((h, indice) => {
-      const posicion = inventosTrasRonda1.findIndex((i) => i.indice === indice)
-      return posicion === -1 ? h : (arreglo2.hallazgos[posicion] ?? h)
-    })
-  }
-
-  phase('Cotejar')
-
-  tercerCotejo = await agent(promptParaElCotejador(hallazgosFinales, loQueDijoElExperto), {
-    label: 'cotejar:tercera',
-    phase: 'Cotejar',
-    agentType: 'auditor',
-    schema: COTEJO
-  })
+const registroEstampado = {
+  capacidades: registro.capacidades.map((p) => conElPasoYLaHora(p, paso, hora)),
+  modulos: registro.modulos.map((p) => conElPasoYLaHora(p, paso, hora)),
+  reglas: registro.reglas.map((p) => conElPasoYLaHora(p, paso, hora))
 }
 
-// Lo que siga flaco, inventado o picado tras las vueltas se escribe igual mas abajo: perder lo
-// que dijo el experto es peor que tenerlo mal redactado, y es peor todavia dejar un invento sin
-// avisar o una lista partida sin marcar. `enFrio` es la ultima lectura que corrio -nunca hay
-// segunda vuelta para ella-, `cotejo` es el ultimo cotejo que corrio, que puede ser el de la
-// segunda vuelta, y `juntado` es la ultima medicion de quien junta -tampoco tiene segunda vuelta
-// propia, corre a lo mas dos veces, dentro de la vuelta 1.
-const enFrio = segundaLectura ?? primeraLectura
-const cotejo = tercerCotejo ?? segundoCotejo ?? primerCotejo
-const juntado = segundoJuntar ?? primerJuntar
+phase('Registrar')
 
-// --- Asentar -------------------------------------------------------------
-
-phase('Asentar')
-
-const hallazgosParaEscribano = hallazgosFinales.map((h) => conLaHoraEstampada(h, hora))
-
-const escritos = await agent(
-  [
-    `Escribe estos hallazgos del paso "${paso}". Ya pasaron por el auditor y el experto cerro sus preguntas.`,
-    '',
-    'Carga tu carta `asentar` antes de escribir nada: ahi viene donde escribes y con que forma.',
-    'Despues lee `roadmap/0000-plantilla.md`: la forma la manda esa plantilla, no tu carta.',
-    'Uno por archivo, en `roadmap/`. La regla no pasa de 120 caracteres y el cuerpo no pasa de 900.',
-    '',
-    '`deDondeSalio` te llega con el caso contado entero. **No lo recortes y no lo apodes.**',
-    'Si no cabe en los 900, ese es justo el momento del puntero: escribes el detalle en',
-    '`roadmap/documentos/` con su plantilla, y en el item pones la ruta en `puntero`.',
-    'El tope no es permiso para resumir: es la senal de que el desahogo va al documento.',
-    hora
-      ? 'Cada hallazgo ya trae su `alta` (y su `confirmado` si la firmeza lo pide) estampados abajo.'
-      : 'No llego la hora del alta: ningun hallazgo trae `alta`. No la inventes - repórtalo como no escrito.',
-    '',
-    JSON.stringify(hallazgosParaEscribano, null, 2)
-  ].join('\n'),
-  { label: `asentar:${paso}`, phase: 'Asentar', agentType: 'escribano', schema: ESCRITOS }
-)
+const escritos = await agent(promptParaRegistrar(paso, registroEstampado, senaladas, sinPieza, hora), {
+  label: `registrar:${paso}`,
+  phase: 'Registrar',
+  agentType: 'escribano',
+  schema: ESCRITOS
+})
 
 if (!escritos) {
-  log('El escribano no reporto. No se puede auditar lo que no se sabe si existe.')
-  return { estado: 'sin-registro', paso, hallazgos: hallazgosFinales }
+  log('El escribano no reporto. No se sabe que quedo escrito ni que no.')
+  return { estado: 'sin-registro', paso, registro: registroEstampado, senaladas }
 }
 
-// --- Auditar -------------------------------------------------------------
-// Otro auditor, contexto limpio: no vio afinar y no sabe que se escribio hasta
-// que lee el crudo. Si leyera lo escrito primero, confirmaria en vez de medir.
+// --- Auditar ---------------------------------------------------------------
 
 phase('Auditar')
 
-const dictamen = await agent(
-  [
-    'Carga tu carta `auditar` antes de abrir nada.',
-    '',
-    'El orden no se invierte: primero el registro crudo, despues los archivos.',
-    transcript ? `El transcript de la sesion esta en: ${transcript}` : 'No te dieron la ruta del transcript: toma el .jsonl mas reciente de la carpeta del proyecto y declara cual usaste.',
-    '',
-    `Se acaba de escribir el paso "${paso}" en \`roadmap/\`. Dictamina lo inventado, lo perdido y lo mal marcado.`
-  ].join('\n'),
-  { label: `auditar:${paso}`, phase: 'Auditar', agentType: 'auditor', schema: DICTAMEN }
-)
+const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos), {
+  label: `auditar:${paso}`,
+  phase: 'Auditar',
+  agentType: 'auditor',
+  schema: DICTAMEN
+})
 
-// El «no sirve» es la cuarta falla y cuenta como las otras tres. Medido el 2026-07-31: el
-// auditor ya contestaba la pregunta del final -si le alcanza a alguien que no estuvo- y la
-// suma la ignoraba, asi que un dictamen «no sirve» salia impreso como «sin fallas» y el
-// estado como «listo». Diecisiete de cincuenta y nueve items quedaron con la procedencia
-// apodada y nadie se entero. Una medicion que no cuenta es una medicion que no se hizo.
-//
-// Los cuatro caminos llegan a la misma falla desde lados distintos: el auditor con el crudo
-// enfrente, el lector en frio sin nada, el cotejador con la platica, y quien junta con los
-// hallazgos solos. Basta uno para pararla — el de enfrente cacha lo que se perdio, el de a
-// ciegas cacha lo que solo se entiende habiendo estado, el cotejador cacha lo que nadie dijo,
-// y quien junta cacha lo que se pudo decir en un solo renglon y se dijo en dos.
-const huecos = enFrio ? enFrio.huecos.length : 0
-const inventos = cotejo ? cotejo.inventos.length : 0
-const grupos = juntado ? juntado.grupos.length : 0
-const noSirve = (dictamen ? dictamen.sirve === false : false) || huecos > 0 || inventos > 0 || grupos > 0
+// --- Armar lo que falta ----------------------------------------------------
 
-// Los cuatro auditores se cuentan por separado: si uno no contesto, lo que los otros si
-// midieron no se puede perder. Sumar en un solo numero que se vuelve null cuando falta el
-// dictamen dejaria pasar en silencio lo que si midieron el lector en frio, el cotejador y
-// quien junta.
-const fallasDelCrudo = dictamen
-  ? dictamen.inventado.length + dictamen.perdido.length + dictamen.malMarcado.length
-  : null
+phase('Armar lo que falta')
 
-const fallas = (fallasDelCrudo ?? 0) + (noSirve ? 1 : 0)
+const loQueFalta = await agent(promptParaArmarLoQueFalta(paso, escritos, escritos.senalesSinPieza ?? sinPieza), {
+  label: `falta:${paso}`,
+  phase: 'Armar lo que falta',
+  agentType: 'auditor',
+  schema: LO_QUE_FALTA
+})
 
-if (fallasDelCrudo === null) log('El auditor no dictamino. Lo escrito queda sin medir contra el crudo.')
-if (!enFrio) log('El lector en frio no contesto. Nadie leyo los items como el que no estuvo.')
-if (!cotejo) log('El cotejador no contesto. Nadie coteja los hallazgos contra la platica.')
-if (!juntado) log('Quien junta no contesto. Nadie midio si los hallazgos escritos eran el mismo problema.')
+// --- Lo que se dice al cerrar ----------------------------------------------
 
-if (fallas === 0 && fallasDelCrudo !== null && enFrio && cotejo && juntado) {
-  log(`Paso "${paso}": ${escritos.archivos.length} hallazgo(s) escrito(s), sin fallas.`)
-} else if (fallas > 0) {
-  log(`Paso "${paso}": ${escritos.archivos.length} escrito(s), ${fallas} falla(s) que el consultor tiene que atender.`)
+// El «no sirve» es la cuarta falla del auditor y cuenta como las otras tres. Medido el
+// 2026-07-31: el auditor ya contestaba la pregunta del final -si le alcanza a alguien que no
+// estuvo- y la suma la ignoraba, asi que un dictamen «no sirve» salia impreso como «sin fallas»
+// y el estado como «listo». Diecisiete de cincuenta y nueve items quedaron mal y nadie se
+// entero. Una medicion que no cuenta es una medicion que no se hizo.
+
+// El estado NO se deriva solo de lo que reporto el escribano. El molino ya sabe que piezas
+// senalaron las mediciones, y si el reporte no las trae marcadas, la marca se perdio en el
+// camino. Manda la medicion, no el reporte: es la misma leccion del 2026-07-31, cuando un
+// dictamen «no sirve» salio impreso como «sin fallas» porque nadie lo sumo.
+const conHuecos = escritos.archivos.filter((a) => a.estado === 'con-huecos')
+const senaladasSinMarcar = senaladas.filter((id) => !escritos.archivos.some((a) => a.idDeTrabajo === id && a.estado === 'con-huecos'))
+const fallasDelCrudo = dictamen ? dictamen.inventado.length + dictamen.perdido.length + dictamen.malMarcado.length : null
+const noSirve = dictamen ? dictamen.sirve === false : false
+const preguntasSinPieza = escritos.senalesSinPieza ?? sinPieza
+
+// Los agentes que no contestan se nombran uno por uno. Un silencio no es una aprobacion, y cada
+// uno de estos mide algo que ningun otro alcanza.
+if (!enFrio) log('El lector en frio no contesto. Nadie leyo las piezas como el que no estuvo.')
+if (!cotejo) log('El cotejador no contesto. Nadie coteja lo escuchado contra la platica.')
+if (!contestado) log('Nadie contesto el examen. El registro queda sin medir contra lo que se levanto antes.')
+if (!dictamen) log('El auditor no dictamino. Lo escrito queda sin medir contra el crudo.')
+if (!loQueFalta) log('Nadie armo lo que falta preguntar. La sesion siguiente abre sin primera plana.')
+
+log(`Paso "${paso}": ${escritos.archivos.length} pieza(s) escrita(s), ${conHuecos.length} con huecos.`)
+
+if (fallasDelCrudo !== null && fallasDelCrudo > 0) {
+  log(`El auditor encontro ${fallasDelCrudo} falla(s) contra el crudo.`)
 }
 
-// El porque puede venir de cualquiera de los cuatro, o de varios a la vez. Se dicen los que
-// haya: un «no sirve» sin el renglon señalado no se puede arreglar.
 if (noSirve) {
-  if (huecos > 0) {
-    log(`No le alcanza a quien no estuvo: ${huecos} de ${enFrio.itemsLeidos} item(s) no se entienden solos, incluso despues de la vuelta de arreglo.`)
-    for (const h of enFrio.huecos) {
-      const ruta = escritos.archivos[h.indice]?.ruta ?? `hallazgo ${h.indice}`
-      log(`  ${ruta} — ${h.forma}: «${h.renglon}»`)
-    }
-  }
-  if (inventos > 0) {
-    log(`Tiene lo inventado: ${inventos} de ${cotejo.hallazgosCotejados} hallazgo(s) traen algo que la platica no dijo, incluso despues de la vuelta de arreglo.`)
-    for (const i of cotejo.inventos) {
-      const ruta = escritos.archivos[i.indice]?.ruta ?? `hallazgo ${i.indice}`
-      log(`  ${ruta} — inventado: «${i.frase}»`)
-    }
-  }
-  if (grupos > 0) {
-    log(`Sigue picado: ${grupos} grupo(s) son el mismo problema contado dos veces, incluso despues de la vuelta de arreglo.`)
-    for (const g of juntado.grupos) {
-      const rutas = g.indices.map((indice) => escritos.archivos[indice]?.ruta ?? `hallazgo ${indice}`).join(', ')
-      log(`  ${rutas} — ${g.porque}`)
-    }
-  }
-  if (dictamen?.sirve === false) log(`El auditor del crudo coincide: ${dictamen.porque}`)
+  log(`No le alcanza a quien no estuvo: ${dictamen.porque}`)
+}
+
+for (const a of conHuecos) {
+  log(`  ${a.ruta} — con huecos`)
+}
+
+if (escritos.noEscritos.length > 0) {
+  log(`${escritos.noEscritos.length} pieza(s) no se pudieron escribir:`)
+  for (const n of escritos.noEscritos) log(`  ${n}`)
+}
+
+if (preguntasSinPieza.length > 0) {
+  log(`${preguntasSinPieza.length} pregunta(s) del examen no las rozaba ninguna pieza. Van a lo que falta preguntar.`)
+}
+
+if (senaladasSinMarcar.length > 0) {
+  log(`${senaladasSinMarcar.length} pieza(s) las senalo una medicion y no quedaron marcadas en disco: ${senaladasSinMarcar.join(', ')}.`)
 }
 
 return {
-  // Escrito no es lo mismo que listo. Si al que no estuvo no le alcanza, el paso no cerro.
-  estado: noSirve ? 'no-sirve' : 'listo',
+  // Escrito no es lo mismo que listo. Si algo quedo marcado, el paso cierra con huecos, y de ese
+  // estado no se deriva nada rio abajo hasta que se cierren. Cuenta lo que midieron las
+  // mediciones aunque el reporte del escribano no lo traiga: una senal que no llego al archivo
+  // sigue siendo una senal, y perderla aqui la perderia para siempre.
+  estado: senaladas.length > 0 || conHuecos.length > 0 || noSirve || (fallasDelCrudo ?? 0) > 0 ? 'con-huecos' : 'listo',
   paso,
   archivos: escritos.archivos,
   noEscritos: escritos.noEscritos,
+  conHuecos: conHuecos.map((a) => a.id),
+  senaladasSinMarcar,
+  loQueFalta,
   dictamen,
   enFrio,
   cotejo,
-  juntado
+  contestado
 }
