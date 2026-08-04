@@ -74,7 +74,15 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
 
     if (opts.phase === 'Sacar') return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
     if (opts.phase === 'Levantar el examen') return { preguntas: ['Desde cuando se le fia a un taller?'] }
-    if (opts.phase === 'Construir') return REGISTRO
+    if (opts.phase === 'Construir') {
+      // Solo lo que le toca a cada llamada, no el registro entero -la misma leccion del
+      // 2026-08-04: un doble que siempre devuelve todo no mide nada.
+      if (label.startsWith('construir:reglas')) return { reglas: REGISTRO.reglas, dudas: REGISTRO.dudas, senaladas: REGISTRO.senaladas }
+      if (label.startsWith('construir:capacidades')) return { capacidades: REGISTRO.capacidades, dudas: REGISTRO.dudas, senaladas: REGISTRO.senaladas }
+      if (label.startsWith('construir:modulos')) return { modulos: REGISTRO.modulos }
+      if (label.startsWith('construir:dominios')) return { dominios: [] }
+      return null
+    }
     if (opts.phase === 'Medir') {
       if (label.startsWith('leer-en-frio')) return { huecos: [], piezasLeidas: 1 }
       if (label.startsWith('cotejar')) return { inventos: [], piezasCotejadas: 1 }
@@ -175,12 +183,14 @@ describe('la procedencia se cuenta entera, y el esquema no deja lugar para el ap
 })
 
 describe('lo que el experto contesto despues vale igual que la platica', () => {
-  it('quien construye ve la platica y las respuestas, las dos', async () => {
+  it('quien construye ve la platica y las respuestas, las dos -en las cuatro llamadas, no solo en la primera', async () => {
     const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
-    const construir = llamadaDe(llamadas, 'Construir')
 
-    expect(construir.prompt).toContain(PLATICA_TEXTO)
-    expect(construir.prompt).toContain('desde los tres meses')
+    for (const prefijo of ['construir:reglas', 'construir:capacidades', 'construir:modulos', 'construir:dominios']) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no ve la platica`).toContain(PLATICA_TEXTO)
+      expect(construir.prompt, `${prefijo} no ve las respuestas`).toContain('desde los tres meses')
+    }
   })
 
   it('el cotejador ve las dos, para que una pieza salida de las respuestas no parezca inventada', async () => {

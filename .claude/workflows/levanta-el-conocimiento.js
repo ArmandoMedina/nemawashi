@@ -101,7 +101,7 @@ const EXAMEN = {
   }
 }
 
-// El registro enlazado. Cuatro campos que este esquema NO tiene, cada uno por su razon:
+// Cuatro campos que ningun esquema de pieza tiene, cada uno por su razon:
 //
 //   `paso` y `alta`  - los estampa el codigo al salir de aqui, pieza por pieza. Un campo que
 //                      el agente pudiera llenar es un campo que el agente puede perder, y una
@@ -114,119 +114,181 @@ const EXAMEN = {
 // Los `id` son de trabajo -`CAP-1`, `REG-2`- y valen solo dentro de esta corrida. Los
 // definitivos salen de numerar la carpeta, y eso pasa al escribir.
 const CAMPOS_DE_PIEZA = {
-  id: { type: 'string', description: 'De trabajo, no de carpeta: CAP-1, MOD-1, REG-1. No inventes un numero de archivo.' },
+  id: { type: 'string', description: 'De trabajo, no de carpeta: CAP-1. No inventes numero de archivo.' },
   renglon: { type: 'string', description: 'Una linea, en palabras del negocio. Tope de 120 caracteres.' },
   firmeza: { type: 'string', enum: ['dicho', 'confirmado', 'abierto'] },
   origen: {
     type: 'string',
     enum: ['escuchado', 'propuesto'],
-    description: 'Otro eje: no sustituye a la firmeza y no se deriva de ella. Solo lo `escuchado` se coteja contra la platica.'
+    description: 'No sustituye a la firmeza. Solo lo `escuchado` se coteja contra la platica.'
   },
   enSusPalabras: {
     type: 'string',
-    description:
-      'Lo que se dijo, entero y sin recortar. Aqui no hay tope: el pedazo cortado no aparece en ningun ' +
-      'lado. Si el origen es `propuesto`, va el caso que se conto y en seguida lo que se saco de el.'
+    description: 'Lo que se dijo, entero, sin recortar -sin tope. Si es `propuesto`, el caso contado y lo que se saco de el.'
   },
   deDondeSalio: {
     type: 'string',
-    description:
-      'Que pregunta lo destapo o de que caso concreto. CONTADO, no apodado: un apodo -«el pleito de la ' +
-      'tercera falla», «la pregunta 2»- nombra algo que no esta escrito en ningun archivo. Si el origen ' +
-      'es `propuesto`, aqui va por que el conjunto no cerraba sin esta pieza.'
+    description: 'Que pregunta lo destapo. CONTADO, no apodado -un apodo nombra algo que no esta en ningun archivo. Si es `propuesto`, por que el conjunto no cerraba sin ella.'
   },
   queQuedaAbierto: {
     type: 'string',
-    description: 'La pregunta pendiente si la firmeza es `abierto`. Si no queda nada, la palabra «nada» -el silencio no se interpreta.'
+    description: 'Pendiente si es `abierto`. Si no queda nada, la palabra «nada» -el silencio no se interpreta.'
   }
 }
 
 const REQUERIDOS_DE_PIEZA = ['id', 'renglon', 'firmeza', 'origen', 'enSusPalabras', 'deDondeSalio', 'queQuedaAbierto']
 
-const REGISTRO = {
+// El registro enlazado se pedia antes en una sola llamada, con las cuatro piezas juntas: pesaba
+// 7806 caracteres serializados, y el clasificador de seguridad la rechazo en una corrida real
+// -medido el 2026-08-04, «Construir» murio con `output schema too large to classify safely`. Se
+// parte en cuatro llamadas, cada una con su propio esquema, mas chico y en cadena: reglas,
+// despues capacidades -que ya conocen las reglas-, despues modulos -que ya conocen las
+// capacidades-, y al final dominios -que ya conocen los modulos. `Corregir` toma la misma
+// particion: nunca manda el esquema de un tipo que no esta corrigiendo.
+//
+// Tres enlaces se piden en un sentido y no en el otro, a proposito: cuando se construye cada
+// tipo, el que lo va a contener todavia no existe -las reglas no conocen capacidad, las
+// capacidades no conocen modulo, los modulos no conocen dominio. Pedirle al agente que cite un
+// id que no existe es pedirle que lo invente. El lado que falta se deja vacio aqui y lo enlaza
+// el codigo por su cuenta mas abajo (`conLasCapacidadesEnlazadas`, `conElModuloEnlazado`,
+// `conElDominioEnlazado`), invirtiendo el lado que si se pudo declarar cuando la pieza de arriba
+// se construyo.
+const PIEZA_REGLA = {
   type: 'object',
-  required: ['dominios', 'capacidades', 'modulos', 'reglas', 'dudas', 'senaladas'],
-  properties: {
-    dominios: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: REQUERIDOS_DE_PIEZA.concat(['modulos', 'quienLoSabe', 'queAgrupa']),
-        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
-          modulos: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de los modulos que contiene.' },
-          quienLoSabe: {
-            type: 'string',
-            description:
-              'El PAPEL del negocio que puede contestar lo de aqui adentro -quien cobra, quien surte, quien ' +
-              'autoriza-, nunca la persona: ningun nombre entra a un archivo. Es lo que separa un dominio de un ' +
-              'modulo. Si dos dominios necesitarian a la misma persona en la sala, no son dos.'
-          },
-          queAgrupa: { type: 'string', description: 'Que modulos caen dentro Y CUALES NO. La segunda mitad es la que sirve.' }
-        })
-      }
-    },
+  required: REQUERIDOS_DE_PIEZA.concat(['capacidades']),
+  properties: Object.assign({}, CAMPOS_DE_PIEZA, {
     capacidades: {
       type: 'array',
-      items: {
-        type: 'object',
-        required: REQUERIDOS_DE_PIEZA.concat(['modulo', 'reglas']),
-        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
-          modulo: { type: 'string', description: 'El id de trabajo del modulo que la contiene. Ese modulo tiene que nombrarla de vuelta.' },
-          reglas: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las reglas que la sostienen. Vacio es un hueco, no un error.' }
-        })
-      }
+      items: { type: 'string' },
+      description: 'Ids de las capacidades que sostiene. Aun no existe ninguna: DEJA VACIO, el codigo lo enlaza despues.'
+    }
+  })
+}
+
+const PIEZA_CAPACIDAD = {
+  type: 'object',
+  required: REQUERIDOS_DE_PIEZA.concat(['modulo', 'reglas']),
+  properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+    modulo: { type: 'string', description: 'Id del modulo. Aun no existe: DEJA VACIO, el codigo lo enlaza despues.' },
+    reglas: { type: 'array', items: { type: 'string' }, description: 'Ids de las reglas que sostiene. Vacio es hueco, no error.' }
+  })
+}
+
+const PIEZA_MODULO = {
+  type: 'object',
+  required: REQUERIDOS_DE_PIEZA.concat(['dominio', 'capacidades', 'queAgrupa']),
+  properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+    dominio: {
+      type: 'string',
+      description: 'Id del dominio que lo contiene. Aun no existe ninguno: DEJA VACIO, el codigo lo enlaza despues.'
     },
-    modulos: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: REQUERIDOS_DE_PIEZA.concat(['dominio', 'capacidades', 'queAgrupa']),
-        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
-          dominio: { type: 'string', description: 'El id de trabajo del dominio que lo contiene. Ese dominio tiene que nombrarlo de vuelta.' },
-          capacidades: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las capacidades que contiene.' },
-          queAgrupa: {
-            type: 'string',
-            description: 'Que cae dentro Y QUE NO. La segunda mitad es la que sirve: sin ella no se puede decidir donde va una capacidad nueva.'
-          }
-        })
-      }
-    },
-    reglas: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: REQUERIDOS_DE_PIEZA.concat(['capacidades']),
-        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
-          capacidades: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las capacidades que sostiene. Una regla puede sostener mas de una.' }
-        })
-      }
-    },
-    dudas: {
-      type: 'array',
+    capacidades: { type: 'array', items: { type: 'string' }, description: 'Ids de las capacidades que contiene.' },
+    queAgrupa: { type: 'string', description: 'Que cae dentro Y QUE NO -la segunda mitad es la que sirve para ubicar una capacidad nueva.' }
+  })
+}
+
+const PIEZA_DOMINIO = {
+  type: 'object',
+  required: REQUERIDOS_DE_PIEZA.concat(['modulos', 'quienLoSabe', 'queAgrupa']),
+  properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+    modulos: { type: 'array', items: { type: 'string' }, description: 'Ids de los modulos que contiene.' },
+    quienLoSabe: {
+      type: 'string',
       description:
-        'Ya convertidas en la pregunta que se le va a hacer al experto. Esto es lo unico que puede parar ' +
-        'la corrida antes de escribir. Vacio si no hay nada que cerrar -y vacio de verdad, no sin llenar.',
-      items: {
-        type: 'object',
-        required: ['pregunta', 'falla'],
-        properties: {
-          pregunta: { type: 'string' },
-          falla: {
-            type: 'string',
-            enum: ['ambiguedad', 'contradiccion', 'frase-a-medias', 'referencia-sin-cerrar', 'umbral-sin-numero', 'reglas-que-chocan', 'capacidad-sin-casa']
-          }
-        }
-      }
+        'El PAPEL que puede contestar esto -quien cobra, quien surte, quien autoriza-, nunca la persona: ' +
+        'ningun nombre entra a un archivo. Si dos dominios necesitan a la misma persona en la sala, no son dos.'
     },
-    senaladas: {
-      type: 'array',
-      description:
-        'Los ids de trabajo de las piezas que quedaron sin cerrar. Es un reporte mas: el escribano lo ' +
-        'traduce a `estado: con-huecos`. Vacio si ninguna.',
-      items: { type: 'string' }
+    queAgrupa: { type: 'string', description: 'Que modulos caen dentro Y CUALES NO -la segunda mitad es la que sirve.' }
+  })
+}
+
+// `dudas` y `senaladas` solo viajan en las llamadas que todavia estan proponiendo -reglas y
+// capacidades-. Las de modulos y dominios solo agrupan lo que ya existe y no proponen nada suelto
+// que pudiera generar una duda nueva; y una vuelta de `Corregir` solo corrige lo que ya se
+// marco, nunca abre una duda que nadie pidio.
+const CAMPO_DUDAS = {
+  type: 'array',
+  description: 'La pregunta ya armada. Para la corrida si hay alguna; vacio de verdad si no hay nada que cerrar.',
+  items: {
+    type: 'object',
+    required: ['pregunta', 'falla'],
+    properties: {
+      pregunta: { type: 'string' },
+      falla: {
+        type: 'string',
+        enum: ['ambiguedad', 'contradiccion', 'frase-a-medias', 'referencia-sin-cerrar', 'umbral-sin-numero', 'reglas-que-chocan', 'capacidad-sin-casa']
+      }
     }
   }
 }
+
+const CAMPO_SENALADAS = {
+  type: 'array',
+  description: 'Ids sin cerrar; el escribano lo traduce a `con-huecos`. Vacio si ninguna.',
+  items: { type: 'string' }
+}
+
+const CONSTRUIR_REGLAS = {
+  type: 'object',
+  required: ['reglas', 'dudas', 'senaladas'],
+  properties: { reglas: { type: 'array', items: PIEZA_REGLA }, dudas: CAMPO_DUDAS, senaladas: CAMPO_SENALADAS }
+}
+
+const CONSTRUIR_CAPACIDADES = {
+  type: 'object',
+  required: ['capacidades', 'dudas', 'senaladas'],
+  properties: { capacidades: { type: 'array', items: PIEZA_CAPACIDAD }, dudas: CAMPO_DUDAS, senaladas: CAMPO_SENALADAS }
+}
+
+const CONSTRUIR_MODULOS = {
+  type: 'object',
+  required: ['modulos'],
+  properties: { modulos: { type: 'array', items: PIEZA_MODULO } }
+}
+
+const CONSTRUIR_DOMINIOS = {
+  type: 'object',
+  required: ['dominios'],
+  properties: { dominios: { type: 'array', items: PIEZA_DOMINIO } }
+}
+
+// `Corregir` manda solo el esquema del tipo que esta corrigiendo -nunca el de los otros tres, y
+// nunca `dudas`: una correccion no abre dudas nuevas, arregla lo que ya se marco o lo deja
+// `abierto` con su id en `senaladas`.
+const CORREGIR_REGLAS = {
+  type: 'object',
+  required: ['reglas', 'senaladas'],
+  properties: { reglas: { type: 'array', items: PIEZA_REGLA }, senaladas: CAMPO_SENALADAS }
+}
+
+const CORREGIR_CAPACIDADES = {
+  type: 'object',
+  required: ['capacidades', 'senaladas'],
+  properties: { capacidades: { type: 'array', items: PIEZA_CAPACIDAD }, senaladas: CAMPO_SENALADAS }
+}
+
+const CORREGIR_MODULOS = {
+  type: 'object',
+  required: ['modulos', 'senaladas'],
+  properties: { modulos: { type: 'array', items: PIEZA_MODULO }, senaladas: CAMPO_SENALADAS }
+}
+
+const CORREGIR_DOMINIOS = {
+  type: 'object',
+  required: ['dominios', 'senaladas'],
+  properties: { dominios: { type: 'array', items: PIEZA_DOMINIO }, senaladas: CAMPO_SENALADAS }
+}
+
+// Los cuatro tipos, en el orden en que se construyen -reglas, capacidades, modulos, dominios-,
+// con la clave de su campo en el registro y el esquema que le toca a `Corregir`. `Construir` no
+// usa esta lista: ahi cada llamada tiene ademas su propio contexto (que ya se construyo antes),
+// y no hay tres usos iguales todavia que abstraer.
+const TIPOS_DE_PIEZA = [
+  { tipo: 'regla', clave: 'reglas', schema: CORREGIR_REGLAS },
+  { tipo: 'capacidad', clave: 'capacidades', schema: CORREGIR_CAPACIDADES },
+  { tipo: 'modulo', clave: 'modulos', schema: CORREGIR_MODULOS },
+  { tipo: 'dominio', clave: 'dominios', schema: CORREGIR_DOMINIOS }
+]
 
 // El lector en frio no compara nada: solo tiene las piezas. Por eso su hallazgo nombra el
 // renglon y la forma de fallar, y NO lleva un campo para «que agregar» - el que dice que falta
@@ -461,6 +523,40 @@ function todasLasPiezas(registro) {
   return (registro.dominios ?? []).concat(registro.capacidades, registro.modulos, registro.reglas)
 }
 
+// Las reglas se construyen antes de que exista una sola capacidad, asi que a su turno se les
+// pidio dejar `capacidades` vacio -no podian saberlo-. Cuando las capacidades ya existen, cada
+// una SI declara sus reglas (`capacidad.reglas`, un id que ya existia cuando ella se construyo),
+// y de ahi se invierte el enlace que a la regla le faltaba. Dato plano entra, dato plano nuevo
+// sale; nunca se toca el original.
+function conLasCapacidadesEnlazadas(reglas, capacidades) {
+  return reglas.map((r) => Object.assign({}, r, {
+    capacidades: capacidades.filter((c) => (c.reglas ?? []).indexOf(r.id) !== -1).map((c) => c.id)
+  }))
+}
+
+// La misma historia un nivel arriba: al construir las capacidades no existe ningun modulo, asi
+// que `capacidad.modulo` se les pidio vacio. Cuando los modulos ya existen, cada uno SI declara
+// sus capacidades (`modulo.capacidades`), y de ahi se invierte el enlace que a la capacidad le
+// faltaba. Si ningun modulo la reclamo, se queda con lo que haya traido -una capacidad sin casa
+// es justo lo que las mediciones de abajo tienen que cazar, no algo que este codigo deba tapar.
+function conElModuloEnlazado(capacidades, modulos) {
+  return capacidades.map((c) => {
+    const suyo = modulos.find((m) => (m.capacidades ?? []).indexOf(c.id) !== -1)
+    return Object.assign({}, c, { modulo: suyo ? suyo.id : c.modulo })
+  })
+}
+
+// La misma inversion, un nivel mas arriba: al construir los modulos no existe ningun dominio,
+// asi que `modulo.dominio` se les pidio vacio. Cuando los dominios ya existen, cada uno SI
+// declara sus modulos (`dominio.modulos`), y de ahi se invierte el enlace que al modulo le
+// faltaba.
+function conElDominioEnlazado(modulos, dominios) {
+  return modulos.map((m) => {
+    const suyo = dominios.find((d) => (d.modulos ?? []).indexOf(m.id) !== -1)
+    return Object.assign({}, m, { dominio: suyo ? suyo.id : m.dominio })
+  })
+}
+
 // Cada senal viene con su razon, y la razon viaja pegada a la pieza hasta el escribano. Medido el
 // 2026-08-04: tres reglas salieron con `estado: con-huecos` y `que-queda-abierto` diciendo «nada»,
 // que su propia plantilla prohibe. Pasaba porque al escribano le llegaba la marca sin el motivo, y
@@ -502,8 +598,11 @@ function idsSenalados(senaladasDelRegistro, enFrio, cotejo, contestado) {
   return ids.filter((id, i) => ids.indexOf(id) === i)
 }
 
-function piezasPorId(registro, ids) {
-  return todasLasPiezas(registro).filter((p) => ids.indexOf(p.id) !== -1)
+// Agrupa por tipo, no por el prefijo del id: el id de trabajo no es un contrato, y de donde
+// sale la pieza -de `registro.reglas`, de `registro.modulos`- si lo es.
+function piezasDelTipoMarcadas(registro, tipo, ids) {
+  const clave = TIPOS_DE_PIEZA.find((t) => t.tipo === tipo).clave
+  return (registro[clave] ?? []).filter((p) => ids.indexOf(p.id) !== -1)
 }
 
 // La vuelta de correccion devuelve SOLO las piezas marcadas -asi se le pide, y asi hay que
@@ -613,15 +712,19 @@ function promptParaElExamen(paso, platica) {
   ].join('\n')
 }
 
-function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, inventario) {
+// Solo lo ya escrito del mismo tipo tiene sentido mostrarle a cada llamada: a quien construye
+// reglas no le ayuda ver modulos viejos, y verlos es lo que lo tentaria a citarlos.
+function piezasDelInventario(inventario, ...tipos) {
   const piezas = inventario ? inventario.piezas : []
+  return piezas.filter((p) => tipos.indexOf(p.tipo) !== -1)
+}
+
+// Lo que las cuatro llamadas de «Construir» comparten: lo ya escrito, el aviso de segunda corrida,
+// las reglas de los `id` de trabajo, la prohibicion de estampar paso/alta/confirmado/estado, y el
+// examen que no se puede tocar. Antes vivia una sola vez porque habia una sola llamada.
+function bloqueComunDeConstruir(examen, piezasYaEscritas, segundaCorrida) {
   return [
-    'Carga tu carta `construir-el-registro` antes de medir nada.',
-    '',
-    `Arma el registro enlazado del paso "${paso}": las reglas dichas, y las capacidades, los modulos`,
-    'y los dominios que se sacan de ellas, ligados en los dos sentidos.',
-    '',
-    piezas.length > 0
+    piezasYaEscritas.length > 0
       ? [
           '--- Lo que otras sesiones YA escribieron ---',
           '',
@@ -634,7 +737,7 @@ function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, i
           'sobrescribas en silencio y nunca decidas tu cual gana -que lo de hoy sea mas nuevo no lo',
           'hace mas cierto.',
           '',
-          JSON.stringify(piezas, null, 2)
+          JSON.stringify(piezasYaEscritas, null, 2)
         ].join('\n')
       : '--- Es la primera corrida del proyecto: no hay nada escrito todavia ---',
     '',
@@ -649,16 +752,98 @@ function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, i
         ].join('\n')
       : 'Esta es la primera corrida: si quedan dudas, la corrida se para y se le llevan al experto.',
     '',
-    '**Los `id` son de trabajo y valen solo aqui:** CAP-1, MOD-1, REG-1. Los numeros de carpeta',
-    'salen de numerar `product/conocimiento/`, y eso pasa al escribir, despues de las mediciones.',
-    'Si adivinas un numero de carpeta, el registro apunta a la pieza de otra sesion.',
+    '**Los `id` son de trabajo y valen solo aqui:** CAP-1, MOD-1, REG-1, DOM-1. Los numeros de',
+    'carpeta salen de numerar `product/conocimiento/`, y eso pasa al escribir, despues de las',
+    'mediciones. Si adivinas un numero de carpeta, el registro apunta a la pieza de otra sesion.',
     '',
     '**No pongas `paso`, `alta`, `confirmado` ni `estado`.** Los tres primeros se estampan al',
     'salir de aqui; el `estado` lo pone el escribano traduciendo lo que senalen las mediciones,',
     'que todavia no han corrido.',
     '',
     '--- El examen que ya se levanto, y no lo puedes tocar ---',
-    examen.preguntas.map((p, i) => `${i + 1}. ${p}`).join('\n'),
+    examen.preguntas.map((p, i) => `${i + 1}. ${p}`).join('\n')
+  ].join('\n')
+}
+
+// «Construir» ya no es una llamada, son cuatro: reglas, despues capacidades -que citan las
+// reglas que acaban de nacer-, despues modulos -que citan esas capacidades-, y al final dominios
+// -que citan esos modulos. La razon es de tamano, no de metodo: el registro entero pesaba 7806
+// caracteres serializados y el clasificador de seguridad lo rechazo en una corrida real, medido
+// el 2026-08-04. Todas reciben lo mismo que antes recibia la unica llamada -el examen, lo que
+// dijo el experto, si es segunda corrida, lo ya escrito de su propio tipo-; las tres ultimas
+// reciben ademas lo que ya construyo la que corrio justo antes, porque agrupan sobre ello.
+
+function promptParaConstruirReglas(paso, loQueDijoElExperto, examen, segundaCorrida, inventario) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Arma las reglas dichas del paso "${paso}": lo que el experto dijo que se cumple siempre, nunca,`,
+    'o bajo una condicion.',
+    '',
+    'Todavia no existe ninguna capacidad -eso se construye despues-, asi que **deja `capacidades`',
+    'vacio en cada regla.** No es un hueco: el codigo enlaza ese lado solo, en cuanto las',
+    'capacidades ya existan.',
+    '',
+    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'regla'), segundaCorrida),
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto
+  ].join('\n')
+}
+
+function promptParaConstruirCapacidades(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, reglas) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Arma las capacidades del paso "${paso}": lo que el sistema tiene que poder hacer, sacado de las`,
+    'reglas de abajo -son las que puedes citar en `reglas`.',
+    '',
+    'Todavia no existe ningun modulo -eso se construye despues-, asi que **deja `modulo` vacio en',
+    'cada capacidad.** No es un hueco: el codigo enlaza ese lado solo, en cuanto los modulos ya',
+    'existan.',
+    '',
+    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'capacidad'), segundaCorrida),
+    '',
+    '--- Las reglas que ya se construyeron ---',
+    JSON.stringify(reglas, null, 2),
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto
+  ].join('\n')
+}
+
+function promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, capacidades) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Arma los modulos del paso "${paso}", agrupando las capacidades de abajo -son las que puedes`,
+    'citar en `capacidades`.',
+    '',
+    'Todavia no existe ningun dominio -eso se construye despues-, asi que **deja `dominio` vacio en',
+    'cada modulo.** No es un hueco: el codigo enlaza ese lado solo, en cuanto los dominios ya',
+    'existan.',
+    '',
+    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'modulo'), segundaCorrida),
+    '',
+    '--- Las capacidades que ya se construyeron ---',
+    JSON.stringify(capacidades, null, 2),
+    '',
+    '--- Lo que dijo el experto ---',
+    loQueDijoElExperto
+  ].join('\n')
+}
+
+function promptParaConstruirDominios(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, modulos) {
+  return [
+    'Carga tu carta `construir-el-registro` antes de medir nada.',
+    '',
+    `Arma los dominios del paso "${paso}", agrupando los modulos de abajo -son los que puedes citar`,
+    'en `modulos`.',
+    '',
+    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'dominio'), segundaCorrida),
+    '',
+    '--- Los modulos que ya se construyeron ---',
+    JSON.stringify(modulos, null, 2),
     '',
     '--- Lo que dijo el experto ---',
     loQueDijoElExperto
@@ -754,11 +939,23 @@ function promptParaContestarElExamen(registro, examen) {
   ].join('\n')
 }
 
-function promptParaCorregir(paso, loQueDijoElExperto, marcadas, enFrio, cotejo, contestado, esLaSegundaVuelta) {
+// «Corregir» corre una vez por cada tipo que tenga piezas marcadas -antes corria una sola vez con
+// todo junto, con el esquema `REGISTRO` completo-. Aqui solo se le manda a cada llamada lo que le
+// toca a su propio tipo: sus piezas marcadas, y de los tres reportes de medicion, solo lo que
+// senalaron ids de ese mismo tipo -mandarle el reporte entero a quien solo corrige reglas no
+// ayuda, y es la clase de ruido que hace que el agente arregle algo que no le tocaba.
+function promptParaCorregir(paso, loQueDijoElExperto, clave, marcadas, enFrio, cotejo, contestado, esLaSegundaVuelta) {
+  const idsDelTipo = marcadas.map((p) => p.id)
+  const huecosDelTipo = enFrio ? enFrio.huecos.filter((h) => idsDelTipo.indexOf(h.id) !== -1) : []
+  const inventosDelTipo = cotejo ? cotejo.inventos.filter((i) => idsDelTipo.indexOf(i.id) !== -1) : []
+  const sinContestarDelTipo = contestado
+    ? contestado.respuestas.filter((r) => r.veredicto !== 'contestada' && (r.camino ?? []).some((id) => idsDelTipo.indexOf(id) !== -1))
+    : []
+
   return [
     'Carga tu carta `construir-el-registro` antes de medir nada.',
     '',
-    `Estas piezas del paso "${paso}" salieron marcadas por las mediciones. Devuelvelas corregidas,`,
+    `Estas ${clave} del paso "${paso}" salieron marcadas por las mediciones. Devuelvelas corregidas,`,
     'con los mismos `id` de trabajo y la misma forma. Las que no vienen abajo no se tocan.',
     '',
     esLaSegundaVuelta
@@ -766,15 +963,15 @@ function promptParaCorregir(paso, loQueDijoElExperto, marcadas, enFrio, cotejo, 
       : 'Si algo no se puede arreglar sin preguntarle al experto, dejalo con firmeza `abierto` y su id en `senaladas`.',
     '',
     '--- Lo que marco el lector en frio (no se entiende solo) ---',
-    enFrio ? JSON.stringify(enFrio.huecos, null, 2) : 'nada',
+    huecosDelTipo.length > 0 ? JSON.stringify(huecosDelTipo, null, 2) : 'nada',
     '',
     '--- Lo que marco el cotejador (no esta dicho) ---',
-    cotejo ? JSON.stringify(cotejo.inventos, null, 2) : 'nada',
+    inventosDelTipo.length > 0 ? JSON.stringify(inventosDelTipo, null, 2) : 'nada',
     '',
     '--- Lo que quedo sin contestar del examen ---',
-    contestado ? JSON.stringify(contestado.respuestas.filter((r) => r.veredicto !== 'contestada'), null, 2) : 'nada',
+    sinContestarDelTipo.length > 0 ? JSON.stringify(sinContestarDelTipo, null, 2) : 'nada',
     '',
-    '--- Las piezas marcadas ---',
+    `--- Las ${clave} marcadas ---`,
     JSON.stringify(marcadas, null, 2),
     '',
     '--- Lo que dijo el experto ---',
@@ -1031,18 +1228,77 @@ log(`${examen.preguntas.length} pregunta(s) levantadas. Contra eso se va a medir
 
 // --- Construir -------------------------------------------------------------
 
+// Cuatro llamadas, en este orden, y no se pueden paralelizar: cada una cita lo que construyo la
+// anterior -las capacidades citan las reglas, los modulos citan las capacidades, los dominios
+// citan los modulos. Antes era una sola llamada con el registro completo -7806 caracteres
+// serializados-, y el clasificador de seguridad la rechazo en una corrida real: medido el
+// 2026-08-04, "Construir" murio con `output schema too large to classify safely`. La primera
+// particion en tres dejaba modulos-y-dominios en 3841 caracteres -otra vez arriba del tope-, y se
+// volvio a partir: modulos y dominios son dos llamadas, no una.
+
 phase('Construir')
 
-const construido = await agent(promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, inventario), {
-  label: `construir:${paso}`,
+const construidoReglas = await agent(promptParaConstruirReglas(paso, loQueDijoElExperto, examen, segundaCorrida, inventario), {
+  label: `construir:reglas:${paso}`,
   phase: 'Construir',
   agentType: 'auditor',
-  schema: REGISTRO
+  schema: CONSTRUIR_REGLAS
 })
 
-if (!construido) {
-  log('Nadie construyo el registro. No hay nada que medir ni que escribir.')
+if (!construidoReglas) {
+  log('Nadie construyo las reglas. No hay nada que medir ni que escribir.')
   return { estado: 'sin-medicion', paso }
+}
+
+const construidoCapacidades = await agent(
+  promptParaConstruirCapacidades(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoReglas.reglas),
+  { label: `construir:capacidades:${paso}`, phase: 'Construir', agentType: 'auditor', schema: CONSTRUIR_CAPACIDADES }
+)
+
+if (!construidoCapacidades) {
+  log('Nadie construyo las capacidades. No hay nada que medir ni que escribir.')
+  return { estado: 'sin-medicion', paso }
+}
+
+// La regla no podia saber que capacidad la iba a citar cuando se construyo -no existia todavia-.
+// Ahora que la capacidad SI declaro sus reglas, se invierte el enlace que a la regla le faltaba.
+const reglasEnlazadas = conLasCapacidadesEnlazadas(construidoReglas.reglas, construidoCapacidades.capacidades)
+
+const construidoModulos = await agent(
+  promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoCapacidades.capacidades),
+  { label: `construir:modulos:${paso}`, phase: 'Construir', agentType: 'auditor', schema: CONSTRUIR_MODULOS }
+)
+
+if (!construidoModulos) {
+  log('Nadie construyo los modulos. No hay nada que medir ni que escribir.')
+  return { estado: 'sin-medicion', paso }
+}
+
+// La misma inversion un nivel arriba: la capacidad no podia saber que modulo la iba a contener.
+const capacidadesEnlazadas = conElModuloEnlazado(construidoCapacidades.capacidades, construidoModulos.modulos)
+
+const construidoDominios = await agent(
+  promptParaConstruirDominios(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoModulos.modulos),
+  { label: `construir:dominios:${paso}`, phase: 'Construir', agentType: 'auditor', schema: CONSTRUIR_DOMINIOS }
+)
+
+if (!construidoDominios) {
+  log('Nadie construyo los dominios. No hay nada que medir ni que escribir.')
+  return { estado: 'sin-medicion', paso }
+}
+
+// Y otra vez, un nivel mas arriba: el modulo no podia saber que dominio lo iba a contener.
+const modulosEnlazados = conElDominioEnlazado(construidoModulos.modulos, construidoDominios.dominios)
+
+const construido = {
+  dominios: construidoDominios.dominios ?? [],
+  modulos: modulosEnlazados,
+  capacidades: capacidadesEnlazadas,
+  reglas: reglasEnlazadas,
+  // Solo reglas y capacidades proponen: ahi es donde puede nacer una duda o quedar algo sin
+  // cerrar. Modulos y dominios solo agrupan lo que ya existe.
+  dudas: (construidoReglas.dudas ?? []).concat(construidoCapacidades.dudas ?? []),
+  senaladas: (construidoReglas.senaladas ?? []).concat(construidoCapacidades.senaladas ?? [])
 }
 
 // El andon para la linea una vez, no para siempre. Sin tope, cada corrida de respuestas destapa
@@ -1094,6 +1350,11 @@ let contestado = primerExamen
 // Dos vueltas y ya. **El tope lo impone el codigo, no el agente:** sin tope, cada revision
 // encuentra algo mas y no se escribe nunca. Lo que siga marcado despues de la segunda se escribe
 // con su marca -escrito no es lo mismo que listo, y para eso existe el campo `estado`.
+//
+// Cada vuelta ya no es una llamada: es hasta cuatro, una por tipo, y solo por los tipos que
+// tengan algo marcado -antes una sola llamada mandaba el registro completo con su esquema
+// `REGISTRO`. `piezasDelTipoMarcadas` separa por de que arreglo salio la pieza, no por el
+// prefijo de su id.
 
 const marcadasVuelta1 = idsSenalados([], primeraLectura, primerCotejo, primerExamen)
 
@@ -1102,14 +1363,24 @@ if (marcadasVuelta1.length > 0) {
 
   phase('Corregir')
 
-  const corregido = await agent(
-    promptParaCorregir(paso, loQueDijoElExperto, piezasPorId(registro, marcadasVuelta1), primeraLectura, primerCotejo, primerExamen, false),
-    { label: `corregir:vuelta-1:${paso}`, phase: 'Corregir', agentType: 'auditor', schema: REGISTRO }
-  )
+  let seCorrigioAlgoVuelta1 = false
 
-  if (corregido) {
-    registro = conLaCorreccionAplicada(registro, corregido)
+  for (const { tipo, clave, schema } of TIPOS_DE_PIEZA) {
+    const marcadasDelTipo = piezasDelTipoMarcadas(registro, tipo, marcadasVuelta1)
+    if (marcadasDelTipo.length === 0) continue
 
+    const corregido = await agent(
+      promptParaCorregir(paso, loQueDijoElExperto, clave, marcadasDelTipo, primeraLectura, primerCotejo, primerExamen, false),
+      { label: `corregir:vuelta-1:${clave}:${paso}`, phase: 'Corregir', agentType: 'auditor', schema }
+    )
+
+    if (corregido) {
+      registro = conLaCorreccionAplicada(registro, corregido)
+      seCorrigioAlgoVuelta1 = true
+    }
+  }
+
+  if (seCorrigioAlgoVuelta1) {
     phase('Medir')
 
     const [segundaLectura, segundoCotejo, segundoExamen] = await Promise.all([
@@ -1133,14 +1404,24 @@ if (marcadasVuelta1.length > 0) {
 
       phase('Corregir')
 
-      const recorregido = await agent(
-        promptParaCorregir(paso, loQueDijoElExperto, piezasPorId(registro, inventosVuelta2), null, segundoCotejo, null, true),
-        { label: `corregir:vuelta-2:${paso}`, phase: 'Corregir', agentType: 'auditor', schema: REGISTRO }
-      )
+      let seCorrigioAlgoVuelta2 = false
 
-      if (recorregido) {
-        registro = conLaCorreccionAplicada(registro, recorregido)
+      for (const { tipo, clave, schema } of TIPOS_DE_PIEZA) {
+        const marcadasDelTipo = piezasDelTipoMarcadas(registro, tipo, inventosVuelta2)
+        if (marcadasDelTipo.length === 0) continue
 
+        const recorregido = await agent(
+          promptParaCorregir(paso, loQueDijoElExperto, clave, marcadasDelTipo, null, segundoCotejo, null, true),
+          { label: `corregir:vuelta-2:${clave}:${paso}`, phase: 'Corregir', agentType: 'auditor', schema }
+        )
+
+        if (recorregido) {
+          registro = conLaCorreccionAplicada(registro, recorregido)
+          seCorrigioAlgoVuelta2 = true
+        }
+      }
+
+      if (seCorrigioAlgoVuelta2) {
         phase('Medir')
 
         const tercerCotejo = await agent(promptParaElCotejador(registro, loQueDijoElExperto), {

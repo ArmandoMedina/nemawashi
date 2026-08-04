@@ -57,7 +57,14 @@ function correrMolino(entrada: Record<string, unknown>, reglas: Pieza[] = REGLAS
 
     if (opts.phase === 'Sacar') return { platica: 'algo se dijo en la platica', transcriptLeido: 'sesion.jsonl' }
     if (opts.phase === 'Levantar el examen') return { preguntas: ['algo que contestar?'] }
-    if (opts.phase === 'Construir') return { capacidades: [], modulos: [], reglas, dudas: [], senaladas: [] }
+    if (opts.phase === 'Construir') {
+      // Solo lo que le toca a cada llamada, no el registro entero.
+      if (label.startsWith('construir:reglas')) return { reglas, dudas: [], senaladas: [] }
+      if (label.startsWith('construir:capacidades')) return { capacidades: [], dudas: [], senaladas: [] }
+      if (label.startsWith('construir:modulos')) return { modulos: [] }
+      if (label.startsWith('construir:dominios')) return { dominios: [] }
+      return null
+    }
     if (opts.phase === 'Medir') {
       if (label.startsWith('leer-en-frio')) return { huecos: [], piezasLeidas: reglas.length }
       if (label.startsWith('cotejar')) return { inventos: [], piezasCotejadas: reglas.length }
@@ -151,10 +158,12 @@ describe('la hora del alta le llega al escribano estampada en cada pieza', () =>
     for (const r of reglasDelPrompt(promptDeRegistrar(llamadas))) expect(r.paso).toBe('el paso que se cerro')
   })
 
-  it('a quien construye se le prohibe poner la hora y el paso: los estampa el codigo', async () => {
+  it('a quien construye se le prohibe poner la hora y el paso: los estampa el codigo -en las cuatro llamadas', async () => {
     const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: HORA })
-    const construir = llamadas.find((l) => l.opts.phase === 'Construir')
 
-    expect(construir?.prompt).toContain('No pongas `paso`, `alta`, `confirmado` ni `estado`')
+    for (const prefijo of ['construir:reglas', 'construir:capacidades', 'construir:modulos', 'construir:dominios']) {
+      const construir = llamadas.find((l) => l.opts.phase === 'Construir' && String(l.opts.label ?? '').startsWith(prefijo))
+      expect(construir?.prompt, `${prefijo} no lo prohibe`).toContain('No pongas `paso`, `alta`, `confirmado` ni `estado`')
+    }
   })
 })

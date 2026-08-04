@@ -160,7 +160,17 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     if (opts.phase === 'Inventariar') return inventario
     if (opts.phase === 'Marcar') return marcado
     if (opts.phase === 'Levantar el examen') return examen
-    if (opts.phase === 'Construir') return registro
+    if (opts.phase === 'Construir') {
+      // Devuelve SOLO lo que le toca a cada llamada, no el registro entero: si le siguieramos
+      // dando todo a las cuatro, un `.reglas` leido donde debia ir un `.capacidades` pasaria
+      // sin que ninguna prueba lo notara -la misma leccion del 2026-08-04 con la correccion.
+      const r = registro as Record<string, unknown>
+      if (label.startsWith('construir:reglas')) return { reglas: r.reglas, dudas: r.dudas, senaladas: r.senaladas }
+      if (label.startsWith('construir:capacidades')) return { capacidades: r.capacidades, dudas: r.dudas, senaladas: r.senaladas }
+      if (label.startsWith('construir:modulos')) return { modulos: r.modulos }
+      if (label.startsWith('construir:dominios')) return { dominios: r.dominios ?? [] }
+      return null
+    }
     if (opts.phase === 'Corregir') return correccion
     if (opts.phase === 'Medir') {
       if (label.startsWith('leer-en-frio')) return lecturas[lecturasServidas++] ?? null
@@ -181,6 +191,9 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     salida: (salida ?? {}) as Record<string, unknown>
   }))
 }
+
+/** «Construir» ya no es una llamada, son cuatro -una por tipo, en el orden en que se enlazan. */
+const PREFIJOS_DE_CONSTRUIR = ['construir:reglas', 'construir:capacidades', 'construir:modulos', 'construir:dominios']
 
 function llamadaDe(llamadas: Llamada[], fase: string, prefijoDeLabel?: string): Llamada {
   const llamada = llamadas.find((l) => l.opts.phase === fase && (!prefijoDeLabel || String(l.opts.label ?? '').startsWith(prefijoDeLabel)))
@@ -260,12 +273,14 @@ describe('el examen se levanta antes de que exista una sola pieza', () => {
     expect(examen.prompt).not.toContain(CAPACIDAD.renglon)
   })
 
-  it('a quien construye se le pasa el examen ya levantado y se le dice que no lo toque', async () => {
+  it('a quien construye se le pasa el examen ya levantado y se le dice que no lo toque -en las cuatro llamadas', async () => {
     const { llamadas } = await correrMolino(ENTRADA)
-    const construir = llamadaDe(llamadas, 'Construir')
 
-    expect(construir.prompt).toContain(PREGUNTA)
-    expect(construir.prompt).toContain('no lo puedes tocar')
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no ve el examen`).toContain(PREGUNTA)
+      expect(construir.prompt, `${prefijo} no dice que no se puede tocar`).toContain('no lo puedes tocar')
+    }
   })
 
   it('si la platica no dio ninguna pregunta, no se construye nada', async () => {
@@ -325,11 +340,13 @@ describe('las tres mediciones corren antes de escribir, y cada una ve algo disti
 })
 
 describe('el `estado` lo produce un solo lado', () => {
-  it('a quien construye se le prohibe ponerlo, junto con el paso y la hora', async () => {
+  it('a quien construye se le prohibe ponerlo, junto con el paso y la hora -en las cuatro llamadas', async () => {
     const { llamadas } = await correrMolino(ENTRADA)
-    const construir = llamadaDe(llamadas, 'Construir')
 
-    expect(construir.prompt).toContain('No pongas `paso`, `alta`, `confirmado` ni `estado`')
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no lo prohibe`).toContain('No pongas `paso`, `alta`, `confirmado` ni `estado`')
+    }
   })
 
   it('una pieza que ninguna medicion senalo llega al escribano como `completa`', async () => {
@@ -426,12 +443,14 @@ describe('las dudas paran la corrida una vez, no para siempre', () => {
     expect(salida.estado).toBe('listo')
   })
 
-  it('en la segunda corrida se le dice al constructor que no devuelva dudas', async () => {
+  it('en la segunda corrida se le dice al constructor que no devuelva dudas -en las cuatro llamadas', async () => {
     const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
-    const construir = llamadaDe(llamadas, 'Construir')
 
-    expect(construir.prompt).toContain('no devuelvas dudas')
-    expect(construir.prompt).toContain('desde los tres meses')
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no lo dice`).toContain('no devuelvas dudas')
+      expect(construir.prompt, `${prefijo} no ve la respuesta`).toContain('desde los tres meses')
+    }
   })
 })
 
@@ -688,9 +707,9 @@ describe('no se vuelve a escribir lo que otra sesion ya escribio', () => {
 })
 
 describe('el dominio es el cuarto nivel, y llega hasta el disco', () => {
-  it('el registro que se le pide al constructor incluye dominios', async () => {
+  it('la llamada que construye dominios pide `dominios` y `quienLoSabe`', async () => {
     const { llamadas } = await correrMolino(ENTRADA)
-    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir').opts.schema ?? {})
+    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir', 'construir:dominios').opts.schema ?? {})
 
     expect(schema).toContain('dominios')
     expect(schema).toContain('quienLoSabe')
@@ -698,7 +717,7 @@ describe('el dominio es el cuarto nivel, y llega hasta el disco', () => {
 
   it('el dominio se define por quien lo sabe, y eso no admite el nombre de una persona', async () => {
     const { llamadas } = await correrMolino(ENTRADA)
-    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir').opts.schema ?? {})
+    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir', 'construir:dominios').opts.schema ?? {})
 
     expect(schema).toContain('nunca la persona')
   })
@@ -745,5 +764,96 @@ describe('el cierre dice lo que se midio, y lo que no', () => {
     expect(auditar.prompt).toContain('product/conocimiento/')
     expect(auditar.prompt).toContain('sesion.jsonl')
     expect(auditar.prompt).toContain('antes de abrir un solo archivo escrito')
+  })
+})
+
+/**
+ * El contrato que cazo el defecto del 2026-08-04: el esquema `REGISTRO`, con las cuatro piezas
+ * juntas, pesaba 7806 caracteres serializados y el clasificador de seguridad lo rechazo en una
+ * corrida real -«Construir» murio con `output schema too large to classify safely`. Ninguna
+ * prueba de este archivo media el tamano del esquema; esta es la primera.
+ */
+describe('ninguna llamada del molino manda un esquema mayor al tope', () => {
+  const TOPE = 2000
+
+  it('en una corrida con marcas en los cuatro tipos -Construir, Corregir y Marcar de por medio- ningun esquema pasa del tope', async () => {
+    const marcaEnLosCuatroTipos = {
+      huecos: [
+        { id: 'REG-1', renglon: REGLA.renglon, forma: 'palabra-sin-definir' },
+        { id: 'CAP-1', renglon: CAPACIDAD.renglon, forma: 'apodo-de-caso' },
+        { id: 'MOD-1', renglon: MODULO.renglon, forma: 'puntero-a-la-nada' },
+        { id: 'DOM-1', renglon: DOMINIO.renglon, forma: 'palabra-sin-definir' }
+      ],
+      piezasLeidas: 4
+    }
+
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [marcaEnLosCuatroTipos, SIN_HUECOS],
+      correccion: REGISTRO_LIMPIO,
+      dictamen: { ...SIN_FALLAS, sirve: false, porque: 'no le alcanza a quien no estuvo' }
+    })
+
+    const conSchema = llamadas.filter((l) => l.opts.schema)
+    // Si esto no crece de aqui, la corrida de la prueba dejo de tocar Corregir o Marcar, y el
+    // contrato quedaria midiendo menos de lo que dice medir.
+    expect(conSchema.length).toBeGreaterThanOrEqual(20)
+
+    for (const l of conSchema) {
+      const caracteres = JSON.stringify(l.opts.schema).length
+      expect(caracteres, `${l.opts.label} manda un esquema de ${caracteres} caracteres`).toBeLessThanOrEqual(TOPE)
+    }
+  })
+})
+
+describe('«Corregir» manda solo el esquema del tipo que corrige', () => {
+  const marcaEnLosCuatroTipos = {
+    huecos: [
+      { id: 'REG-1', renglon: REGLA.renglon, forma: 'palabra-sin-definir' },
+      { id: 'CAP-1', renglon: CAPACIDAD.renglon, forma: 'apodo-de-caso' },
+      { id: 'MOD-1', renglon: MODULO.renglon, forma: 'puntero-a-la-nada' },
+      { id: 'DOM-1', renglon: DOMINIO.renglon, forma: 'palabra-sin-definir' }
+    ],
+    piezasLeidas: 4
+  }
+
+  it('la correccion de una regla no manda el esquema de capacidades, modulos ni dominios', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [marcaEnLosCuatroTipos, SIN_HUECOS],
+      correccion: REGISTRO_LIMPIO
+    })
+
+    const corregirReglas = llamadaDe(llamadas, 'Corregir', 'corregir:vuelta-1:reglas')
+    const schema = JSON.stringify(corregirReglas.opts.schema ?? {})
+
+    expect(schema).toContain('"reglas"')
+    expect(schema).not.toContain('quienLoSabe')
+    expect(schema).not.toContain('queAgrupa')
+  })
+
+  it('corre una vez por cada tipo con marcas, y cada una carga `construir-el-registro`', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [marcaEnLosCuatroTipos, SIN_HUECOS],
+      correccion: REGISTRO_LIMPIO
+    })
+
+    for (const prefijo of ['corregir:vuelta-1:reglas', 'corregir:vuelta-1:capacidades', 'corregir:vuelta-1:modulos', 'corregir:vuelta-1:dominios']) {
+      const corregir = llamadaDe(llamadas, 'Corregir', prefijo)
+      expect(corregir.prompt, `${prefijo} no carga su carta`).toContain('`construir-el-registro`')
+      expect(corregir.prompt, `${prefijo} no dice que la cargue`).toMatch(/Carga tu carta/)
+      expect(corregir.opts.agentType).toBe('auditor')
+    }
+  })
+})
+
+describe('las cuatro llamadas de «Construir» cargan la carta que les toca', () => {
+  it('reglas, capacidades, modulos y dominios, cada una con `construir-el-registro`', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no carga su carta`).toContain('`construir-el-registro`')
+      expect(construir.prompt, `${prefijo} no dice que la cargue`).toMatch(/Carga tu carta/)
+      expect(construir.opts.agentType).toBe('auditor')
+    }
   })
 })
