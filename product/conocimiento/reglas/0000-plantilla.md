@@ -8,6 +8,7 @@ estado: completa
 paso: como se llamo el tramo de sesion donde salio
 alta: AAAA-MM-DDTHH:MM:SS-06:00
 confirmado:
+marcado:
 ---
 
 <regla>
@@ -64,4 +65,6 @@ Como se llena cada campo:
               y asi fue como quince items del roadmap salieron con las doce en punto el 2026-07-31.
   confirmado  ISO 8601, con la misma forma. Vacio mientras la firmeza no sea `confirmado`,
               y eso es correcto: vacio a proposito no es un campo que falte.
+  marcado     ISO 8601. Cuando una auditoria posterior marco esta pieza. Vacio si nunca la marcaron.
+              Lo escribe la carta `marcar-lo-auditado` y nadie mas.
 -->

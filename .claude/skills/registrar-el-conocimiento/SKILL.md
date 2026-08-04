@@ -18,6 +18,7 @@ dos.
 
 | Ruta | Qué va ahí |
 |---|---|
+| `product/conocimiento/dominios/NNNN-nombre.md` | El dominio. Aquí escribes tú |
 | `product/conocimiento/capacidades/NNNN-nombre.md` | La capacidad. Aquí escribes tú |
 | `product/conocimiento/modulos/NNNN-nombre.md` | El módulo. Aquí escribes tú |
 | `product/conocimiento/reglas/NNNN-nombre.md` | La regla. Aquí escribes tú |
@@ -107,12 +108,24 @@ Te llegan enlazados en los dos sentidos y así se escriben. **Escribir sólo un 
 no se ve al revisar el archivo que sí quedó bien.**
 
 ```
+dominio.modulos[]     ⇄  modulo.dominio
 modulo.capacidades[]  ⇄  capacidad.modulo
 capacidad.reglas[]    ⇄  regla.capacidades[]
 ```
 
 Antes de terminar, recorre lo que escribiste y comprueba que **cada id que citaste existe como
 archivo**. Un id que apunta a la nada es peor que un campo vacío: el campo vacío se ve.
+
+<las-piezas-que-ya-existian>
+A veces llega una pieza con **un id de carpeta** —`REG-0012`, no `REG-1`—. Ésa no es nueva: ya está
+escrita, y viene porque esta plática le agregó un enlace o la completó.
+
+**No la numeras y no la escribes.** Tú creas archivos; tocar uno que ya existe no es tuyo, y hacerlo
+por tu cuenta borraría lo que otra sesión dejó ahí.
+
+Va entera a `noEscritos`, con su id y con lo que traía de nuevo. **Hoy no hay quien lo aplique**, y
+callarlo sería peor que decirlo: quedaría un enlace que alguien creyó escrito.
+</las-piezas-que-ya-existian>
 </los-enlaces-de-los-dos-lados>
 </la-forma>
 

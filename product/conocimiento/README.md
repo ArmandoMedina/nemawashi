@@ -15,10 +15,31 @@ el registro y se midió. A mano también se vale: una capacidad se puede escribi
 
 | Dónde | Qué guarda |
 |---|---|
+| `dominios/NNNN-nombre.md` | **El área del negocio**, la que se levanta en sesiones aparte |
+| `modulos/NNNN-nombre.md` | **El pedazo dentro de esa área** donde caen unas capacidades y no otras |
 | `capacidades/NNNN-nombre.md` | **Lo que el sistema tiene que poder hacer.** La pieza central |
-| `modulos/NNNN-nombre.md` | **El pedazo del negocio** donde caen unas capacidades y no otras |
 | `reglas/NNNN-nombre.md` | **La verdad que sostiene** una capacidad: qué se vale, qué no, con qué número |
 | `*/0000-plantilla.md` | La forma de cada uno. **Manda la plantilla**, no este archivo |
+
+## Qué es cada pieza, y cómo se sabe que es ésa y no otra
+
+**Aquí viven las definiciones, y sólo aquí.** Las cartas de los agentes remiten a este renglón en
+vez de repetirlo: lo que está escrito en dos lugares, un día dice cosas distintas.
+
+Cada una lleva **su prueba** — no una descripción bonita, sino la pregunta que se contesta para
+decidir si una pieza es de ese tipo:
+
+| Pieza | Qué es | La prueba |
+|---|---|---|
+| **Dominio** | El área del negocio | **Se puede levantar en una sesión aparte, con quien la sabe.** Si para hablar de dos dominios hace falta siempre la misma persona en la sala, no son dos |
+| **Módulo** | El pedazo del negocio dentro de un dominio | **Sirve para decidir dónde va una capacidad nueva.** Si no puedes usarlo para eso, no es un módulo: es una etiqueta |
+| **Capacidad** | Lo que el sistema tiene que poder hacer | **Empieza con un verbo y alguien la pide.** Un sustantivo suelto no dice quién la quiere ni cuándo falla |
+| **Regla** | La verdad que sostiene una capacidad | **Se puede violar.** Si nada la puede incumplir, no es una regla — es una descripción |
+
+Las dos que más se confunden son **dominio y módulo**, y lo que las separa no es el tamaño: es
+**quién lo sabe**. El dominio se define por el papel del negocio que puede contestar lo de adentro;
+el módulo, por servir para clasificar. Por eso la plantilla del dominio tiene `<quien-lo-sabe>` y la
+del módulo no.
 
 ## Las palabras de la casa
 
@@ -39,7 +60,8 @@ recorre en una dirección y se pierde en la otra.
 
 | Archivo | Campo que apunta hacia arriba | Campo que apunta hacia abajo |
 |---|---|---|
-| Módulo | — | `capacidades: [CAP-0000]` |
+| Dominio | — | `modulos: [MOD-0000]` |
+| Módulo | `dominio: DOM-0000` | `capacidades: [CAP-0000]` |
 | Capacidad | `modulo: MOD-0000` | `reglas: [REG-0000]` |
 | Regla | `capacidades: [CAP-0000]` | — |
 
@@ -55,6 +77,14 @@ las tres carpetas.
 
 **La sesión siguiente abre por ahí.** Lo que salió marcado no se deriva río abajo hasta que se
 cierre: no se convierte en tarea del backlog ni en historia de usuario.
+
+**Una marca puede llegar después de escrito.** Cuando la auditoría contra el crudo encuentra algo,
+la carta `marcar-lo-auditado` lo lleva al archivo: pone `estado: con-huecos`, agrega lo que el
+auditor probó al final de `<que-queda-abierto>`, y estampa la hora en `marcado`. **Nunca borra ni
+reescribe lo que ya estaba.** Ése es el único momento en que un archivo escrito se toca.
+
+Un archivo con `marcado` lleno es uno que una auditoría señaló. Buscar por ese campo da lo que se
+descubrió mal **después** de darlo por bueno, que no es lo mismo que lo que salió marcado de origen.
 
 **Pero `estado` y `firmeza` son dos ejes, y hay que buscar por los dos.** `completa` no quiere decir
 que no falte nada — quiere decir que **ninguna medición señaló ese archivo**. Una regla que el

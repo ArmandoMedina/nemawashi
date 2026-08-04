@@ -30,6 +30,7 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 | [`construir-el-registro`](skills/construir-el-registro/SKILL.md) | auditor | Antes de escribir: armar capacidades, módulos y reglas enlazados |
 | [`contestar-el-examen`](skills/contestar-el-examen/SKILL.md) | auditor | Antes de escribir: medir el registro por lo que contesta |
 | [`registrar-el-conocimiento`](skills/registrar-el-conocimiento/SKILL.md) | escribano | Al escribir cualquier archivo de `product/conocimiento/` |
+| [`marcar-lo-auditado`](skills/marcar-lo-auditado/SKILL.md) | escribano | Después de auditar: llevar el dictamen a los archivos ya escritos |
 | [`armar-lo-que-falta`](skills/armar-lo-que-falta/SKILL.md) | auditor | Al cerrar el paso: lo que hay que preguntar la próxima vez |
 | [`desarrollador`](skills/desarrollador/SKILL.md) | desarrollador | Al implementar cualquier cosa |
 | [`qa`](skills/qa/SKILL.md) | qa | Al escribir, clasificar o juzgar cualquier prueba |
@@ -52,13 +53,11 @@ No hay `CLAUDE.md`: lo que decía vive aquí, por tema.
 
 | Flujo | Sus fases, en orden |
 |---|---|
-| [`levanta-el-roadmap`](workflows/levanta-el-roadmap.js) | Sacar · Afinar · Leer en frío · Cotejar · Juntar · Asentar · Auditar |
+| [`levanta-el-roadmap`](workflows/levanta-el-roadmap.js) | Sacar · Inventariar · Levantar el examen · Construir · Medir · Corregir · Registrar · Auditar · Marcar · Armar lo que falta |
 
-**Cinco cartas todavía no las llama ningún flujo**: `levantar-el-examen`, `construir-el-registro`,
-`contestar-el-examen`, `registrar-el-conocimiento` y `armar-lo-que-falta`. Son del molino dibujado en
-[`product/diagramas/levanta-el-roadmap.bpmn`](../product/diagramas/levanta-el-roadmap.bpmn), que
-todavía no se implementa. Existen para que se puedan leer y medir antes de escribir el código que
-las use — no porque estén en uso.
+El molino escribe en `product/conocimiento/` y ya corrió sobre una plática real. **`roadmap/` se
+quedó sin flujo que lo llene**, y con él las cartas `afinar`, `juntar` y `asentar`: siguen escritas y
+medidas, pero hoy no las llama nadie.
 
 ## Las personalidades de sesión
 

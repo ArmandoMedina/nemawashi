@@ -1,6 +1,6 @@
 ---
 name: construir-el-registro
-description: Carta del auditor para armar el registro enlazado de un paso — sacar las reglas dichas, proponer las capacidades y los módulos, enlazarlos en los dos sentidos, marcar firmeza y origen, y anotar las dudas que hay que devolverle al experto. Úsala después de levantar el examen y antes de escribir nada a disco.
+description: Carta del auditor para armar el registro enlazado de un paso — sacar las reglas dichas, proponer las capacidades, los módulos y los dominios, enlazarlos en los dos sentidos, no repetir lo que ya está escrito, marcar firmeza y origen, y anotar las dudas que hay que devolverle al experto. Úsala después de levantar el examen y antes de escribir nada a disco.
 ---
 
 <carta nombre="construir-el-registro" agente="auditor" momento="antes de escribir">
@@ -68,18 +68,16 @@ reportas; agregarla ahora sería escribir el examen después de ver el resultado
 </sobre-el-examen>
 </lo-que-te-llega>
 
-<las-tres-piezas>
-<pieza nombre="Regla" prueba="Se puede violar. Si nada la puede incumplir, no es regla">
-La verdad que sostiene algo: qué se vale, qué no, con qué número.
-</pieza>
+<las-cuatro-piezas>
+<donde-estan-definidas>
+**Qué es un dominio, un módulo, una capacidad y una regla —y la prueba de cada una— vive en
+`product/conocimiento/README.md`.** Ábrelo antes de armar nada; aquí no se repiten, porque lo que
+está escrito en dos lugares un día dice cosas distintas.
 
-<pieza nombre="Capacidad" prueba="Empieza con un verbo y alguien la pide">
-Lo que el sistema tiene que **poder hacer**.
-</pieza>
-
-<pieza nombre="Modulo" prueba="Sirve para decidir dónde va una capacidad nueva">
-El pedazo del negocio donde caen unas capacidades y no otras.
-</pieza>
+Lo único que se dice aquí, porque es lo que más se confunde al construir: **dominio y módulo no se
+separan por tamaño.** El dominio se define por **quién lo sabe** —el papel del negocio que puede
+contestar lo de adentro— y el módulo por servir para decidir dónde cae una capacidad nueva.
+</donde-estan-definidas>
 
 <sobre-la-forma>
 La forma exacta de cada archivo la manda su plantilla en
@@ -99,7 +97,45 @@ escribano los cambia por los definitivos al escribir.
 **No inventes un número de carpeta.** Si adivinas `CAP-0008` y ese archivo ya existe, el registro
 apunta a la pieza de otra sesión.
 </sobre-los-identificadores>
-</las-tres-piezas>
+</las-cuatro-piezas>
+
+<lo-que-ya-existe>
+<advertencia>
+Te llega **el índice de lo que otras sesiones ya escribieron**: id, renglón, firmeza y fecha de cada
+pieza que hay en disco. No el cuerpo — no cabría. **Léelo antes de proponer nada.**
+</advertencia>
+
+<no-lo-vuelvas-a-escribir>
+Sin este índice, cada paso vuelve a proponer lo mismo con otro número, y el registro se llena de la
+misma regla dicha cinco veces. Cuando lo que sale de esta plática **ya está en el índice**, hay tres
+salidas y ninguna es escribirlo otra vez:
+
+- **Enlazarlo.** La pieza vieja gana una liga nueva. Devuélvela con su id de carpeta —`REG-0012`, no
+  uno de trabajo— y sólo los enlaces que cambian.
+- **Decir que esta plática la completa.** Lo que se dijo hoy agrega algo a lo que ya estaba. Se
+  entrega la pieza vieja con lo nuevo, y en `de-donde-salio` se dice de qué paso viene el añadido.
+- **Cazarla como contradicción**, si lo de hoy no puede ser cierto al mismo tiempo que lo de antes.
+  Ver abajo.
+</no-lo-vuelvas-a-escribir>
+
+<cuando-lo-de-hoy-contradice-lo-de-antes>
+**Eso no es un duplicado: es una contradicción**, y es de las cinco fallas que paran la corrida.
+
+Por eso el índice trae **la firmeza y la fecha**: sin ellas ves dos reglas que chocan y no sabes
+cuál es la vieja ni qué tan cerrada quedó. Con ellas, la duda se le lleva al experto con los dos
+lados en la mano:
+
+> *«Hace tres semanas quedó que a los tres meses ya se le fía, y hoy dice que a los seis. ¿Cuál
+> manda?»*
+
+Y **pesa más si la vieja está `confirmado`**: eso quiere decir que se la devolvieron y dijo que sí.
+Dilo en la pregunta.
+
+**Nunca la sobrescribes en silencio, y nunca decides tú cuál gana.** Aunque lo de hoy suene mejor
+pensado, aunque sea más reciente. Que sea más nuevo no lo hace más cierto: puede ser que hoy se
+explicó mal, o que se acordó de otro caso.
+</cuando-lo-de-hoy-contradice-lo-de-antes>
+</lo-que-ya-existe>
 
 <metodo>
 
@@ -135,15 +171,32 @@ suelto no dice quién lo pide ni cuándo falla.
 caso es el trabajo; lo que no se vale es callar que la sacaste tú.
 </paso>
 
-<paso n="3" nombre="Proponer los modulos">
-Un módulo **casi siempre nace `propuesto`**: la gente cuenta lo que hace, no cómo está dividido.
-Proponer el corte no es falla; callar que se propuso, sí — y por eso su plantilla tiene un
+<paso n="3" nombre="Proponer los modulos y los dominios">
+Los dos **casi siempre nacen `propuesto`**: la gente cuenta lo que hace, no cómo está dividido.
+Proponer el corte no es falla; callar que se propuso, sí — y por eso los dos tienen un
 `<de-donde-salio>` donde se dice por qué se cortó así.
 
 **La mitad que sirve es la de afuera.** Un módulo que sólo dice qué incluye no se puede usar para
-decidir dónde va una capacidad nueva, y para eso existe. Di también qué **no** cae dentro.
+decidir dónde va una capacidad nueva, y para eso existe. Di también qué **no** cae dentro. Lo mismo
+el dominio con sus módulos.
 
-Si dos módulos se pelean una capacidad, **eso no lo resuelves**: va a las dudas.
+<el-dominio-lleva-quien-lo-sabe>
+Es su campo propio y es lo que lo separa de un módulo. **El papel del negocio, nunca la persona:**
+quien cobra, quien surte, quien autoriza. Ningún nombre entra a un archivo.
+
+Si no se ve quién sabría contestar lo de adentro, o si dos dominios necesitarían a la misma persona
+en la sala, **no son dos dominios**: es uno, o es un módulo disfrazado.
+</el-dominio-lleva-quien-lo-sabe>
+
+<cuando-no-alcanza-para-un-dominio>
+Una plática corta puede no dar para separar áreas. **Entonces sale un solo dominio, y se dice que
+es uno solo porque la plática no dio para más** — con `firmeza: abierto` y la pregunta puesta.
+
+Partir en tres dominios lo que se habló en veinte minutos es inventar un reparto que nadie dijo.
+</cuando-no-alcanza-para-un-dominio>
+
+Si dos módulos se pelean una capacidad, o dos dominios un módulo, **eso no lo resuelves**: va a las
+dudas.
 </paso>
 
 <paso n="4" nombre="Enlazar">
@@ -152,6 +205,7 @@ recorre en una dirección y se pierde en la otra: la capacidad listaría sus reg
 regla no diría a quién sirve.
 
 ```
+dominio.modulos[]     ⇄  modulo.dominio
 modulo.capacidades[]  ⇄  capacidad.modulo
 capacidad.reglas[]    ⇄  regla.capacidades[]
 ```
@@ -160,6 +214,7 @@ Los enlaces **no llevan tipo todavía**. Sólo dicen que hay liga. No inventes u
 
 <hueco nombre="capacidad sin reglas">No se sabe cuándo está bien hecha.</hueco>
 <hueco nombre="regla sin capacidad">Nadie la va a aplicar; o falta la capacidad, o la regla es de otro paso.</hueco>
+<hueco nombre="modulo sin dominio">No se sabe con quién se levanta lo que hay dentro.</hueco>
 
 Ninguno de los dos se tapa inventando la pieza que falta. **Se marcan y se preguntan.**
 
@@ -262,13 +317,13 @@ preguntas nuevas y no se escribe nunca.
 
 <entregable>
 <parte n="1" nombre="El registro enlazado">
-Reglas, capacidades y módulos, cada pieza con sus campos:
+Reglas, capacidades, módulos y dominios, cada pieza con sus campos:
 
 | Campo | De dónde sale |
 |---|---|
 | El renglón (`capacidad`, `modulo`, `regla`) | Lo redactas tú. Una línea, tope de 120 caracteres |
-| El identificador de trabajo | Lo pones tú: `CAP-1`, `MOD-1`, `REG-1`… Vale sólo en esta corrida |
-| Los enlaces (`modulo`, `capacidades`, `reglas`) | Los armas tú, **en los dos sentidos** |
+| El identificador de trabajo | Lo pones tú: `CAP-1`, `MOD-1`, `REG-1`, `DOM-1`… Vale sólo en esta corrida. **Salvo cuando devuelves una pieza que ya existía: ésa lleva su id de carpeta** |
+| Los enlaces (`dominio`, `modulo`, `capacidades`, `reglas`) | Los armas tú, **en los dos sentidos** |
 | `firmeza`, `origen` | Los marcas tú. Dos ejes, ninguno se deriva del otro |
 | `paso`, `alta` | **Te llegan.** Se copian tal cual |
 | `confirmado` | La hora del sí, o vacío si la firmeza no es `confirmado` |

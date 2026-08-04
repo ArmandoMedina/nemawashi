@@ -1,6 +1,7 @@
 ---
 id: MOD-0000
 modulo: Como se llama el pedazo del negocio, en la palabra que uso el experto
+dominio: DOM-0000
 capacidades: [CAP-0000]
 firmeza: dicho
 origen: propuesto
@@ -8,6 +9,7 @@ estado: completa
 paso: como se llamo el tramo de sesion donde salio
 alta: AAAA-MM-DDTHH:MM:SS-06:00
 confirmado:
+marcado:
 ---
 
 <modulo>
@@ -46,6 +48,9 @@ Como se llena cada campo:
   id          MOD-NNNN, consecutivo. Vive aqui adentro, no en el nombre del archivo.
   modulo      Una linea. La palabra del negocio, no la del patron de software.
               Tope de 120 caracteres.
+  dominio     El id del dominio que lo contiene. Ese dominio tiene que nombrarlo de vuelta.
+              Un dominio es el area del negocio; un modulo, el pedazo dentro de esa area.
+              La prueba que los separa vive en el README, junto a las de las otras piezas.
   capacidades Los ids de las capacidades que contiene. Cada una tiene que nombrarlo de vuelta
               en su campo `modulo`. Vacio, `[]`, mientras no haya ninguna — y eso es un hueco.
   firmeza     dicho | confirmado | abierto. No hay una cuarta.
@@ -65,4 +70,6 @@ Como se llena cada campo:
               y asi fue como quince items del roadmap salieron con las doce en punto el 2026-07-31.
   confirmado  ISO 8601, con la misma forma. Vacio mientras la firmeza no sea `confirmado`,
               y eso es correcto: vacio a proposito no es un campo que falte.
+  marcado     ISO 8601. Cuando una auditoria posterior marco esta pieza. Vacio si nunca la marcaron.
+              Lo escribe la carta `marcar-lo-auditado` y nadie mas.
 -->

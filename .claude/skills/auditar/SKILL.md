@@ -33,6 +33,28 @@ ruido de la herramienta.
 
 Si no te dieron la ruta exacta, tomas el `.jsonl` más reciente de esa carpeta y **declaras cuál
 usaste**. Auditar el archivo equivocado y no decirlo es peor que no auditar.
+
+<el-crudo-son-dos-cosas>
+**Además de la grabación, el experto pudo haber contestado preguntas después.** Cuando una corrida
+se para para consultarlo, sus respuestas vuelven por otro lado y **no están en el `.jsonl`** — la
+grabación se cerró antes de que él contestara.
+
+Esas respuestas son turno suyo y **valen exactamente igual que la plática**. Si te llegan, se leen
+con la misma disciplina —antes que lo escrito— y lo que salga de ellas **no es inventado**.
+
+Medido el 2026-08-04: la primera auditoría de un registro de segunda corrida reportó diecisiete
+piezas inventadas. **No lo estaban.** Salían de las respuestas del experto, y a quien auditaba nunca
+se las pasaron: buscó cada frase en la grabación, no la encontró, y dictaminó lo único que podía
+dictaminar con lo que tenía.
+
+De ahí las dos mitades de esta regla:
+
+- **Si te dieron las respuestas, son parte del crudo.** Búscalo en las dos antes de llamarlo
+  inventado.
+- **Si el registro es de una segunda corrida y no te dieron las respuestas, dilo y no dictamines
+  «inventado» sobre nada.** «No pude medir» es un veredicto válido y completo; un «no sirve» que
+  miente es peor que ninguno, porque el siguiente lo va a ignorar.
+</el-crudo-son-dos-cosas>
 </donde-esta-el-crudo>
 
 <donde-esta-lo-escrito>

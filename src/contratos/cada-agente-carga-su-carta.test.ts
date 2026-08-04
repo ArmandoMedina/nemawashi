@@ -74,7 +74,23 @@ const REGLA = {
   queQuedaAbierto: 'nada'
 }
 
-const REGISTRO_LIMPIO = { capacidades: [CAPACIDAD], modulos: [MODULO], reglas: [REGLA], dudas: [], senaladas: [] }
+const DOMINIO = {
+  id: 'DOM-1',
+  renglon: 'Credito y cobranza',
+  modulos: ['MOD-1'],
+  quienLoSabe: 'quien autoriza que se le fie a un cliente',
+  queAgrupa: 'lo que decide a quien se le fia y como se le cobra; no cae aqui lo que se surte',
+  firmeza: 'dicho',
+  origen: 'propuesto',
+  enSusPalabras: 'el experto no nombro el area; el corte lo propuso el agente',
+  deDondeSalio: 'sin este corte no se sabia con quien se levanta lo de adentro',
+  queQuedaAbierto: 'nada'
+}
+
+const REGISTRO_LIMPIO = { dominios: [DOMINIO], capacidades: [CAPACIDAD], modulos: [MODULO], reglas: [REGLA], dudas: [], senaladas: [] }
+
+const INVENTARIO_VACIO = { piezas: [] }
+const SIN_MARCAR = { marcados: [], perdido: [] }
 
 const SIN_HUECOS = { huecos: [], piezasLeidas: 3 }
 const SIN_INVENTOS = { inventos: [], piezasCotejadas: 3 }
@@ -86,6 +102,7 @@ const EXAMEN_APROBADO = {
 
 const ESCRITOS_LIMPIOS = {
   archivos: [
+    { ruta: 'product/conocimiento/dominios/0001-credito-y-cobranza.md', id: 'DOM-0001', idDeTrabajo: 'DOM-1', estado: 'completa' },
     { ruta: 'product/conocimiento/capacidades/0001-credito-a-taller-nuevo.md', id: 'CAP-0001', idDeTrabajo: 'CAP-1', estado: 'completa' },
     { ruta: 'product/conocimiento/modulos/0001-credito.md', id: 'MOD-0001', idDeTrabajo: 'MOD-1', estado: 'completa' },
     { ruta: 'product/conocimiento/reglas/0001-antiguedad-minima.md', id: 'REG-0001', idDeTrabajo: 'REG-1', estado: 'completa' }
@@ -99,6 +116,8 @@ const SIN_FALLAS = { inventado: [], perdido: [], malMarcado: [], sirve: true, po
 const LO_QUE_FALTA = { deEstePaso: [], deAntes: [], archivosRecorridos: 3 }
 
 type OpcionesCorrida = {
+  inventario?: Record<string, unknown> | null
+  marcado?: Record<string, unknown> | null
   examen?: Record<string, unknown> | null
   registro?: Record<string, unknown> | null
   lecturas?: Array<Record<string, unknown> | null>
@@ -115,6 +134,8 @@ type OpcionesCorrida = {
  */
 function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrida = {}): Promise<Corrida> {
   const {
+    inventario = INVENTARIO_VACIO,
+    marcado = SIN_MARCAR,
     examen = EXAMEN,
     registro = REGISTRO_LIMPIO,
     lecturas = [SIN_HUECOS],
@@ -136,6 +157,8 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     const label = String(opts.label ?? '')
 
     if (opts.phase === 'Sacar') return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+    if (opts.phase === 'Inventariar') return inventario
+    if (opts.phase === 'Marcar') return marcado
     if (opts.phase === 'Levantar el examen') return examen
     if (opts.phase === 'Construir') return registro
     if (opts.phase === 'Corregir') return correccion
@@ -359,7 +382,7 @@ describe('la hora y el paso se estampan, nunca los pone el agente', () => {
     const registrar = llamadaDe(llamadas, 'Registrar')
 
     const altas = registrar.prompt.match(/"alta": "2026-08-04T11:00:00-06:00"/g) ?? []
-    expect(altas).toHaveLength(3)
+    expect(altas).toHaveLength(4)
     expect(registrar.prompt).toContain('"paso": "paso de prueba"')
   })
 
@@ -494,6 +517,207 @@ describe('la correccion se funde con el registro, no lo reemplaza', () => {
 
     expect(ids.length).toBeGreaterThan(0)
     for (const id of ids) expect(prompt, `${id} se cita y no existe`).toContain(`"id": "${id}"`)
+  })
+})
+
+/**
+ * Medido el 2026-08-04, en la primera corrida real: el dictamen del auditor se imprimia, se sumaba
+ * al estado de salida del molino, y NO tocaba un solo archivo. Una regla que el auditor llamo
+ * inventada entera se quedo en disco diciendo `estado: completa`.
+ *
+ * Es el defecto del 2026-07-31 otra vez: una medicion que no cuenta es una medicion que no se hizo.
+ * Que cuente quiere decir que llegue al archivo, no al reporte.
+ */
+describe('el dictamen del auditor llega a los archivos', () => {
+  const CON_FALLAS = { ...SIN_FALLAS, sirve: false, porque: 'REG-0001 dice algo que nadie dijo', inventado: ['reglas/0001: no esta en el crudo'] }
+
+  it('con fallas, corre una fase que marca, y corre DESPUES de auditar', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { dictamen: CON_FALLAS })
+
+    const indiceAuditar = llamadas.findIndex((l) => l.opts.phase === 'Auditar')
+    const indiceMarcar = llamadas.findIndex((l) => l.opts.phase === 'Marcar')
+
+    expect(indiceAuditar).toBeGreaterThanOrEqual(0)
+    expect(indiceMarcar).toBeGreaterThan(indiceAuditar)
+  })
+
+  it('quien marca es el escribano, con su carta, y le llega el dictamen entero', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { dictamen: CON_FALLAS })
+    const marcar = llamadaDe(llamadas, 'Marcar')
+
+    expect(marcar.opts.agentType).toBe('escribano')
+    expect(marcar.prompt).toContain('`marcar-lo-auditado`')
+    expect(marcar.prompt).toContain('no esta en el crudo')
+  })
+
+  it('se le prohibe borrar y reescribir: solo agrega y sube el estado', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { dictamen: CON_FALLAS })
+    const marcar = llamadaDe(llamadas, 'Marcar')
+
+    expect(marcar.prompt).toContain('No borras, no reescribes el cuerpo y no quitas ninguna marca')
+    expect(marcar.prompt).toContain('se AGREGA')
+  })
+
+  it('con un dictamen limpio no se manda a nadie a abrir treinta archivos', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+
+    expect(llamadas.find((l) => l.opts.phase === 'Marcar')).toBeUndefined()
+  })
+
+  it('un «no sirve» sin listas tambien manda a marcar: la cuarta falla cuenta como las tres', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { dictamen: { ...SIN_FALLAS, sirve: false, porque: 'no le alcanza a quien no estuvo' } })
+
+    expect(llamadaDe(llamadas, 'Marcar')).toBeDefined()
+  })
+
+  it('si hay fallas y nadie las marca, se dice: lo escrito se lee como si estuviera bien', async () => {
+    const { dichos } = await correrMolino(ENTRADA, { dictamen: CON_FALLAS, marcado: null })
+
+    expect(dichos.join('\n')).toContain('nadie las marco en los archivos')
+  })
+})
+
+/**
+ * Medido el 2026-08-04: la primera auditoria de un registro de segunda corrida reporto diecisiete
+ * piezas inventadas que no lo estaban. Salian de las respuestas del experto, que viajan por
+ * `args.respuestas` y nunca llegaban a quien auditaba: buscaba cada frase en la grabacion, no la
+ * encontraba, y dictaminaba lo unico que podia con lo que tenia.
+ */
+describe('quien audita ve todo lo que dijo el experto, no solo la grabacion', () => {
+  it('en una segunda corrida, las respuestas le llegan al auditor', async () => {
+    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses, no antes' })
+    const auditar = llamadaDe(llamadas, 'Auditar')
+
+    expect(auditar.prompt).toContain('desde los tres meses, no antes')
+    expect(auditar.prompt).toContain('El crudo son DOS cosas')
+  })
+
+  it('en una primera corrida no hay respuestas y no se le inventa el bloque', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const auditar = llamadaDe(llamadas, 'Auditar')
+
+    expect(auditar.prompt).not.toContain('El crudo son DOS cosas')
+  })
+})
+
+/**
+ * Medido el 2026-08-04: tres reglas salieron con `estado: con-huecos` y `que-queda-abierto`
+ * diciendo «nada», que su propia plantilla prohibe. Al escribano le llegaba la marca sin el motivo,
+ * y una regla que solo pide no se cumple: si no tiene con que llenarlo, lo deja en nada.
+ */
+describe('la razon del hueco viaja pegada a la pieza', () => {
+  it('una pieza senalada llega con lo que dijo el reporte que la senalo', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [{ huecos: [{ id: 'REG-1', renglon: REGLA.renglon, forma: 'palabra-sin-definir' }], piezasLeidas: 4 }],
+      correccion: null
+    })
+
+    const registrar = llamadaDe(llamadas, 'Registrar')
+
+    expect(registrar.prompt).toContain('"porQueTieneHueco"')
+    expect(registrar.prompt).toContain('palabra-sin-definir')
+    expect(registrar.prompt).toContain('No se entiende solo')
+  })
+
+  it('una pieza que nadie senalo no lleva razon, porque no hay ninguna', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const registrar = llamadaDe(llamadas, 'Registrar')
+
+    // El campo, no la instruccion que lo explica: esa aparece siempre.
+    expect(registrar.prompt).not.toContain('"porQueTieneHueco"')
+  })
+
+  it('al escribano se le dice que ese campo no se escribe al archivo', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [{ huecos: [{ id: 'REG-1', renglon: REGLA.renglon, forma: 'apodo-de-caso' }], piezasLeidas: 4 }],
+      correccion: null
+    })
+
+    expect(llamadaDe(llamadas, 'Registrar').prompt).toContain('no se escribe al archivo')
+  })
+})
+
+describe('no se vuelve a escribir lo que otra sesion ya escribio', () => {
+  const YA_ESCRITO = {
+    piezas: [
+      { id: 'REG-0012', tipo: 'regla', renglon: 'A un taller con menos de tres meses no se le fia', firmeza: 'confirmado', alta: '2026-07-14T10:00:00-06:00', estado: 'completa' }
+    ]
+  }
+
+  it('inventariar corre antes de construir, y sin cargar ninguna carta', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+
+    const indiceInventario = llamadas.findIndex((l) => l.opts.phase === 'Inventariar')
+    const indiceConstruir = llamadas.findIndex((l) => l.opts.phase === 'Construir')
+
+    expect(indiceInventario).toBeGreaterThanOrEqual(0)
+    expect(indiceConstruir).toBeGreaterThan(indiceInventario)
+    expect(llamadaDe(llamadas, 'Inventariar').prompt).toContain('no cargues ninguna de tus cartas')
+  })
+
+  it('lo ya escrito le llega al constructor con su firmeza y su fecha', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { inventario: YA_ESCRITO })
+    const construir = llamadaDe(llamadas, 'Construir')
+
+    expect(construir.prompt).toContain('REG-0012')
+    expect(construir.prompt).toContain('2026-07-14T10:00:00-06:00')
+    expect(construir.prompt).toContain('"firmeza": "confirmado"')
+    expect(construir.prompt).toContain('no se vuelve a escribir')
+  })
+
+  it('se le dice que una contradiccion no es un duplicado, y que no decida el cual gana', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { inventario: YA_ESCRITO })
+    const construir = llamadaDe(llamadas, 'Construir')
+
+    expect(construir.prompt).toContain('es una contradiccion')
+    expect(construir.prompt).toContain('nunca decidas tu cual gana')
+  })
+
+  it('en la primera corrida del proyecto se dice que no hay nada, en vez de callarlo', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+
+    expect(llamadaDe(llamadas, 'Construir').prompt).toContain('primera corrida del proyecto')
+  })
+
+  it('si el inventario falla, la corrida sigue pero se dice que puede salir repetido', async () => {
+    const { llamadas, dichos } = await correrMolino(ENTRADA, { inventario: null })
+
+    expect(llamadaDe(llamadas, 'Construir')).toBeDefined()
+    expect(dichos.join('\n')).toContain('puede salir repetido')
+  })
+})
+
+describe('el dominio es el cuarto nivel, y llega hasta el disco', () => {
+  it('el registro que se le pide al constructor incluye dominios', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir').opts.schema ?? {})
+
+    expect(schema).toContain('dominios')
+    expect(schema).toContain('quienLoSabe')
+  })
+
+  it('el dominio se define por quien lo sabe, y eso no admite el nombre de una persona', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const schema = JSON.stringify(llamadaDe(llamadas, 'Construir').opts.schema ?? {})
+
+    expect(schema).toContain('nunca la persona')
+  })
+
+  it('el dominio llega al escribano con su paso y su hora, como las demas piezas', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const registrar = llamadaDe(llamadas, 'Registrar')
+
+    expect(registrar.prompt).toContain('--- Los dominios ---')
+    expect(registrar.prompt).toContain('"id": "DOM-1"')
+    expect(registrar.prompt).toContain('"quienLoSabe"')
+  })
+
+  it('al lector en frio el dominio le llega pelado, igual que el resto', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const lector = llamadaDe(llamadas, 'Medir', 'leer-en-frio')
+
+    expect(lector.prompt).toContain('DOM-1')
+    expect(lector.prompt).not.toContain('"origen"')
   })
 })
 

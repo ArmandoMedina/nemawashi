@@ -4,12 +4,14 @@ export const meta = {
   whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan dudas por cerrar; se vuelve a correr con las respuestas.',
   phases: [
     { title: 'Sacar', detail: 'leer la grabacion de la sesion y sacar la platica limpia con el sacador' },
+    { title: 'Inventariar', detail: 'listar lo que otras sesiones ya escribieron, para no volver a proponerlo' },
     { title: 'Levantar el examen', detail: 'las preguntas que el registro va a tener que contestar, antes de que exista una sola pieza' },
     { title: 'Construir', detail: 'armar capacidades, modulos y reglas enlazadas, y cazar lo que no se puede escribir todavia' },
     { title: 'Medir', detail: 'leer en frio, cotejar contra la platica y contestar el examen, las tres a la vez' },
     { title: 'Corregir', detail: 'volver sobre lo que las mediciones marcaron, antes de que llegue a disco' },
     { title: 'Registrar', detail: 'un archivo por pieza, con la marca de lo que quedo a medias' },
     { title: 'Auditar', detail: 'leer el crudo y dictaminar' },
+    { title: 'Marcar', detail: 'llevar el dictamen a los archivos, para que la medicion cuente' },
     { title: 'Armar lo que falta', detail: 'lo que hay que preguntarle al experto la proxima vez' }
   ]
 }
@@ -51,6 +53,34 @@ const SACADO = {
       type: 'string',
       description: 'Por que no se pudo leer el archivo o correr el sacador. Vacio si si se pudo.'
     }
+  }
+}
+
+// El inventario trae el rengon de cada pieza que ya esta escrita, no su cuerpo: el cuerpo no
+// cabria, y para saber si algo ya se dijo basta el renglon. Trae `firmeza` y `alta` porque sin
+// ellas quien construye ve dos reglas que chocan y no sabe cual es la vieja ni que tan cerrada
+// quedo -y esa es justo la diferencia entre un duplicado y una contradiccion.
+const INVENTARIO = {
+  type: 'object',
+  required: ['piezas'],
+  properties: {
+    piezas: {
+      type: 'array',
+      description: 'Todo lo que ya esta escrito en las cuatro carpetas. Vacio si es la primera corrida del proyecto.',
+      items: {
+        type: 'object',
+        required: ['id', 'tipo', 'renglon', 'firmeza'],
+        properties: {
+          id: { type: 'string', description: 'El de carpeta, el que vive dentro del archivo: CAP-0007.' },
+          tipo: { type: 'string', enum: ['dominio', 'modulo', 'capacidad', 'regla'] },
+          renglon: { type: 'string', description: 'El campo de una linea del frontmatter, copiado tal cual.' },
+          firmeza: { type: 'string', enum: ['dicho', 'confirmado', 'abierto'] },
+          alta: { type: 'string', description: 'Cuando se escribio. Es lo que dice cual es la vieja cuando dos chocan.' },
+          estado: { type: 'string', enum: ['completa', 'con-huecos'] }
+        }
+      }
+    },
+    noSePudo: { type: 'string', description: 'Por que no se pudo leer alguna carpeta. Vacio si se leyeron todas.' }
   }
 }
 
@@ -115,8 +145,26 @@ const REQUERIDOS_DE_PIEZA = ['id', 'renglon', 'firmeza', 'origen', 'enSusPalabra
 
 const REGISTRO = {
   type: 'object',
-  required: ['capacidades', 'modulos', 'reglas', 'dudas', 'senaladas'],
+  required: ['dominios', 'capacidades', 'modulos', 'reglas', 'dudas', 'senaladas'],
   properties: {
+    dominios: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: REQUERIDOS_DE_PIEZA.concat(['modulos', 'quienLoSabe', 'queAgrupa']),
+        properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+          modulos: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de los modulos que contiene.' },
+          quienLoSabe: {
+            type: 'string',
+            description:
+              'El PAPEL del negocio que puede contestar lo de aqui adentro -quien cobra, quien surte, quien ' +
+              'autoriza-, nunca la persona: ningun nombre entra a un archivo. Es lo que separa un dominio de un ' +
+              'modulo. Si dos dominios necesitarian a la misma persona en la sala, no son dos.'
+          },
+          queAgrupa: { type: 'string', description: 'Que modulos caen dentro Y CUALES NO. La segunda mitad es la que sirve.' }
+        })
+      }
+    },
     capacidades: {
       type: 'array',
       items: {
@@ -132,8 +180,9 @@ const REGISTRO = {
       type: 'array',
       items: {
         type: 'object',
-        required: REQUERIDOS_DE_PIEZA.concat(['capacidades', 'queAgrupa']),
+        required: REQUERIDOS_DE_PIEZA.concat(['dominio', 'capacidades', 'queAgrupa']),
         properties: Object.assign({}, CAMPOS_DE_PIEZA, {
+          dominio: { type: 'string', description: 'El id de trabajo del dominio que lo contiene. Ese dominio tiene que nombrarlo de vuelta.' },
           capacidades: { type: 'array', items: { type: 'string' }, description: 'Los ids de trabajo de las capacidades que contiene.' },
           queAgrupa: {
             type: 'string',
@@ -309,6 +358,40 @@ const DICTAMEN = {
   }
 }
 
+// Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el
+// auditor haya probado que lo que dice nadie lo dijo. Medido el 2026-07-31 y VUELTO A MEDIR el
+// 2026-08-04, cuando el molino ya contaba el dictamen para su estado de salida y aun asi ningun
+// archivo cambio, porque nadie tenia permiso de tocarlos. Que la medicion cuente quiere decir que
+// llegue al archivo, no al reporte.
+const MARCADO = {
+  type: 'object',
+  required: ['marcados', 'perdido'],
+  properties: {
+    marcados: {
+      type: 'array',
+      items: {
+        type: 'object',
+        required: ['ruta', 'id', 'falla'],
+        properties: {
+          ruta: { type: 'string' },
+          id: { type: 'string' },
+          falla: { type: 'string', description: 'Cual de las cuatro del dictamen le toco a esta pieza.' }
+        }
+      }
+    },
+    perdido: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Lo que el auditor dijo que se perdio. No tiene archivo donde marcarse -por eso se perdio- y se pasa entero.'
+    },
+    noSePudo: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Archivos que el dictamen nombraba y no se pudieron abrir o no existen. Un dictamen que apunta a la nada es un dato.'
+    }
+  }
+}
+
 // Lo que abre la sesion siguiente. Los dos bloques van separados a proposito: un hueco de hace
 // tres semanas que sigue abierto sigue siendo un hueco, y si solo se mira el paso de hoy la
 // lista se ve corta y el registro se pudre por abajo.
@@ -375,7 +458,34 @@ function conElPasoYLaHora(pieza, paso, hora) {
 }
 
 function todasLasPiezas(registro) {
-  return registro.capacidades.concat(registro.modulos, registro.reglas)
+  return (registro.dominios ?? []).concat(registro.capacidades, registro.modulos, registro.reglas)
+}
+
+// Cada senal viene con su razon, y la razon viaja pegada a la pieza hasta el escribano. Medido el
+// 2026-08-04: tres reglas salieron con `estado: con-huecos` y `que-queda-abierto` diciendo «nada»,
+// que su propia plantilla prohibe. Pasaba porque al escribano le llegaba la marca sin el motivo, y
+// una regla que solo pide no se cumple: si no tiene con que llenarlo, lo deja en nada.
+function razonesPorId(registro, enFrio, cotejo, contestado) {
+  const razones = {}
+  const agregar = (id, texto) => {
+    if (!razones[id]) razones[id] = []
+    razones[id].push(texto)
+  }
+
+  for (const id of registro.senaladas) agregar(id, 'Quedo sin cerrar al construir el registro.')
+  if (enFrio) for (const h of enFrio.huecos) agregar(h.id, `No se entiende solo (${h.forma}): «${h.renglon}»`)
+  if (cotejo) for (const i of cotejo.inventos) agregar(i.id, `Esto no esta dicho en la platica: «${i.frase}»`)
+  if (contestado) {
+    for (const r of contestado.respuestas) {
+      if (r.veredicto === 'contestada') continue
+      for (const id of r.camino ?? []) agregar(id, `El examen quedo ${r.veredicto} en: «${r.pregunta}»`)
+    }
+    for (const id of contestado.senaladas) {
+      if (!razones[id]) agregar(id, 'El examen no se pudo contestar con esta pieza.')
+    }
+  }
+
+  return razones
 }
 
 // Una pieza senalada por cualquier reporte se escribe `con-huecos`. **Basta uno:** cada
@@ -417,6 +527,7 @@ function conLaCorreccionAplicada(registro, corregido) {
   const senaladas = (corregido.senaladas ?? []).concat(registro.senaladas)
 
   return {
+    dominios: fundir(registro.dominios ?? [], corregido.dominios ?? []),
     capacidades: fundir(registro.capacidades, corregido.capacidades ?? []),
     modulos: fundir(registro.modulos, corregido.modulos ?? []),
     reglas: fundir(registro.reglas, corregido.reglas ?? []),
@@ -466,6 +577,26 @@ function promptParaSacar(rutaPedida) {
   ].join('\n')
 }
 
+function promptParaInventariar() {
+  return [
+    'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
+    '',
+    'Lista lo que ya esta escrito en `product/conocimiento/`, en sus cuatro carpetas: `dominios/`,',
+    '`modulos/`, `capacidades/` y `reglas/`.',
+    '',
+    'De cada archivo `NNNN-*.md` -**no de las plantillas `0000-plantilla.md`, ni del README**- saca',
+    'del frontmatter: el `id`, el renglon de una linea (`dominio`, `modulo`, `capacidad` o `regla`',
+    'segun la carpeta), la `firmeza`, el `alta` y el `estado`. **El cuerpo no**: no cabe y no hace',
+    'falta para saber si algo ya se dijo.',
+    '',
+    'Si una carpeta no existe todavia, no es un error: es la primera corrida. Devuelve lo que si',
+    'haya y sigue. Si una carpeta existe y no la pudiste leer, eso si se dice en `noSePudo`.',
+    '',
+    '**No abras el cuerpo de los archivos, no los resumas y no opines sobre ellos.** Aqui solo se',
+    'lista lo que hay.'
+  ].join('\n')
+}
+
 function promptParaElExamen(paso, platica) {
   return [
     'Carga tu carta `levantar-el-examen` antes de leer nada.',
@@ -482,12 +613,30 @@ function promptParaElExamen(paso, platica) {
   ].join('\n')
 }
 
-function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida) {
+function promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, inventario) {
+  const piezas = inventario ? inventario.piezas : []
   return [
     'Carga tu carta `construir-el-registro` antes de medir nada.',
     '',
-    `Arma el registro enlazado del paso "${paso}": las reglas dichas, y las capacidades y los`,
-    'modulos que se sacan de ellas, ligados en los dos sentidos.',
+    `Arma el registro enlazado del paso "${paso}": las reglas dichas, y las capacidades, los modulos`,
+    'y los dominios que se sacan de ellas, ligados en los dos sentidos.',
+    '',
+    piezas.length > 0
+      ? [
+          '--- Lo que otras sesiones YA escribieron ---',
+          '',
+          '**Leelo antes de proponer nada.** Lo que ya este aqui no se vuelve a escribir: se enlaza, o',
+          'se dice que esta platica lo completa, y entonces esa pieza vuelve **con su id de carpeta**',
+          '-no con uno de trabajo- y solo con lo que cambia.',
+          '',
+          'Y si lo de hoy **no puede ser cierto al mismo tiempo** que algo de aqui, eso no es un',
+          'duplicado: es una contradiccion, y va a las dudas con las dos fechas en la mano. Nunca la',
+          'sobrescribas en silencio y nunca decidas tu cual gana -que lo de hoy sea mas nuevo no lo',
+          'hace mas cierto.',
+          '',
+          JSON.stringify(piezas, null, 2)
+        ].join('\n')
+      : '--- Es la primera corrida del proyecto: no hay nada escrito todavia ---',
     '',
     segundaCorrida
       ? [
@@ -529,8 +678,9 @@ function registroParaElLector(registro) {
     queQuedaAbierto: p.queQuedaAbierto
   })
   return {
+    dominios: (registro.dominios ?? []).map((d) => Object.assign(pelar(d), { modulos: d.modulos, quienLoSabe: d.quienLoSabe, queAgrupa: d.queAgrupa })),
+    modulos: registro.modulos.map((m) => Object.assign(pelar(m), { dominio: m.dominio, capacidades: m.capacidades, queAgrupa: m.queAgrupa })),
     capacidades: registro.capacidades.map((c) => Object.assign(pelar(c), { modulo: c.modulo, reglas: c.reglas })),
-    modulos: registro.modulos.map((m) => Object.assign(pelar(m), { capacidades: m.capacidades, queAgrupa: m.queAgrupa })),
     reglas: registro.reglas.map((r) => Object.assign(pelar(r), { capacidades: r.capacidades }))
   }
 }
@@ -632,8 +782,13 @@ function promptParaCorregir(paso, loQueDijoElExperto, marcadas, enFrio, cotejo, 
   ].join('\n')
 }
 
-function promptParaRegistrar(paso, registro, senaladas, sinPieza, hora) {
-  const conEstado = (p) => Object.assign({}, p, { estado: senaladas.indexOf(p.id) === -1 ? 'completa' : 'con-huecos' })
+function promptParaRegistrar(paso, registro, senaladas, razones, sinPieza, hora) {
+  // La razon viaja pegada a la pieza. Sin ella el escribano tiene la marca y no tiene con que
+  // llenar `que-queda-abierto`, y lo deja en «nada» -que es justo lo que su plantilla prohibe.
+  const conEstado = (p) => {
+    if (senaladas.indexOf(p.id) === -1) return Object.assign({}, p, { estado: 'completa' })
+    return Object.assign({}, p, { estado: 'con-huecos', porQueTieneHueco: razones[p.id] ?? ['Una medicion la senalo sin decir por que.'] })
+  }
   return [
     `Escribe este registro del paso "${paso}". Ya paso por las tres mediciones.`,
     '',
@@ -649,6 +804,12 @@ function promptParaRegistrar(paso, registro, senaladas, sinPieza, hora) {
     '**El `estado` ya viene puesto en cada pieza.** Lo pusieron las mediciones, no tu lectura: una',
     'pieza senalada por cualquier reporte va `con-huecos`, basta uno. No lo cambies.',
     '',
+    '**Cada pieza `con-huecos` trae ademas `porQueTieneHueco`**, con lo que dijo el reporte que la',
+    'senalo. Eso va copiado en su `<que-queda-abierto>`, debajo de lo que ya trajera. Una pieza',
+    '`con-huecos` cuyo `<que-queda-abierto>` diga «nada» no sirve de nada: la sesion siguiente la',
+    'encuentra y no sabe que cerrar. **El campo `porQueTieneHueco` no se escribe al archivo** -no',
+    'esta en la plantilla-: es de donde sacas el texto.',
+    '',
     hora
       ? 'Cada pieza ya trae su `alta` (y su `confirmado` si la firmeza lo pide) estampados abajo.'
       : 'No llego la hora del alta: ninguna pieza trae `alta`. No la inventes - reportalo en `noEscritos`.',
@@ -663,21 +824,41 @@ function promptParaRegistrar(paso, registro, senaladas, sinPieza, hora) {
         ].join('\n')
       : '',
     '',
-    '--- Las capacidades ---',
-    JSON.stringify(registro.capacidades.map(conEstado), null, 2),
+    '--- Los dominios ---',
+    JSON.stringify((registro.dominios ?? []).map(conEstado), null, 2),
     '',
     '--- Los modulos ---',
     JSON.stringify(registro.modulos.map(conEstado), null, 2),
+    '',
+    '--- Las capacidades ---',
+    JSON.stringify(registro.capacidades.map(conEstado), null, 2),
     '',
     '--- Las reglas ---',
     JSON.stringify(registro.reglas.map(conEstado), null, 2)
   ].join('\n')
 }
 
-function promptParaAuditar(paso, rutaTranscript, escritos) {
+function promptParaAuditar(paso, rutaTranscript, escritos, respuestas) {
   return [
     'Carga tu carta `auditar` antes de abrir nada.',
     '',
+    // Medido el 2026-08-04: la primera auditoria de un registro de segunda corrida reporto
+    // diecisiete piezas inventadas. No lo estaban -salian de las respuestas del experto, que
+    // viajan por `args.respuestas` y nunca llegaban aqui. Quien auditaba buscaba cada frase en la
+    // grabacion, no la encontraba, y dictaminaba lo unico que podia con lo que tenia. Un dictamen
+    // que miente es peor que ninguno: el siguiente lo va a ignorar.
+    respuestas
+      ? [
+          '**El crudo son DOS cosas en esta corrida.** La grabacion, y ademas lo que el experto',
+          'contesto despues, cuando la corrida se paro para consultarlo. Esas respuestas **no estan',
+          'en el `.jsonl`** -la grabacion se cerro antes de que el contestara- y valen exactamente',
+          'igual: lo que salga de ellas NO es inventado.',
+          '',
+          '--- Lo que el experto contesto despues ---',
+          respuestas,
+          ''
+        ].join('\n')
+      : '',
     `Se acaba de escribir el paso "${paso}" en \`product/conocimiento/\` -las tres carpetas:`,
     '`capacidades/`, `modulos/` y `reglas/`. **Ese es el lugar; no lo adivines y no busques en**',
     '`roadmap/`, que es de otro molino.',
@@ -692,6 +873,30 @@ function promptParaAuditar(paso, rutaTranscript, escritos) {
     '',
     '--- Lo que se escribio ---',
     JSON.stringify(escritos.archivos, null, 2)
+  ].join('\n')
+}
+
+function promptParaMarcar(paso, dictamen, hora) {
+  return [
+    'Carga tu carta `marcar-lo-auditado` antes de abrir nada.',
+    '',
+    `El paso "${paso}" ya se escribio en \`product/conocimiento/\` y ya se audito contra el crudo.`,
+    'Abajo va el dictamen. **Llevalo a los archivos que nombra, y solo a esos.**',
+    '',
+    'Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el',
+    'auditor haya probado que lo que dice nadie lo dijo, y quien lo abra dentro de seis meses se lo',
+    'cree. Que la medicion cuente quiere decir que llegue al archivo, no al reporte.',
+    '',
+    hora
+      ? `La hora para el campo \`marcado\` es \`${hora}\`. No la deduzcas.`
+      : 'No llego la hora: no marques nada y reportalo. Una hora inventada se ve igual de bien que una real.',
+    '',
+    '**No borras, no reescribes el cuerpo y no quitas ninguna marca.** El `estado` solo va de',
+    '`completa` a `con-huecos`, y lo del auditor se AGREGA al final de `<que-queda-abierto>`,',
+    'copiado con sus palabras.',
+    '',
+    '--- El dictamen ---',
+    JSON.stringify(dictamen, null, 2)
   ].join('\n')
 }
 
@@ -769,6 +974,33 @@ const loQueDijoElExperto = respuestas ? `${platica}\n\n--- Lo que el experto con
 
 const segundaCorrida = Boolean(respuestas && String(respuestas).trim())
 
+// --- Inventariar -----------------------------------------------------------
+
+// Sin esto, cada paso vuelve a proponer lo mismo con otro numero y el registro se llena de la
+// misma regla dicha cinco veces. El molino no puede leer disco -no tiene `fs`-, asi que el indice
+// lo trae un agente, igual que la platica. Y es mecanico: aqui no se juzga nada, se lista.
+//
+// Si falla, la corrida sigue: construir a ciegas produce duplicados, que se pueden juntar despues;
+// no construir no produce nada. Pero se dice, para que nadie lea el resultado creyendo que se
+// compararon.
+
+phase('Inventariar')
+
+const inventario = await agent(promptParaInventariar(), {
+  label: `inventariar:${paso}`,
+  phase: 'Inventariar',
+  agentType: 'auditor',
+  schema: INVENTARIO
+})
+
+if (!inventario) {
+  log('No se pudo inventariar lo ya escrito. Se construye a ciegas: puede salir repetido lo que ya existe.')
+} else if (inventario.noSePudo) {
+  log(`El inventario salio incompleto: ${inventario.noSePudo}. Lo que no se leyo puede salir repetido.`)
+} else {
+  log(`${inventario.piezas.length} pieza(s) ya escritas. Contra eso se compara lo que salga de esta platica.`)
+}
+
 // --- Levantar el examen ----------------------------------------------------
 
 // Va antes de construir y no se puede mover. No hay archivo que pruebe despues que el examen se
@@ -801,7 +1033,7 @@ log(`${examen.preguntas.length} pregunta(s) levantadas. Contra eso se va a medir
 
 phase('Construir')
 
-const construido = await agent(promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida), {
+const construido = await agent(promptParaConstruir(paso, loQueDijoElExperto, examen, segundaCorrida, inventario), {
   label: `construir:${paso}`,
   phase: 'Construir',
   agentType: 'auditor',
@@ -927,9 +1159,11 @@ if (marcadasVuelta1.length > 0) {
 // --- Registrar -------------------------------------------------------------
 
 const senaladas = idsSenalados(registro.senaladas, enFrio, cotejo, contestado)
+const razones = razonesPorId(registro, enFrio, cotejo, contestado)
 const sinPieza = contestado ? contestado.sinPieza : []
 
 const registroEstampado = {
+  dominios: (registro.dominios ?? []).map((p) => conElPasoYLaHora(p, paso, hora)),
   capacidades: registro.capacidades.map((p) => conElPasoYLaHora(p, paso, hora)),
   modulos: registro.modulos.map((p) => conElPasoYLaHora(p, paso, hora)),
   reglas: registro.reglas.map((p) => conElPasoYLaHora(p, paso, hora))
@@ -937,7 +1171,7 @@ const registroEstampado = {
 
 phase('Registrar')
 
-const escritos = await agent(promptParaRegistrar(paso, registroEstampado, senaladas, sinPieza, hora), {
+const escritos = await agent(promptParaRegistrar(paso, registroEstampado, senaladas, razones, sinPieza, hora), {
   label: `registrar:${paso}`,
   phase: 'Registrar',
   agentType: 'escribano',
@@ -953,18 +1187,51 @@ if (!escritos) {
 
 phase('Auditar')
 
-const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos), {
+const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos, respuestas), {
   label: `auditar:${paso}`,
   phase: 'Auditar',
   agentType: 'auditor',
   schema: DICTAMEN
 })
 
+// --- Marcar ----------------------------------------------------------------
+
+// Aqui el dictamen llega al archivo. Sin esta fase se imprime y se pierde: el archivo se queda
+// diciendo `completa` aunque el auditor haya probado que lo que dice nadie lo dijo. Es el defecto
+// del 2026-07-31 -una medicion que no cuenta es una medicion que no se hizo- y el 2026-08-04 se
+// volvio a cometer con el dictamen ya contado para el estado de salida, pero sin nadie que pudiera
+// tocar los archivos.
+//
+// Solo corre si hay algo que marcar. Un dictamen limpio no manda a nadie a abrir treinta archivos.
+
+const fallasQueMarcar = dictamen ? dictamen.inventado.concat(dictamen.perdido, dictamen.malMarcado) : []
+let marcado = null
+
+if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
+  phase('Marcar')
+
+  marcado = await agent(promptParaMarcar(paso, dictamen, hora), {
+    label: `marcar:${paso}`,
+    phase: 'Marcar',
+    agentType: 'escribano',
+    schema: MARCADO
+  })
+
+  if (!marcado) {
+    log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+  }
+}
+
 // --- Armar lo que falta ----------------------------------------------------
 
 phase('Armar lo que falta')
 
-const loQueFalta = await agent(promptParaArmarLoQueFalta(paso, escritos, escritos.senalesSinPieza ?? sinPieza), {
+// Lo perdido que encontro el auditor tampoco tiene archivo donde marcarse -por eso se perdio-, asi
+// que se junta aqui con las preguntas que ninguna pieza rozaba. Las dos se pierden si nadie las
+// recoge en la lista que abre la sesion siguiente.
+const sinDondeMarcarse = (escritos.senalesSinPieza ?? sinPieza).concat(marcado ? marcado.perdido : [])
+
+const loQueFalta = await agent(promptParaArmarLoQueFalta(paso, escritos, sinDondeMarcarse), {
   label: `falta:${paso}`,
   phase: 'Armar lo que falta',
   agentType: 'auditor',
@@ -1007,6 +1274,17 @@ if (noSirve) {
   log(`No le alcanza a quien no estuvo: ${dictamen.porque}`)
 }
 
+if (marcado) {
+  log(`${marcado.marcados.length} archivo(s) quedaron marcados con lo que encontro la auditoria.`)
+  if (marcado.perdido.length > 0) {
+    log(`${marcado.perdido.length} cosa(s) se dijeron y no quedaron escritas. No tienen archivo que marcar: van a lo que falta preguntar.`)
+  }
+  if ((marcado.noSePudo ?? []).length > 0) {
+    log(`${marcado.noSePudo.length} archivo(s) que el dictamen nombraba no se pudieron abrir:`)
+    for (const n of marcado.noSePudo) log(`  ${n}`)
+  }
+}
+
 for (const a of conHuecos) {
   log(`  ${a.ruta} — con huecos`)
 }
@@ -1037,6 +1315,7 @@ return {
   senaladasSinMarcar,
   loQueFalta,
   dictamen,
+  marcado,
   enFrio,
   cotejo,
   contestado

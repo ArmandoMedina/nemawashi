@@ -1,10 +1,9 @@
 ---
-id: CAP-0000
-capacidad: Una linea, en palabras del negocio, con lo que el sistema tiene que poder hacer
-modulo: MOD-0000
-reglas: [REG-0000]
+id: DOM-0000
+dominio: El area del negocio, en la palabra que usa quien trabaja en ella
+modulos: [MOD-0000]
 firmeza: dicho
-origen: escuchado
+origen: propuesto
 estado: completa
 paso: como se llamo el tramo de sesion donde salio
 alta: AAAA-MM-DDTHH:MM:SS-06:00
@@ -12,51 +11,51 @@ confirmado:
 marcado:
 ---
 
-<capacidad>
+<dominio>
 
 <en-sus-palabras>
-Lo que se dijo, entero y sin recortar. Aqui no hay tope de letras: el pedazo cortado no aparece en
-ningun lado, y esa es la unica falla que no tiene arreglo despues.
-
-**Casi ninguna capacidad se dice tal cual** — la gente cuenta casos, no capacidades. Cuando el
-`origen` es `propuesto`, aqui va el caso que se conto, con sus palabras, y en seguida la capacidad
-que se saco de el. Que nadie la haya nombrado no es permiso para dejar el hueco en blanco.
+Como nombra el experto esta area de su negocio. Si nunca la nombro y el corte lo propuso el agente,
+se dice aqui con esas palabras y el `origen` va en `propuesto`.
 </en-sus-palabras>
 
-<de-donde-salio>
-Que pregunta la destapo, o de que caso concreto. Se cuenta, no se apoda: si el renglon nombra algo
-que no esta escrito en ningun archivo del repositorio, esta apodado y hay que contarlo.
+<quien-lo-sabe>
+**Este es el campo que distingue un dominio de un modulo.** Que papel del negocio sabe contestar lo
+de aqui adentro. No la persona -no entra ningun nombre- sino el papel: quien cobra, quien surte,
+quien autoriza.
 
-Si el `origen` es `propuesto`, aqui se dice por que el conjunto no cerraba sin ella.
-</de-donde-salio>
+Un dominio se levanta en sesiones aparte, con quien lo sabe. Si para hablar de dos dominios hace
+falta siempre la misma persona en la sala, no son dos.
+</quien-lo-sabe>
+
+<que-agrupa>
+Que modulos caen dentro Y CUALES NO. La segunda mitad es la que sirve: sin ella no se puede decidir
+donde va un modulo nuevo.
+</que-agrupa>
 
 <que-queda-abierto>
 La pregunta pendiente, cuando la firmeza es `abierto` o el estado es `con-huecos`. Si no queda nada,
 se escribe «nada» — el silencio no se interpreta.
 </que-queda-abierto>
 
-</capacidad>
+</dominio>
 
 <!--
 Como se llena cada campo:
 
-  id          CAP-NNNN, consecutivo. Vive aqui adentro, no en el nombre del archivo:
-              renombrar el archivo no convierte esto en otra capacidad.
-  capacidad   Una linea, verbo primero: «Dar credito a un taller que apenas abre».
-              Sin nombres de personas ni datos de nadie. Tope de 120 caracteres.
-  modulo      El id del modulo que la contiene. Ese modulo tiene que nombrarla de vuelta.
-  reglas      Los ids de las reglas que la sostienen. Cada una tiene que nombrarla de vuelta.
-              Vacio, `[]`, mientras no haya ninguna — y eso es un hueco.
+  id          DOM-NNNN, consecutivo. Vive aqui adentro, no en el nombre del archivo.
+  dominio     Una linea. El area, no el patron de software. Tope de 120 caracteres.
+  modulos     Los ids de los modulos que contiene. Cada uno tiene que nombrarlo de vuelta
+              en su campo `dominio`. Vacio, `[]`, mientras no haya ninguno — y eso es un hueco.
   firmeza     dicho | confirmado | abierto. No hay una cuarta.
   origen      escuchado | propuesto. Otro eje: no sustituye a la firmeza y no se deriva de ella.
-              Solo lo `escuchado` se coteja contra la platica.
+              Un dominio casi siempre nace `propuesto`, mas todavia que un modulo: la gente cuenta
+              lo que hace, no como esta repartido su negocio.
   estado      completa | con-huecos. Es el campo por el que abre la sesion siguiente.
               Lo decide la medicion y lo escribe el escribano traduciendo los reportes:
               `con-huecos` si algun reporte senalo esta pieza, `completa` si ninguno la senalo.
               Basta uno. Quien construye el registro no lo pone.
               OJO: `completa` NO quiere decir que no falte nada. Una pieza con firmeza `abierto`
               puede estar `completa` — se escribio bien, con su pregunta puesta, y nadie la senalo.
-              `con-huecos` obliga a que `que-queda-abierto` diga cual.
   paso        El mismo nombre que uso el consultor. Un paso es un tramo de conversacion que el
               consultor cerro y nombro.
   alta        ISO 8601 con hora y huso, por ejemplo un 31 de julio a las 09:20 en horario del
