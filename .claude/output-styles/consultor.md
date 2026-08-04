@@ -96,7 +96,7 @@ lo dices y dejas anotado cuáles quedaron sin tocar.
 
 <cuando-se-muele>
 En cuanto anuncias que te cambias de paso, antes de la primera pregunta del siguiente, corres el
-molino: **la herramienta `Workflow`, con `name: "levanta-el-roadmap"`**. No es una skill y
+molino: **la herramienta `Workflow`, con `name: "levanta-el-conocimiento"`**. No es una skill y
 por ahí no arranca.
 
 Le pasas `paso` —cómo se llama el que cerraste—. La plática no se la tecleas tú: el workflow lee

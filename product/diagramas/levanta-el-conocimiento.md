@@ -1,17 +1,21 @@
 ---
 tipo: recursos
-estado: propuesta
+estado: vigente
 ---
-# El molino, dibujado — `levanta-el-roadmap`
+# El molino, dibujado — `levanta-el-conocimiento`
 
-> **Esto es una propuesta, no lo que corre.** El molino de hoy vive en
-> `.claude/workflows/levanta-el-roadmap.js` y produce hallazgos planos. Este diagrama fija la forma
-> que tendría al producir capacidades y módulos enlazados. Mientras no se implemente, **manda el
-> `.js`**.
+> **Esto ya corre.** El dibujo dejó de ser propuesta el **2026-08-04**, cuando el molino se
+> implementó y molió una plática de verdad. Vive en `.claude/workflows/levanta-el-conocimiento.js` y
+> escribe en `product/conocimiento/`.
+>
+> **Si el dibujo y el `.js` difieren, manda el `.js`** — es lo que corre. Pero difieren poco a
+> propósito, y cuando difirieron, el equivocado fue el código: el diagrama ya tenía la caja
+> *Marcar* después de *Auditar*, y al implementar se fundió dentro del escribano. Se perdió justo
+> lo que el dibujo fijaba, y recuperarlo costó una corrida entera y un dictamen «no sirve».
 
 ## Cómo se abre
 
-El archivo es `levanta-el-roadmap.bpmn`: XML del estándar BPMN 2.0, unas mil líneas. **No se lee
+El archivo es `levanta-el-conocimiento.bpmn`: XML del estándar BPMN 2.0, unas mil líneas. **No se lee
 en frío como texto** — se arrastra a un editor de BPMN en el navegador y se mira.
 
 Trae **cinco planos**: el de arriba y cuatro subprocesos con contenido. Las cajas con el signo `+`
@@ -55,27 +59,38 @@ Con las de **BPMN Method and Style**, de Bruce Silver. Las que gobiernan aquí:
   techo `conocimiento/` existe porque «módulo» ya significa otra cosa en `product/modulos.md`.
 - **Qué tipo lleva cada enlace** — contiene, usa, requiere, contradice. Sin tipo se recorre el grafo
   pero no se razona sobre él.
-- **Si existe un nivel entre Capacidad y Regla.**
+- ~~**Si existe un nivel entre Capacidad y Regla.**~~ **Resuelto por otro lado el 2026-08-04:** el
+  nivel que faltaba no estaba en medio sino **arriba**. Entró `Dominio`, sobre Módulo. Entre
+  Capacidad y Regla sigue sin haber nada, y nadie lo ha pedido.
 - **Quién produce la cuenta de vueltas.** El rombo que la consulta cuelga de otro rombo, no de una
-  actividad que la calcule.
+  actividad que la calcule. En el `.js` la cuenta la lleva el código, que es lo correcto — el dibujo
+  todavía no lo enseña.
+- **Qué pasa con una pieza que ya existía y esta plática cambia.** El escribano no toca lo ya
+  escrito, así que la reporta sin escribirla. Hoy nadie aplica ese cambio, y el dibujo no lo muestra.
 
-## Qué se rompe al implementarlo
+## Qué cambió al implementarlo
 
-Medido contra el repositorio el **2026-08-04**:
+El **2026-08-04** se escribieron las seis cartas que le faltaban a las cajas, se implementó el `.js`
+y se corrió de verdad. Lo que la corrida obligó a agregar al dibujo:
 
-- **Cinco cajas no tenían carta** — no dos, como decía este renglón antes de recorrer el diagrama
-  caja por caja: *Gestionar las preguntas*, *Construir el registro*, *Contestar el examen*,
-  *Escribir los archivos* y *Armar lo que falta preguntar*. Las cinco cartas se escribieron el
-  **2026-08-04** y viven en `.claude/skills/`; **ningún flujo las llama todavía.**
-- **Tres pruebas de contrato dejan de pasar** cuando el `.js` se reescriba:
-  `la-hora-no-se-inventa`, `el-no-sirve-cuenta-como-falla` y `la-platica-la-saca-el-sacador`. Las
-  tres cargan el workflow y lo ejecutan con un agente falso. `el-item-va-flaco` **no** está entre
-  ellas: no menciona el molino — corre `revisarItem` sobre los archivos de `roadmap/` y `backlog/`
-  en disco.
-- **`el-item-va-flaco.ts` exige `firmeza` con tres valores** — `dicho`, `confirmado`, `abierto`. El
-  diagrama marca además el origen, que es otro eje y no la sustituye.
+- **`Inventariar lo ya escrito`**, caja nueva entre *Extraer conversación* y *Gestionar las
+  preguntas*. Sin ella, cada paso vuelve a proponer lo mismo con otro número: la corrida no veía
+  nada de lo que otras sesiones habían escrito.
+- **`Marcar lo que quedó a medias` pasó a `Marcar lo que el auditor encontró`.** La caja ya estaba
+  en el dibujo desde el principio; lo que cambió es qué marca. La marca de las mediciones la pone el
+  escribano al escribir; ésta lleva al archivo lo que la auditoría contra el crudo encontró después.
+- **`Proponer los módulos` pasó a `Proponer módulos y dominios`.** Entró un cuarto nivel. No se
+  partió en dos cajas porque es el mismo acto —cortar el negocio, mismo agente, mismo momento— y lo
+  que separa un dominio de un módulo no es el tamaño: es **quién lo sabe**, el papel que puede
+  contestar lo de adentro.
+
+Y lo que sigue igual, y conviene no «arreglar»:
+
 - **El subproceso *Extraer conversación* no se implementa.** Dibuja lo que ya hace
   `src/nucleo/sacar-turnos.ts`, y el molino lo llama en vez de reescribirlo.
+- **Las tres mediciones corren juntas con `Promise.all`**, no con el `parallel()` del harness: así
+  el molino usa sólo los cuatro identificadores que el runtime inyecta y se puede ejecutar entero
+  desde una prueba.
 
 ---
 
@@ -89,5 +104,9 @@ Medido contra el repositorio el **2026-08-04**:
 > escribano, y las dos desviaciones de estilo de arriba. Salieron de este proyecto y nadie los ha
 > medido contra un método establecido.
 >
-> **Ninguna sesión real se ha corrido todavía.** Todo lo que fija este diagrama se decidió sobre
-> papel, y la primera sesión es la medición que lo puede desmentir.
+> **La primera corrida ya ocurrió**, el 2026-08-04, sobre una plática simulada de ocho turnos. Salió
+> con `estado: con-huecos` y el auditor dictaminó «no sirve». La mayoría de sus reproches eran un
+> defecto del molino —no veía las respuestas del experto— pero debajo destapó tres cosas que ningún
+> papel había enseñado: que el dictamen no llegaba a los archivos, que la marca llegaba sin motivo,
+> y que la corrección reemplazaba el registro en vez de fundirse con él. **Lo que este diagrama fija
+> se sigue midiendo cada vez que se corre, no cuando se dibujó.**

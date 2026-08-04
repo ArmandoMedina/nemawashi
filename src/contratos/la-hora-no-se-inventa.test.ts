@@ -17,7 +17,7 @@ import { describe, it, expect } from 'vitest'
  * runtime de Claude Code inyectando `args`, `agent`, `log` y `phase`.
  */
 
-const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-roadmap.js')
+const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-conocimiento.js')
 
 type Llamada = { prompt: string; opts: Record<string, unknown> }
 

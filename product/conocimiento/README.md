@@ -123,6 +123,6 @@ cuenta entero.
 ---
 
 > **Esta forma es hipótesis, y no se ha corrido ninguna sesión con ella.** Salió de dibujar el flujo
-> que la produce en [`diagramas/levanta-el-roadmap.bpmn`](../diagramas/levanta-el-roadmap.bpmn) y de
+> que la produce en [`diagramas/levanta-el-conocimiento.bpmn`](../diagramas/levanta-el-conocimiento.bpmn) y de
 > decidir sobre papel. La primera sesión real es la medición que la puede desmentir. Si falta un
 > campo para escribir algo que sí se dijo, **se reporta, no se inventa.**

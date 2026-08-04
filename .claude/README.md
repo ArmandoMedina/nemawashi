@@ -53,7 +53,7 @@ No hay `CLAUDE.md`: lo que decía vive aquí, por tema.
 
 | Flujo | Sus fases, en orden |
 |---|---|
-| [`levanta-el-roadmap`](workflows/levanta-el-roadmap.js) | Sacar · Inventariar · Levantar el examen · Construir · Medir · Corregir · Registrar · Auditar · Marcar · Armar lo que falta |
+| [`levanta-el-conocimiento`](workflows/levanta-el-conocimiento.js) | Sacar · Inventariar · Levantar el examen · Construir · Medir · Corregir · Registrar · Auditar · Marcar · Armar lo que falta |
 
 El molino escribe en `product/conocimiento/` y ya corrió sobre una plática real. **`roadmap/` se
 quedó sin flujo que lo llene**, y con él las cartas `afinar`, `juntar` y `asentar`: siguen escritas y

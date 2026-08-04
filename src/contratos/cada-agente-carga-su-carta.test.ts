@@ -20,7 +20,7 @@ import { describe, it, expect } from 'vitest'
  * invocacion con un `agent` falso que contesta lo minimo que cada schema exige, y nada mas.
  */
 
-const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-roadmap.js')
+const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-conocimiento.js')
 
 type Llamada = { prompt: string; opts: Record<string, unknown> }
 type Corrida = { llamadas: Llamada[]; dichos: string[]; salida: Record<string, unknown> }

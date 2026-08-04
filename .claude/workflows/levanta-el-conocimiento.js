@@ -1,5 +1,5 @@
 export const meta = {
-  name: 'levanta-el-roadmap',
+  name: 'levanta-el-conocimiento',
   description: 'Muele lo platicado en un paso de la sesion y lo deja escrito como capacidades, modulos y reglas enlazadas, medidas contra el examen que se levanto antes de construirlas.',
   whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan dudas por cerrar; se vuelve a correr con las respuestas.',
   phases: [

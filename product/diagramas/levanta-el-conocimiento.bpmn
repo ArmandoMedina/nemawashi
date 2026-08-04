@@ -8,14 +8,15 @@
     <bpmn:textAnnotation id="Nota_vueltas">
       <bpmn:text>Dos vueltas y ya. El tope lo pone el código, no el agente: sin tope, cada revisión encuentra algo más y no se escribe nunca.</bpmn:text>
     </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_inventario">
+      <bpmn:text>Sin esto, cada paso vuelve a proponer lo mismo con otro número. Trae la firmeza y la fecha de lo ya escrito: sin la fecha, dos reglas que chocan no dicen cuál es la vieja — y ahí está la diferencia entre un duplicado y una contradicción.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_inventario" sourceRef="T_inventariar" targetRef="Nota_inventario" />
     <bpmn:textAnnotation id="Nota_escribir">
       <bpmn:text>Se escribe aunque la medición haya fallado. Lo que no se vale es escribir sin marca: el defecto silencioso es lo único que jidoka prohíbe.</bpmn:text>
     </bpmn:textAnnotation>
     <bpmn:textAnnotation id="Nota_marcar">
-      <bpmn:text>El estado va en el archivo de la capacidad, en un campo que se pueda buscar — no en el reporte de la corrida. La sesión siguiente abre por ahí.</bpmn:text>
-    </bpmn:textAnnotation>
-    <bpmn:textAnnotation id="Nota_guion">
-      <bpmn:text>Ésta y `Gestionar las preguntas` son del auditor, pero su carta todavía no existe. Ahí está el trabajo real de rehacer el molino: dos cartas nuevas, no código.</bpmn:text>
+      <bpmn:text>Aquí el dictamen llega al archivo. El estado va en un campo que se pueda buscar — no en el reporte, que muere al cerrar la terminal. Es el único momento en que se toca algo ya escrito: se marca y se agrega, nunca se borra ni se reescribe.</bpmn:text>
     </bpmn:textAnnotation>
     <bpmn:association id="Asoc_vueltas" sourceRef="GW_vueltas" targetRef="Nota_vueltas" />
     <bpmn:association id="Asoc_escribir" sourceRef="T_asentar" targetRef="Nota_escribir" />
@@ -24,7 +25,6 @@
     <bpmn:textAnnotation id="Nota_cierre">
       <bpmn:text>Escrito no es lo mismo que listo. Si algo quedó marcado, el paso cierra con huecos — y de ese estado no se deriva nada río abajo hasta que se cierren.</bpmn:text>
     </bpmn:textAnnotation>
-    <bpmn:association id="Asoc_guion" sourceRef="T_guion" targetRef="Nota_guion" />
   </bpmn:collaboration>
   <bpmn:process id="Proceso_molino" name="Levantar el conocimiento de un paso" isExecutable="false">
     <bpmn:laneSet id="Carriles">
@@ -39,6 +39,7 @@
         <bpmn:flowNodeRef>GW_construccion</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>GW_medida</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>GW_vueltas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_inventariar</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_corregir</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_auditar</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>T_sacar</bpmn:flowNodeRef>
@@ -78,6 +79,10 @@
       <bpmn:outgoing>F_gw4_corregir</bpmn:outgoing>
       <bpmn:outgoing>F_gw4_asentar</bpmn:outgoing>
     </bpmn:exclusiveGateway>
+    <bpmn:task id="T_inventariar" name="Inventariar lo ya escrito">
+      <bpmn:incoming>F_sacar_inventario</bpmn:incoming>
+      <bpmn:outgoing>F_inventario_vara</bpmn:outgoing>
+    </bpmn:task>
     <bpmn:task id="T_corregir" name="Corregir lo marcado">
       <bpmn:incoming>F_gw4_corregir</bpmn:incoming>
       <bpmn:outgoing>F_corregir_construir</bpmn:outgoing>
@@ -91,13 +96,13 @@
       <bpmn:incoming>F_asentar_auditar</bpmn:incoming>
       <bpmn:outgoing>F_auditar_marcar</bpmn:outgoing>
     </bpmn:task>
-    <bpmn:task id="T_marcar" name="Marcar lo que quedó a medias">
+    <bpmn:task id="T_marcar" name="Marcar lo que el auditor encontró">
       <bpmn:incoming>F_auditar_marcar</bpmn:incoming>
       <bpmn:outgoing>F_marcar_guion</bpmn:outgoing>
     </bpmn:task>
     <bpmn:subProcess id="T_sacar" name="Extraer conversación">
       <bpmn:incoming>F_inicio_sacar</bpmn:incoming>
-      <bpmn:outgoing>F_sacar_vara</bpmn:outgoing>
+      <bpmn:outgoing>F_sacar_inventario</bpmn:outgoing>
       <bpmn:startEvent id="H0_inicio" name="Grabación cruda">
         <bpmn:outgoing>H0_f1</bpmn:outgoing>
       </bpmn:startEvent>
@@ -154,7 +159,7 @@
       <bpmn:association id="H0_asoc_texto" sourceRef="H0_texto" targetRef="H0_nota_texto" />
     </bpmn:subProcess>
     <bpmn:subProcess id="T_vara" name="Gestionar las preguntas">
-      <bpmn:incoming>F_sacar_vara</bpmn:incoming>
+      <bpmn:incoming>F_inventario_vara</bpmn:incoming>
       <bpmn:outgoing>F_vara_gw1</bpmn:outgoing>
       <bpmn:startEvent id="H1_inicio" name="Plática lista">
         <bpmn:outgoing>H1_f1</bpmn:outgoing>
@@ -221,7 +226,7 @@
         <bpmn:incoming>H3_f2</bpmn:incoming>
         <bpmn:outgoing>H3_f3</bpmn:outgoing>
       </bpmn:task>
-      <bpmn:task id="H3_modulos" name="Proponer los módulos">
+      <bpmn:task id="H3_modulos" name="Proponer módulos y dominios">
         <bpmn:incoming>H3_f3</bpmn:incoming>
         <bpmn:outgoing>H3_f4</bpmn:outgoing>
       </bpmn:task>
@@ -279,7 +284,7 @@
       </bpmn:textAnnotation>
       <bpmn:association id="H3_asoc" sourceRef="H3_marcar" targetRef="H3_nota" />
       <bpmn:textAnnotation id="H3_nota_enlazar">
-        <bpmn:text>El enlace va en los dos sentidos: la capacidad lista sus reglas y la regla nombra su capacidad. Las preguntas se hacen desde los dos lados.</bpmn:text>
+        <bpmn:text>Cuatro niveles, y el enlace va en los dos sentidos en cada salto: dominio ⇄ módulo ⇄ capacidad ⇄ regla. Las preguntas se hacen desde los dos lados. Lo que separa un dominio de un módulo no es el tamaño: es quién lo sabe.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:association id="H3_asoc_enlazar" sourceRef="H3_enlazar" targetRef="H3_nota_enlazar" />
       <bpmn:textAnnotation id="H3_nota_dudas">
@@ -373,7 +378,8 @@
     <bpmn:sequenceFlow id="F_guion_fin" sourceRef="T_guion" targetRef="GW_cierre" />
     <bpmn:sequenceFlow id="F_cierre_listo" name="sin pendientes" sourceRef="GW_cierre" targetRef="Fin" />
     <bpmn:sequenceFlow id="F_cierre_huecos" name="con pendientes" sourceRef="GW_cierre" targetRef="Fin_huecos" />
-    <bpmn:sequenceFlow id="F_sacar_vara" sourceRef="T_sacar" targetRef="T_vara" />
+    <bpmn:sequenceFlow id="F_sacar_inventario" sourceRef="T_sacar" targetRef="T_inventariar" />
+    <bpmn:sequenceFlow id="F_inventario_vara" sourceRef="T_inventariar" targetRef="T_vara" />
     <bpmn:sequenceFlow id="F_gw2_paro" name="con dudas" sourceRef="GW_construccion" targetRef="Paro_construccion" />
     <bpmn:endEvent id="Paro_construccion" name="Dudas devueltas al experto">
       <bpmn:incoming>F_gw2_paro</bpmn:incoming>
@@ -398,14 +404,14 @@
   <bpmndi:BPMNDiagram id="D_padre">
     <bpmndi:BPMNPlane id="P_padre" bpmnElement="Colaboracion_molino">
       <bpmndi:BPMNShape id="S_Pool" bpmnElement="Pool_molino" isHorizontal="true">
-        <dc:Bounds x="155" y="80" width="2071" height="740" />
+        <dc:Bounds x="155" y="80" width="2071" height="800" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Lane_auditor" bpmnElement="Lane_auditor" isHorizontal="true">
         <dc:Bounds x="185" y="80" width="2041" height="540" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Lane_escribano" bpmnElement="Lane_escribano" isHorizontal="true">
-        <dc:Bounds x="185" y="620" width="2041" height="180" />
+        <dc:Bounds x="185" y="620" width="2041" height="260" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Inicio" bpmnElement="Inicio">
         <dc:Bounds x="215" y="132" width="36" height="36" />
@@ -443,6 +449,9 @@
           <dc:Bounds x="1160" y="342" width="90" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_inventariar" bpmnElement="T_inventariar">
+        <dc:Bounds x="285" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_T_corregir" bpmnElement="T_corregir">
         <dc:Bounds x="995" y="270" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -454,6 +463,24 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_T_marcar" bpmnElement="T_marcar">
         <dc:Bounds x="1715" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_sacar" bpmnElement="T_sacar" isExpanded="false">
+        <dc:Bounds x="285" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_vara" bpmnElement="T_vara" isExpanded="false">
+        <dc:Bounds x="435" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_construir" bpmnElement="T_construir" isExpanded="false">
+        <dc:Bounds x="725" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_medir" bpmnElement="T_medir" isExpanded="false">
+        <dc:Bounds x="1015" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Paro_construccion" bpmnElement="Paro_construccion">
+        <dc:Bounds x="882" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="859" y="263" width="82" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_T_guion" bpmnElement="T_guion">
         <dc:Bounds x="1875" y="360" width="100" height="80" />
@@ -474,28 +501,6 @@
           <dc:Bounds x="2001" y="545" width="98" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_T_sacar" bpmnElement="T_sacar" isExpanded="false">
-        <dc:Bounds x="285" y="110" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_T_vara" bpmnElement="T_vara" isExpanded="false">
-        <dc:Bounds x="435" y="440" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_T_construir" bpmnElement="T_construir" isExpanded="false">
-        <dc:Bounds x="725" y="110" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_T_medir" bpmnElement="T_medir" isExpanded="false">
-        <dc:Bounds x="1015" y="110" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Paro_construccion" bpmnElement="Paro_construccion">
-        <dc:Bounds x="882" y="222" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="859" y="263" width="82" height="27" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="E_asoc_cierre" bpmnElement="Asoc_cierre">
-        <di:waypoint x="2042" y="383" />
-        <di:waypoint x="2007" y="290" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="E1" bpmnElement="F_inicio_sacar">
         <di:waypoint x="251" y="150" />
         <di:waypoint x="285" y="150" />
@@ -605,9 +610,13 @@
           <dc:Bounds x="2064" y="449" width="75" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E2" bpmnElement="F_sacar_vara">
-        <di:waypoint x="385" y="150" />
-        <di:waypoint x="410" y="150" />
+      <bpmndi:BPMNEdge id="E2" bpmnElement="F_sacar_inventario">
+        <di:waypoint x="335" y="190" />
+        <di:waypoint x="335" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_inventario_vara" bpmnElement="F_inventario_vara">
+        <di:waypoint x="385" y="330" />
+        <di:waypoint x="410" y="330" />
         <di:waypoint x="410" y="480" />
         <di:waypoint x="435" y="480" />
       </bpmndi:BPMNEdge>
@@ -618,43 +627,48 @@
           <dc:Bounds x="913" y="187" width="51" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E_asoc_marcar" bpmnElement="Asoc_marcar">
-        <di:waypoint x="1715" y="695" />
-        <di:waypoint x="1675" y="704" />
+      <bpmndi:BPMNEdge id="E_asoc_cierre" bpmnElement="Asoc_cierre">
+        <di:waypoint x="2042" y="383" />
+        <di:waypoint x="2007" y="290" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E_asoc_guion" bpmnElement="Asoc_guion">
-        <di:waypoint x="1875" y="415" />
-        <di:waypoint x="1845" y="435" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E_asoc_vueltas" bpmnElement="Asoc_vueltas">
-        <di:waypoint x="1173" y="318" />
-        <di:waypoint x="1121" y="360" />
+      <bpmndi:BPMNEdge id="E_asoc_inventario" bpmnElement="Asoc_inventario">
+        <di:waypoint x="385" y="302" />
+        <di:waypoint x="441" y="280" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="S_Nota_preguntas" bpmnElement="Nota_preguntas">
         <dc:Bounds x="270" y="517" width="140" height="86" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_vueltas" bpmnElement="Nota_vueltas">
+        <dc:Bounds x="1060" y="360" width="120" height="129" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Nota_escribir" bpmnElement="Nota_escribir">
         <dc:Bounds x="1185" y="730" width="240" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="E_asoc_escribir" bpmnElement="Asoc_escribir">
-        <di:waypoint x="1325" y="720" />
-        <di:waypoint x="1310" y="730" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="E_asoc_preguntas" bpmnElement="Asoc_preguntas">
-        <di:waypoint x="473" y="520" />
-        <di:waypoint x="410" y="556" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="S_Nota_marcar" bpmnElement="Nota_marcar">
         <dc:Bounds x="1550" y="650" width="125" height="144" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_Nota_cierre" bpmnElement="Nota_cierre">
         <dc:Bounds x="1870" y="200" width="250" height="90" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Nota_guion" bpmnElement="Nota_guion">
-        <dc:Bounds x="1720" y="400" width="125" height="144" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_Nota_vueltas" bpmnElement="Nota_vueltas">
-        <dc:Bounds x="1060" y="360" width="120" height="129" />
+      <bpmndi:BPMNEdge id="E_asoc_vueltas" bpmnElement="Asoc_vueltas">
+        <di:waypoint x="1173" y="318" />
+        <di:waypoint x="1121" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_escribir" bpmnElement="Asoc_escribir">
+        <di:waypoint x="1325" y="720" />
+        <di:waypoint x="1310" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_marcar" bpmnElement="Asoc_marcar">
+        <di:waypoint x="1715" y="695" />
+        <di:waypoint x="1675" y="704" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_preguntas" bpmnElement="Asoc_preguntas">
+        <di:waypoint x="473" y="520" />
+        <di:waypoint x="410" y="556" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_Nota_inventario" bpmnElement="Nota_inventario">
+        <dc:Bounds x="410" y="180" width="242.6956938667658" height="100" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
