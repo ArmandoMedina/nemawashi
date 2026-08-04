@@ -4,10 +4,11 @@ modulo: El registro de lo que se dijo: lo que queda escrito, con su firmeza y su
 capacidades: [CAP-0006, CAP-0007, CAP-0008, CAP-0012]
 firmeza: dicho
 origen: propuesto
-estado: completa
+estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-04T15:19:13-06:00
 ---
 
 <modulo>
@@ -38,7 +39,9 @@ dónde va una capacidad nueva que sólo toca lo escrito.
 </de-donde-salio>
 
 <que-queda-abierto>
-nada
+Auditoría del 2026-08-04:
+
+- Mal marcado. Enlace de un solo lado, DOM-0001 → MOD-0002. Este archivo no tiene siquiera campo `dominio` en su frontmatter, así que no nombra de vuelta a `product/conocimiento/dominios/0001-el-levantamiento-hablado-del-negocio.md`, que en su línea 4 lo lista dentro de `modulos: [MOD-0004, MOD-0002]`. Y contradice lo que el mismo DOM-0001 argumenta en sus líneas 37 y 45: ahí deja fuera a MOD-0001 y MOD-0003 precisamente por no dejar «un enlace escrito de un solo lado», y a MOD-0002 lo lista aunque está exactamente en la misma condición («Los dos están en disco sin campo de dominio en su frontmatter, medido» — cierto también de MOD-0002).
 </que-queda-abierto>
 
 </modulo>

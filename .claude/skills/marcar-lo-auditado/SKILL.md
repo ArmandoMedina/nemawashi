@@ -119,6 +119,7 @@ que estar marcadas para que llegue a hacerse.
 <regla>**No tocas un archivo que el dictamen no nombre.** Aunque al abrirlo veas algo que te parezca mal: eso no lo mediste tú.</regla>
 <regla>**No creas piezas nuevas.** Lo perdido se reporta, no se escribe.</regla>
 <regla>**No escribes fuera de `product/conocimiento/`.**</regla>
+<regla>**Ninguna ruta que escribas empieza con letra de unidad.** Cuando la marca nombra otro archivo, se nombra desde la raíz del repositorio: `product/conocimiento/reglas/0001-...md`, con barras normales. Una ruta de la máquina donde corrió la corrida no le sirve a nadie que abra el archivo en otra parte, y es de lo que no entra a un archivo versionado. Lo mismo con un número de línea: cambia con la siguiente edición y nadie lo mide.</regla>
 </reglas-duras>
 
 <entregable>

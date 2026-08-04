@@ -4,10 +4,11 @@ regla: Nemawashi se instala y se abre como cualquier programa: ni terminal ni un
 capacidades: [CAP-0001]
 firmeza: dicho
 origen: escuchado
-estado: completa
+estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-04T15:19:13-06:00
 ---
 
 <regla>
@@ -24,7 +25,10 @@ Del primer turno del experto, cuando se le pidió que contara qué es esto y qu�
 </de-donde-salio>
 
 <que-queda-abierto>
-nada
+Auditoría del 2026-08-04:
+
+- Mal marcado. Enlace de un solo lado, CAP-0015 → REG-0001. `product/conocimiento/capacidades/0015-instalar-y-abrir-como-cualquier-programa.md` línea 5 declara `reglas: [REG-0001]`, y este archivo (REG-0001) tiene `capacidades: [CAP-0001]` — no la nombra de vuelta. La plantilla de capacidades: «reglas — ... Cada una tiene que nombrarla de vuelta».
+- Mal marcado. Enlace de un solo lado, CAP-0016 → REG-0001. `product/conocimiento/capacidades/0016-construir-hablando-el-mapa-del-sistema.md` línea 5 declara `reglas: [REG-0001]`, y este archivo (REG-0001) sigue con `capacidades: [CAP-0001]`, sin nombrarla de vuelta.
 </que-queda-abierto>
 
 </regla>
