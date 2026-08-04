@@ -59,7 +59,10 @@ const SACADO = {
 // El inventario trae el rengon de cada pieza que ya esta escrita, no su cuerpo: el cuerpo no
 // cabria, y para saber si algo ya se dijo basta el renglon. Trae `firmeza` y `alta` porque sin
 // ellas quien construye ve dos reglas que chocan y no sabe cual es la vieja ni que tan cerrada
-// quedo -y esa es justo la diferencia entre un duplicado y una contradiccion.
+// quedo -y esa es justo la diferencia entre un duplicado y una contradiccion. Trae `origen`
+// porque ese campo ya existe en las 36 piezas escritas -`escuchado` o `propuesto`, definido en
+// `product/conocimiento/README.md`-, y sin verlo aqui quien construye no sabe que ya esta
+// resuelto y lo vuelve a preguntar.
 const INVENTARIO = {
   type: 'object',
   required: ['piezas'],
@@ -75,6 +78,7 @@ const INVENTARIO = {
           tipo: { type: 'string', enum: ['dominio', 'modulo', 'capacidad', 'regla'] },
           renglon: { type: 'string', description: 'El campo de una linea del frontmatter, copiado tal cual.' },
           firmeza: { type: 'string', enum: ['dicho', 'confirmado', 'abierto'] },
+          origen: { type: 'string', enum: ['escuchado', 'propuesto'], description: 'El campo de una linea del frontmatter, copiado tal cual.' },
           alta: { type: 'string', description: 'Cuando se escribio. Es lo que dice cual es la vieja cuando dos chocan.' },
           estado: { type: 'string', enum: ['completa', 'con-huecos'] }
         }
@@ -685,8 +689,8 @@ function promptParaInventariar() {
     '',
     'De cada archivo `NNNN-*.md` -**no de las plantillas `0000-plantilla.md`, ni del README**- saca',
     'del frontmatter: el `id`, el renglon de una linea (`dominio`, `modulo`, `capacidad` o `regla`',
-    'segun la carpeta), la `firmeza`, el `alta` y el `estado`. **El cuerpo no**: no cabe y no hace',
-    'falta para saber si algo ya se dijo.',
+    'segun la carpeta), la `firmeza`, el `origen`, el `alta` y el `estado`. **El cuerpo no**: no cabe',
+    'y no hace falta para saber si algo ya se dijo.',
     '',
     'Si una carpeta no existe todavia, no es un error: es la primera corrida. Devuelve lo que si',
     'haya y sigue. Si una carpeta existe y no la pudiste leer, eso si se dice en `noSePudo`.',
@@ -712,32 +716,42 @@ function promptParaElExamen(paso, platica) {
   ].join('\n')
 }
 
-// Solo lo ya escrito del mismo tipo tiene sentido mostrarle a cada llamada: a quien construye
-// reglas no le ayuda ver modulos viejos, y verlos es lo que lo tentaria a citarlos.
-function piezasDelInventario(inventario, ...tipos) {
-  const piezas = inventario ? inventario.piezas : []
-  return piezas.filter((p) => tipos.indexOf(p.tipo) !== -1)
+// Lo que se filtra es que se le pide ESCRIBIR a cada llamada -eso ya lo hace su propio esquema,
+// mas abajo-, no que se le deja VER: por eso el indice completo, de los cuatro tipos, va a las
+// cuatro llamadas por igual. Medido en corrida real el 2026-08-04: al constructor de reglas solo
+// le llegaba el indice de reglas, y cuatro enunciados que ya vivian escritos como capacidades no
+// los cazo por eso -los caso leyendo el disco por su cuenta, que nadie le habia pedido.
+function piezasYaEscritas(inventario) {
+  return inventario ? inventario.piezas : []
 }
 
-// Lo que las cuatro llamadas de «Construir» comparten: lo ya escrito, el aviso de segunda corrida,
-// las reglas de los `id` de trabajo, la prohibicion de estampar paso/alta/confirmado/estado, y el
-// examen que no se puede tocar. Antes vivia una sola vez porque habia una sola llamada.
-function bloqueComunDeConstruir(examen, piezasYaEscritas, segundaCorrida) {
+// Lo que las cuatro llamadas de «Construir» comparten: el indice completo de lo ya escrito, el
+// aviso de segunda corrida, las reglas de los `id` de trabajo, la prohibicion de estampar
+// paso/alta/confirmado/estado, y el examen que no se puede tocar. Antes vivia una sola vez porque
+// habia una sola llamada. `queDevuelve` nombra el tipo que le toca a ESTA llamada -`reglas`,
+// `capacidades`, `modulos` o `dominios`- para poder aclarar la diferencia: el indice de abajo
+// trae los cuatro tipos, pero lo unico que esta llamada devuelve es el suyo.
+function bloqueComunDeConstruir(examen, indiceCompleto, segundaCorrida, queDevuelve) {
   return [
-    piezasYaEscritas.length > 0
+    indiceCompleto.length > 0
       ? [
-          '--- Lo que otras sesiones YA escribieron ---',
+          '--- Lo que otras sesiones YA escribieron, en las cuatro carpetas ---',
           '',
-          '**Leelo antes de proponer nada.** Lo que ya este aqui no se vuelve a escribir: se enlaza, o',
-          'se dice que esta platica lo completa, y entonces esa pieza vuelve **con su id de carpeta**',
-          '-no con uno de trabajo- y solo con lo que cambia.',
+          `**Esto es TODO lo que ya existe -dominios, modulos, capacidades y reglas-, no solo`,
+          `${queDevuelve}: cotejar contra los cuatro tipos es lo que deja cazar que algo de hoy ya`,
+          `vive escrito, aunque hoy viviera de otro tipo. Tu SIGUES devolviendo solo ${queDevuelve}`,
+          '-eso no cambia-, pero leelo entero antes de proponer nada.**',
+          '',
+          'Lo que ya este aqui no se vuelve a escribir: se enlaza, o se dice que esta platica lo',
+          'completa, y entonces esa pieza vuelve **con su id de carpeta** -no con uno de trabajo- y',
+          'solo con lo que cambia.',
           '',
           'Y si lo de hoy **no puede ser cierto al mismo tiempo** que algo de aqui, eso no es un',
           'duplicado: es una contradiccion, y va a las dudas con las dos fechas en la mano. Nunca la',
           'sobrescribas en silencio y nunca decidas tu cual gana -que lo de hoy sea mas nuevo no lo',
           'hace mas cierto.',
           '',
-          JSON.stringify(piezasYaEscritas, null, 2)
+          JSON.stringify(indiceCompleto, null, 2)
         ].join('\n')
       : '--- Es la primera corrida del proyecto: no hay nada escrito todavia ---',
     '',
@@ -770,8 +784,11 @@ function bloqueComunDeConstruir(examen, piezasYaEscritas, segundaCorrida) {
 // -que citan esos modulos. La razon es de tamano, no de metodo: el registro entero pesaba 7806
 // caracteres serializados y el clasificador de seguridad lo rechazo en una corrida real, medido
 // el 2026-08-04. Todas reciben lo mismo que antes recibia la unica llamada -el examen, lo que
-// dijo el experto, si es segunda corrida, lo ya escrito de su propio tipo-; las tres ultimas
-// reciben ademas lo que ya construyo la que corrio justo antes, porque agrupan sobre ello.
+// dijo el experto, si es segunda corrida, el indice completo de lo ya escrito-; las tres ultimas
+// reciben ademas TODO lo que ya se construyo en esta corrida, no solo lo de la llamada
+// inmediata anterior: quien arma dominios agrupa modulos, pero tambien tiene que poder ver las
+// capacidades y las reglas de las que esos modulos salieron. Medido en corrida real el
+// 2026-08-04: sin esto, quien construia dominios solo veia modulos.
 
 function promptParaConstruirReglas(paso, loQueDijoElExperto, examen, segundaCorrida, inventario) {
   return [
@@ -784,7 +801,7 @@ function promptParaConstruirReglas(paso, loQueDijoElExperto, examen, segundaCorr
     'vacio en cada regla.** No es un hueco: el codigo enlaza ese lado solo, en cuanto las',
     'capacidades ya existan.',
     '',
-    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'regla'), segundaCorrida),
+    bloqueComunDeConstruir(examen, piezasYaEscritas(inventario), segundaCorrida, 'reglas'),
     '',
     '--- Lo que dijo el experto ---',
     loQueDijoElExperto
@@ -802,9 +819,9 @@ function promptParaConstruirCapacidades(paso, loQueDijoElExperto, examen, segund
     'cada capacidad.** No es un hueco: el codigo enlaza ese lado solo, en cuanto los modulos ya',
     'existan.',
     '',
-    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'capacidad'), segundaCorrida),
+    bloqueComunDeConstruir(examen, piezasYaEscritas(inventario), segundaCorrida, 'capacidades'),
     '',
-    '--- Las reglas que ya se construyeron ---',
+    '--- Las reglas que ya se construyeron en esta corrida ---',
     JSON.stringify(reglas, null, 2),
     '',
     '--- Lo que dijo el experto ---',
@@ -812,7 +829,7 @@ function promptParaConstruirCapacidades(paso, loQueDijoElExperto, examen, segund
   ].join('\n')
 }
 
-function promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, capacidades) {
+function promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, capacidades, reglas) {
   return [
     'Carga tu carta `construir-el-registro` antes de medir nada.',
     '',
@@ -823,27 +840,36 @@ function promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCor
     'cada modulo.** No es un hueco: el codigo enlaza ese lado solo, en cuanto los dominios ya',
     'existan.',
     '',
-    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'modulo'), segundaCorrida),
+    bloqueComunDeConstruir(examen, piezasYaEscritas(inventario), segundaCorrida, 'modulos'),
     '',
-    '--- Las capacidades que ya se construyeron ---',
+    '--- Las capacidades que ya se construyeron en esta corrida ---',
     JSON.stringify(capacidades, null, 2),
+    '',
+    '--- Las reglas que ya se construyeron en esta corrida ---',
+    JSON.stringify(reglas, null, 2),
     '',
     '--- Lo que dijo el experto ---',
     loQueDijoElExperto
   ].join('\n')
 }
 
-function promptParaConstruirDominios(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, modulos) {
+function promptParaConstruirDominios(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, modulos, capacidades, reglas) {
   return [
     'Carga tu carta `construir-el-registro` antes de medir nada.',
     '',
     `Arma los dominios del paso "${paso}", agrupando los modulos de abajo -son los que puedes citar`,
     'en `modulos`.',
     '',
-    bloqueComunDeConstruir(examen, piezasDelInventario(inventario, 'dominio'), segundaCorrida),
+    bloqueComunDeConstruir(examen, piezasYaEscritas(inventario), segundaCorrida, 'dominios'),
     '',
-    '--- Los modulos que ya se construyeron ---',
+    '--- Los modulos que ya se construyeron en esta corrida ---',
     JSON.stringify(modulos, null, 2),
+    '',
+    '--- Las capacidades que ya se construyeron en esta corrida ---',
+    JSON.stringify(capacidades, null, 2),
+    '',
+    '--- Las reglas que ya se construyeron en esta corrida ---',
+    JSON.stringify(reglas, null, 2),
     '',
     '--- Lo que dijo el experto ---',
     loQueDijoElExperto
@@ -1265,7 +1291,9 @@ if (!construidoCapacidades) {
 const reglasEnlazadas = conLasCapacidadesEnlazadas(construidoReglas.reglas, construidoCapacidades.capacidades)
 
 const construidoModulos = await agent(
-  promptParaConstruirModulos(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoCapacidades.capacidades),
+  promptParaConstruirModulos(
+    paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoCapacidades.capacidades, construidoReglas.reglas
+  ),
   { label: `construir:modulos:${paso}`, phase: 'Construir', agentType: 'auditor', schema: CONSTRUIR_MODULOS }
 )
 
@@ -1278,7 +1306,10 @@ if (!construidoModulos) {
 const capacidadesEnlazadas = conElModuloEnlazado(construidoCapacidades.capacidades, construidoModulos.modulos)
 
 const construidoDominios = await agent(
-  promptParaConstruirDominios(paso, loQueDijoElExperto, examen, segundaCorrida, inventario, construidoModulos.modulos),
+  promptParaConstruirDominios(
+    paso, loQueDijoElExperto, examen, segundaCorrida, inventario,
+    construidoModulos.modulos, construidoCapacidades.capacidades, construidoReglas.reglas
+  ),
   { label: `construir:dominios:${paso}`, phase: 'Construir', agentType: 'auditor', schema: CONSTRUIR_DOMINIOS }
 )
 

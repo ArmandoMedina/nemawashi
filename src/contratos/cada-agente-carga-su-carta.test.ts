@@ -857,3 +857,96 @@ describe('las cuatro llamadas de «Construir» cargan la carta que les toca', ()
     }
   })
 })
+
+/**
+ * Medido en corrida real, el 2026-08-04: al constructor de reglas solo le llegaba el indice de
+ * reglas -no el de capacidades, modulos ni dominios-, y cuatro enunciados que ya vivian escritos
+ * como capacidades no los cazo por eso: los caso leyendo el disco por su cuenta, que nadie le
+ * habia pedido. En la misma corrida, el constructor de dominios vio solo los modulos que agrupa
+ * y no las reglas ni las capacidades de mas abajo.
+ *
+ * Lo que se filtra es que se le pide ESCRIBIR a cada llamada -eso ya lo hace su propio esquema-,
+ * no que se le deja VER: por eso el indice completo, de los cuatro tipos, tiene que llegar a las
+ * cuatro llamadas, y cada una tiene que ver tambien lo que construyeron las que corrieron antes
+ * en esta misma corrida, no solo la inmediata anterior.
+ */
+describe('las cuatro llamadas de «Construir» ven el indice completo, no solo el de su propio tipo', () => {
+  const PIEZA_CAPACIDAD_YA_ESCRITA = {
+    id: 'CAP-0001',
+    tipo: 'capacidad',
+    renglon: 'Dar credito a un taller nuevo, ya escrito en otra sesion',
+    firmeza: 'confirmado',
+    origen: 'escuchado',
+    alta: '2026-07-01T10:00:00-06:00',
+    estado: 'completa'
+  }
+
+  const INVENTARIO_CUATRO_TIPOS = {
+    piezas: [
+      {
+        id: 'DOM-0001',
+        tipo: 'dominio',
+        renglon: 'Credito y cobranza, ya escrito en otra sesion',
+        firmeza: 'confirmado',
+        origen: 'propuesto',
+        alta: '2026-07-01T10:00:00-06:00',
+        estado: 'completa'
+      },
+      {
+        id: 'MOD-0001',
+        tipo: 'modulo',
+        renglon: 'Credito, ya escrito en otra sesion',
+        firmeza: 'confirmado',
+        origen: 'propuesto',
+        alta: '2026-07-01T10:00:00-06:00',
+        estado: 'completa'
+      },
+      PIEZA_CAPACIDAD_YA_ESCRITA,
+      {
+        id: 'REG-0001',
+        tipo: 'regla',
+        renglon: 'A un taller con menos de tres meses no se le fia, ya escrito en otra sesion',
+        firmeza: 'confirmado',
+        origen: 'escuchado',
+        alta: '2026-07-01T10:00:00-06:00',
+        estado: 'completa'
+      }
+    ]
+  }
+
+  it('cada una de las cuatro llamadas ve las piezas ya escritas de los cuatro tipos, no solo del suyo', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { inventario: INVENTARIO_CUATRO_TIPOS })
+
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      for (const pieza of INVENTARIO_CUATRO_TIPOS.piezas) {
+        expect(construir.prompt, `${prefijo} no ve ${pieza.id} (${pieza.tipo})`).toContain(pieza.id)
+      }
+    }
+  })
+
+  it('el indice trae `origen`, y llega al prompt de las cuatro llamadas', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { inventario: INVENTARIO_CUATRO_TIPOS })
+
+    for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
+      const construir = llamadaDe(llamadas, 'Construir', prefijo)
+      expect(construir.prompt, `${prefijo} no ve el origen`).toContain('"origen": "escuchado"')
+    }
+  })
+
+  it('la llamada de dominios ve las reglas y las capacidades de esta corrida, no solo los modulos que agrupa', async () => {
+    const { llamadas } = await correrMolino(ENTRADA)
+    const dominios = llamadaDe(llamadas, 'Construir', 'construir:dominios')
+
+    expect(dominios.prompt, 'no ve la regla que se construyo en esta corrida').toContain(REGLA.renglon)
+    expect(dominios.prompt, 'no ve la capacidad que se construyo en esta corrida').toContain(CAPACIDAD.renglon)
+  })
+
+  it('cada llamada sigue sabiendo que le toca escribir, aunque vea los otros tres tipos', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, { inventario: INVENTARIO_CUATRO_TIPOS })
+    const reglas = llamadaDe(llamadas, 'Construir', 'construir:reglas')
+
+    expect(reglas.prompt, 'ya no dice que arma reglas').toContain('Arma las reglas dichas')
+    expect(reglas.prompt, 'no ve la capacidad ya escrita').toContain(PIEZA_CAPACIDAD_YA_ESCRITA.renglon)
+  })
+})

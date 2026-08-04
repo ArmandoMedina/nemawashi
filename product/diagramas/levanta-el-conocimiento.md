@@ -78,10 +78,17 @@ siguiente más grande del molino.
 - **El bucle es de multi-instancia secuencial**, no paralela. Los tramos corren en fila porque cada
   uno ve el renglón de lo que los anteriores propusieron —con su firmeza y su fecha—, y eso es lo
   que permite cazar una contradicción entre el principio y el final de una junta larga.
-- **`Proponer módulos y dominios` corre una sola vez**, al final, sobre todo lo que los tramos
-  juntaron. Agrupar es un acto y necesita el conjunto enfrente. **De abajo hacia arriba**: un
-  dominio puesto primero llegaría inventado, y los tres niveles de abajo colgarían de esa invención
-  sin que nadie pudiera desmentirla.
+- **`Proponer los módulos` y `Proponer los dominios` corren una sola vez**, al final, sobre todo lo
+  que los tramos juntaron. Agrupar es un acto y necesita el conjunto enfrente. **De abajo hacia
+  arriba**: un dominio puesto primero llegaría inventado, y los tres niveles de abajo colgarían de
+  esa invención sin que nadie pudiera desmentirla.
+- **Van en dos cajas por medición, no por diseño.** Juntas pesaban 3841 caracteres de esquema,
+  casi el doble del tope. Si el umbral del clasificador llega a medirse y da para tanto, vuelven a
+  ser una: es el mismo acto.
+- **Las cuatro llamadas ven el índice completo**, no sólo las piezas de su tipo. Lo que se filtra
+  es qué se le pide escribir, no qué se le deja ver — medido el 2026-08-04: quien sacaba reglas no
+  veía las capacidades ya escritas, y cuatro enunciados que ya vivían como capacidad estuvieron a
+  punto de volver a escribirse como regla.
 - **`Coser los enlaces en los dos sentidos`** refleja hacia abajo lo que el nivel de arriba declaró.
   Un solo lugar donde se dice quién contiene a quién.
 
@@ -123,7 +130,8 @@ Cinco objetos y un almacén, y cada uno responde una pregunta que el flujo de co
 | El flujo troncal, las diez fases y los dos frenos | **Corre** |
 | `Corregir lo marcado` yendo a *Medir*, no de vuelta a *Construir* | **Corre** — el dibujo se alineó al código |
 | Los objetos de datos | **Documentan** lo que el código ya hace |
-| `Construir` partido en varias llamadas | **En camino** |
+| `Construir` partido en cuatro llamadas, una por nivel | **Corre** — el mayor esquema pasó de 7806 a 1994 |
+| El índice completo a las cuatro llamadas | **Corre** |
 | El bucle por tramos, y el corte por tema | **No corre todavía** |
 
 ## Lo que la auditoría en frío dejó abierto

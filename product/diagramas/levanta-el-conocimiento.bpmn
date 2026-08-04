@@ -292,10 +292,17 @@
         </bpmn:textAnnotation>
         <bpmn:association id="TR_asoc_cazar" sourceRef="TR_cazar" targetRef="TR_nota_cazar" />
       </bpmn:subProcess>
-      <bpmn:task id="H3_modulos" name="Proponer módulos y dominios">
+      <bpmn:task id="H3_modulos" name="Proponer los módulos">
         <bpmn:incoming>H3_f3</bpmn:incoming>
-        <bpmn:outgoing>H3_f4</bpmn:outgoing>
+        <bpmn:outgoing>H3_f3b</bpmn:outgoing>
         <bpmn:dataInputAssociation id="DA_propuesto_modulos">
+          <bpmn:sourceRef>DO_propuesto_ref</bpmn:sourceRef>
+        </bpmn:dataInputAssociation>
+      </bpmn:task>
+      <bpmn:task id="H3_dominios" name="Proponer los dominios">
+        <bpmn:incoming>H3_f3b</bpmn:incoming>
+        <bpmn:outgoing>H3_f4</bpmn:outgoing>
+        <bpmn:dataInputAssociation id="DA_propuesto_dominios">
           <bpmn:sourceRef>DO_propuesto_ref</bpmn:sourceRef>
         </bpmn:dataInputAssociation>
       </bpmn:task>
@@ -327,7 +334,8 @@
       <bpmn:sequenceFlow id="H3_f1" sourceRef="H3_inicio" targetRef="H3_tramos" />
       <bpmn:sequenceFlow id="H3_f2" sourceRef="H3_tramos" targetRef="H3_tramo" />
       <bpmn:sequenceFlow id="H3_f3" sourceRef="H3_tramo" targetRef="H3_modulos" />
-      <bpmn:sequenceFlow id="H3_f4" sourceRef="H3_modulos" targetRef="H3_enlazar" />
+      <bpmn:sequenceFlow id="H3_f3b" sourceRef="H3_modulos" targetRef="H3_dominios" />
+      <bpmn:sequenceFlow id="H3_f4" sourceRef="H3_dominios" targetRef="H3_enlazar" />
       <bpmn:sequenceFlow id="H3_f6b" sourceRef="H3_enlazar" targetRef="H3_dudas" />
       <bpmn:sequenceFlow id="H3_f7" sourceRef="H3_dudas" targetRef="H3_gw" />
       <bpmn:sequenceFlow id="H3_f8" name="sí" sourceRef="H3_gw" targetRef="H3_gw2" />
@@ -347,9 +355,13 @@
       </bpmn:textAnnotation>
       <bpmn:association id="H3_asoc_propuesto" sourceRef="DO_propuesto_ref" targetRef="H3_nota_propuesto" />
       <bpmn:textAnnotation id="H3_nota_modulos">
-        <bpmn:text>Corre UNA vez, sobre todo lo que los tramos juntaron. Agrupar es un solo acto y necesita el conjunto enfrente. Un dominio nunca sale de la boca del experto. Cuando la plática no da para separar áreas, la carta manda: sale UN dominio, con `firmeza: abierto` y la pregunta puesta — no una lista vacía. Partir en tres lo que se habló en veinte minutos es inventar un reparto que nadie dijo.</bpmn:text>
+        <bpmn:text>Las dos corren UNA vez, sobre todo lo que los tramos juntaron: agrupar es un acto y necesita el conjunto enfrente. Van separadas porque juntas medían 3841 caracteres de esquema, casi el doble del tope — no porque sean dos actos distintos. Si el umbral del clasificador se llega a medir y da para tanto, vuelven a ser una.</bpmn:text>
       </bpmn:textAnnotation>
       <bpmn:association id="H3_asoc_modulos" sourceRef="H3_modulos" targetRef="H3_nota_modulos" />
+      <bpmn:textAnnotation id="H3_nota_dominios">
+        <bpmn:text>Un dominio nunca sale de la boca del experto. Cuando la plática no da para separar áreas, la carta manda: sale UN dominio, con `firmeza: abierto` y la pregunta puesta — no una lista vacía. Partir en tres lo que se habló en veinte minutos es inventar un reparto que nadie dijo. Lo que separa un dominio de un módulo no es el tamaño: es quién sabe contestar lo de adentro.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc_dominios" sourceRef="H3_dominios" targetRef="H3_nota_dominios" />
       <bpmn:textAnnotation id="H3_nota_enlazar">
         <bpmn:text>El de arriba declara a quién contiene; esta caja lo refleja hacia abajo. Un solo lugar donde se dice quién contiene a quién, y ningún agente puede contradecir al otro. Cuatro niveles: dominio ⇄ módulo ⇄ capacidad ⇄ regla.</bpmn:text>
       </bpmn:textAnnotation>
@@ -365,6 +377,7 @@
     </bpmn:subProcess>
     <bpmn:subProcess id="T_medir" name="Medir lo construido">
       <bpmn:incoming>F_gw2_medir</bpmn:incoming>
+      <bpmn:incoming>F_corregir_medir</bpmn:incoming>
       <bpmn:incoming>F_corregir_medir</bpmn:incoming>
       <bpmn:outgoing>F_medir_gw3</bpmn:outgoing>
       <bpmn:dataObjectReference id="DO_dicho_ref" dataObjectRef="DO_dicho" name="Lo que dijo el experto" />
@@ -962,34 +975,37 @@
       <bpmndi:BPMNShape id="S_H3_modulos" bpmnElement="H3_modulos">
         <dc:Bounds x="640" y="280" width="120" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_H3_enlazar" bpmnElement="H3_enlazar">
+      <bpmndi:BPMNShape id="S_H3_dominios" bpmnElement="H3_dominios">
         <dc:Bounds x="810" y="280" width="120" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="S_H3_dudas" bpmnElement="H3_dudas">
+      <bpmndi:BPMNShape id="S_H3_enlazar" bpmnElement="H3_enlazar">
         <dc:Bounds x="980" y="280" width="120" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_dudas" bpmnElement="H3_dudas">
+        <dc:Bounds x="1150" y="280" width="120" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_gw" bpmnElement="H3_gw">
-        <dc:Bounds x="1155" y="295" width="50" height="50" />
+        <dc:Bounds x="1325" y="295" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1134" y="265" width="92" height="27" />
+          <dc:Bounds x="1304" y="265" width="92" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_gw2" bpmnElement="H3_gw2">
-        <dc:Bounds x="1155" y="460" width="50" height="50" />
+        <dc:Bounds x="1325" y="460" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1130" y="516" width="101" height="27" />
+          <dc:Bounds x="1300" y="516" width="101" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_fin_sin" bpmnElement="H3_fin_sin">
-        <dc:Bounds x="1320" y="302" width="36" height="36" />
+        <dc:Bounds x="1490" y="302" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1311" y="345" width="55" height="14" />
+          <dc:Bounds x="1481" y="345" width="55" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_fin_con" bpmnElement="H3_fin_con">
-        <dc:Bounds x="1320" y="467" width="36" height="36" />
+        <dc:Bounds x="1490" y="467" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1311" y="510" width="56" height="14" />
+          <dc:Bounds x="1481" y="510" width="56" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_DO_tramos" bpmnElement="DO_tramos_ref">
@@ -1020,16 +1036,19 @@
         <dc:Bounds x="190" y="410" width="240" height="150" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_nota_modulos" bpmnElement="H3_nota_modulos">
-        <dc:Bounds x="590" y="410" width="230" height="115" />
+        <dc:Bounds x="560" y="410" width="220" height="135" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota_dominios" bpmnElement="H3_nota_dominios">
+        <dc:Bounds x="800" y="410" width="230" height="145" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_nota_enlazar" bpmnElement="H3_nota_enlazar">
-        <dc:Bounds x="850" y="590" width="230" height="105" />
+        <dc:Bounds x="1000" y="600" width="235" height="105" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_nota_dudas" bpmnElement="H3_nota_dudas">
-        <dc:Bounds x="950" y="410" width="210" height="90" />
+        <dc:Bounds x="1090" y="410" width="210" height="95" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_H3_nota_primera" bpmnElement="H3_nota_primera">
-        <dc:Bounds x="1240" y="590" width="260" height="95" />
+        <dc:Bounds x="1400" y="600" width="260" height="95" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="EH3_f1" bpmnElement="H3_f1">
         <di:waypoint x="196" y="320" />
@@ -1043,47 +1062,51 @@
         <di:waypoint x="580" y="320" />
         <di:waypoint x="640" y="320" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="EH3_f4" bpmnElement="H3_f4">
+      <bpmndi:BPMNEdge id="EH3_f3b" bpmnElement="H3_f3b">
         <di:waypoint x="760" y="320" />
         <di:waypoint x="810" y="320" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="EH3_f6b" bpmnElement="H3_f6b">
+      <bpmndi:BPMNEdge id="EH3_f4" bpmnElement="H3_f4">
         <di:waypoint x="930" y="320" />
         <di:waypoint x="980" y="320" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="EH3_f7" bpmnElement="H3_f7">
+      <bpmndi:BPMNEdge id="EH3_f6b" bpmnElement="H3_f6b">
         <di:waypoint x="1100" y="320" />
-        <di:waypoint x="1155" y="320" />
+        <di:waypoint x="1150" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_f7" bpmnElement="H3_f7">
+        <di:waypoint x="1270" y="320" />
+        <di:waypoint x="1325" y="320" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_f8" bpmnElement="H3_f8">
-        <di:waypoint x="1180" y="345" />
-        <di:waypoint x="1180" y="460" />
+        <di:waypoint x="1350" y="345" />
+        <di:waypoint x="1350" y="460" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1186" y="395" width="12" height="14" />
+          <dc:Bounds x="1356" y="395" width="12" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_f9" bpmnElement="H3_f9">
-        <di:waypoint x="1205" y="320" />
-        <di:waypoint x="1320" y="320" />
+        <di:waypoint x="1375" y="320" />
+        <di:waypoint x="1490" y="320" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1254" y="302" width="15" height="14" />
+          <dc:Bounds x="1424" y="302" width="15" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_f10" bpmnElement="H3_f10">
-        <di:waypoint x="1205" y="485" />
-        <di:waypoint x="1320" y="485" />
+        <di:waypoint x="1375" y="485" />
+        <di:waypoint x="1490" y="485" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1254" y="467" width="12" height="14" />
+          <dc:Bounds x="1424" y="467" width="12" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_f11" bpmnElement="H3_f11">
-        <di:waypoint x="1180" y="460" />
-        <di:waypoint x="1180" y="410" />
-        <di:waypoint x="1430" y="410" />
-        <di:waypoint x="1430" y="320" />
-        <di:waypoint x="1356" y="320" />
+        <di:waypoint x="1350" y="460" />
+        <di:waypoint x="1350" y="380" />
+        <di:waypoint x="1600" y="380" />
+        <di:waypoint x="1600" y="320" />
+        <di:waypoint x="1526" y="320" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="1310" y="388" width="15" height="14" />
+          <dc:Bounds x="1470" y="358" width="15" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EDA_tramos_out" bpmnElement="DA_tramos_out">
@@ -1111,6 +1134,11 @@
         <di:waypoint x="640" y="180" />
         <di:waypoint x="680" y="280" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EDA_propuesto_dominios" bpmnElement="DA_propuesto_dominios">
+        <di:waypoint x="646" y="165" />
+        <di:waypoint x="860" y="200" />
+        <di:waypoint x="868" y="280" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_asoc_cuantas" bpmnElement="H3_asoc_cuantas">
         <di:waypoint x="382" y="145" />
         <di:waypoint x="470" y="100" />
@@ -1125,7 +1153,11 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_asoc_modulos" bpmnElement="H3_asoc_modulos">
         <di:waypoint x="700" y="360" />
-        <di:waypoint x="700" y="410" />
+        <di:waypoint x="680" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc_dominios" bpmnElement="H3_asoc_dominios">
+        <di:waypoint x="870" y="360" />
+        <di:waypoint x="890" y="410" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="EH3_asoc_enlazar" bpmnElement="H3_asoc_enlazar">
         <di:waypoint x="890" y="360" />
