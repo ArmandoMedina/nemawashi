@@ -1,0 +1,1113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_molino" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Colaboracion_molino">
+    <bpmn:participant id="Pool_molino" name="El molino" processRef="Proceso_molino" />
+    <bpmn:textAnnotation id="Nota_preguntas">
+      <bpmn:text>El examen se levanta ANTES de construir. Escrito después de ver el resultado, siempre lo aprueba.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_vueltas">
+      <bpmn:text>Dos vueltas y ya. El tope lo pone el código, no el agente: sin tope, cada revisión encuentra algo más y no se escribe nunca.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_escribir">
+      <bpmn:text>Se escribe aunque la medición haya fallado. Lo que no se vale es escribir sin marca: el defecto silencioso es lo único que jidoka prohíbe.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_marcar">
+      <bpmn:text>El estado va en el archivo de la capacidad, en un campo que se pueda buscar — no en el reporte de la corrida. La sesión siguiente abre por ahí.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_guion">
+      <bpmn:text>Ésta y `Gestionar las preguntas` son del auditor, pero su carta todavía no existe. Ahí está el trabajo real de rehacer el molino: dos cartas nuevas, no código.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_vueltas" sourceRef="GW_vueltas" targetRef="Nota_vueltas" />
+    <bpmn:association id="Asoc_escribir" sourceRef="T_asentar" targetRef="Nota_escribir" />
+    <bpmn:association id="Asoc_marcar" sourceRef="T_marcar" targetRef="Nota_marcar" />
+    <bpmn:association id="Asoc_preguntas" sourceRef="T_vara" targetRef="Nota_preguntas" />
+    <bpmn:textAnnotation id="Nota_cierre">
+      <bpmn:text>Escrito no es lo mismo que listo. Si algo quedó marcado, el paso cierra con huecos — y de ese estado no se deriva nada río abajo hasta que se cierren.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_guion" sourceRef="T_guion" targetRef="Nota_guion" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proceso_molino" name="Levantar el conocimiento de un paso" isExecutable="false">
+    <bpmn:laneSet id="Carriles">
+      <bpmn:lane id="Lane_escribano" name="escribano">
+        <bpmn:flowNodeRef>T_asentar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_marcar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_auditor" name="auditor">
+        <bpmn:flowNodeRef>Inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_vara</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Paro_vara</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_construccion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_medida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_vueltas</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_corregir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_auditar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_sacar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_vara</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_construir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_medir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Paro_construccion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>T_guion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>GW_cierre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fin_huecos</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Inicio" name="Paso de la sesión cerrado">
+      <bpmn:outgoing>F_inicio_sacar</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="GW_vara">
+      <bpmn:incoming>F_vara_gw1</bpmn:incoming>
+      <bpmn:outgoing>F_gw1_construir</bpmn:outgoing>
+      <bpmn:outgoing>F_gw1_paro</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Paro_vara" name="Sin examen que aplicar">
+      <bpmn:incoming>F_gw1_paro</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="GW_construccion">
+      <bpmn:incoming>F_construir_gw2</bpmn:incoming>
+      <bpmn:outgoing>F_gw2_medir</bpmn:outgoing>
+      <bpmn:outgoing>F_gw2_paro</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_medida">
+      <bpmn:incoming>F_medir_gw3</bpmn:incoming>
+      <bpmn:outgoing>F_gw3_asentar</bpmn:outgoing>
+      <bpmn:outgoing>F_gw3_vueltas</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="GW_vueltas" name="¿Quedan vueltas?">
+      <bpmn:incoming>F_gw3_vueltas</bpmn:incoming>
+      <bpmn:outgoing>F_gw4_corregir</bpmn:outgoing>
+      <bpmn:outgoing>F_gw4_asentar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="T_corregir" name="Corregir lo marcado">
+      <bpmn:incoming>F_gw4_corregir</bpmn:incoming>
+      <bpmn:outgoing>F_corregir_construir</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="T_asentar" name="Escribir los archivos">
+      <bpmn:incoming>F_gw3_asentar</bpmn:incoming>
+      <bpmn:incoming>F_gw4_asentar</bpmn:incoming>
+      <bpmn:outgoing>F_asentar_auditar</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="T_auditar" name="Auditar lo escrito">
+      <bpmn:incoming>F_asentar_auditar</bpmn:incoming>
+      <bpmn:outgoing>F_auditar_marcar</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="T_marcar" name="Marcar lo que quedó a medias">
+      <bpmn:incoming>F_auditar_marcar</bpmn:incoming>
+      <bpmn:outgoing>F_marcar_guion</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:subProcess id="T_sacar" name="Extraer conversación">
+      <bpmn:incoming>F_inicio_sacar</bpmn:incoming>
+      <bpmn:outgoing>F_sacar_vara</bpmn:outgoing>
+      <bpmn:startEvent id="H0_inicio" name="Grabación cruda">
+        <bpmn:outgoing>H0_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="H0_partir" name="Partir el crudo en renglones">
+        <bpmn:incoming>H0_f1</bpmn:incoming>
+        <bpmn:outgoing>H0_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_descartar" name="Descartar lo que nadie dijo">
+        <bpmn:incoming>H0_f2</bpmn:incoming>
+        <bpmn:outgoing>H0_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_rescatar" name="Rescatar las respuestas del experto">
+        <bpmn:incoming>H0_f3</bpmn:incoming>
+        <bpmn:outgoing>H0_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_texto" name="Sacar el texto de cada turno">
+        <bpmn:incoming>H0_f4</bpmn:incoming>
+        <bpmn:outgoing>H0_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_avisos" name="Quitar los avisos del sistema">
+        <bpmn:incoming>H0_f5</bpmn:incoming>
+        <bpmn:outgoing>H0_f6</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_vacios" name="Tirar los turnos vacíos">
+        <bpmn:incoming>H0_f6</bpmn:incoming>
+        <bpmn:outgoing>H0_f7</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_armar" name="Armar la plática">
+        <bpmn:incoming>H0_f7</bpmn:incoming>
+        <bpmn:outgoing>H0_f8</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="H0_fin" name="Plática limpia">
+        <bpmn:incoming>H0_f8</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H0_f1" sourceRef="H0_inicio" targetRef="H0_partir" />
+      <bpmn:sequenceFlow id="H0_f2" sourceRef="H0_partir" targetRef="H0_descartar" />
+      <bpmn:sequenceFlow id="H0_f3" sourceRef="H0_descartar" targetRef="H0_rescatar" />
+      <bpmn:sequenceFlow id="H0_f4" sourceRef="H0_rescatar" targetRef="H0_texto" />
+      <bpmn:sequenceFlow id="H0_f5" sourceRef="H0_texto" targetRef="H0_avisos" />
+      <bpmn:sequenceFlow id="H0_f6" sourceRef="H0_avisos" targetRef="H0_vacios" />
+      <bpmn:sequenceFlow id="H0_f7" sourceRef="H0_vacios" targetRef="H0_armar" />
+      <bpmn:sequenceFlow id="H0_f8" sourceRef="H0_armar" targetRef="H0_fin" />
+      <bpmn:textAnnotation id="H0_nota">
+        <bpmn:text>ESTO NO SE IMPLEMENTA: es lo que ya hace `src/nucleo/sacar-turnos.ts`, dibujado para poderlo leer. El molino lo llama, no lo reescribe (levanta-el-roadmap.js:281). Y ahí está el defecto medido: si un renglón trae respuesta del experto y además texto, sólo se queda la respuesta.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc" sourceRef="H0_rescatar" targetRef="H0_nota" />
+      <bpmn:textAnnotation id="H0_nota_descartar">
+        <bpmn:text>Se va lo que la máquina metió sola: llamadas a herramientas, el razonamiento del agente, los avisos del sistema y los mensajes entre sesiones. Ninguno de los dos lo dijo.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_descartar" sourceRef="H0_descartar" targetRef="H0_nota_descartar" />
+      <bpmn:textAnnotation id="H0_nota_texto">
+        <bpmn:text>De una imagen sólo queda la marca [imagen]. La ruta del archivo no le dice nada a nadie y arrastraría la máquina del cliente al texto limpio.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_texto" sourceRef="H0_texto" targetRef="H0_nota_texto" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="T_vara" name="Gestionar las preguntas">
+      <bpmn:incoming>F_sacar_vara</bpmn:incoming>
+      <bpmn:outgoing>F_vara_gw1</bpmn:outgoing>
+      <bpmn:startEvent id="H1_inicio" name="Plática lista">
+        <bpmn:outgoing>H1_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="H1_sacar" name="Obtener preguntas">
+        <bpmn:incoming>H1_f1</bpmn:incoming>
+        <bpmn:outgoing>H1_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_partir" name="Partir las compuestas">
+        <bpmn:incoming>H1_f2</bpmn:incoming>
+        <bpmn:outgoing>H1_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_quitar" name="Quitar los nombres propios">
+        <bpmn:incoming>H1_f3</bpmn:incoming>
+        <bpmn:outgoing>H1_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_juntar" name="Juntar las repetidas">
+        <bpmn:incoming>H1_f4</bpmn:incoming>
+        <bpmn:outgoing>H1_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H1_gw" name="¿Quedó alguna?">
+        <bpmn:incoming>H1_f5</bpmn:incoming>
+        <bpmn:outgoing>H1_f6</bpmn:outgoing>
+        <bpmn:outgoing>H1_f7</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="H1_fin_con" name="Con preguntas">
+        <bpmn:incoming>H1_f6</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="H1_fin_sin" name="Sin preguntas">
+        <bpmn:incoming>H1_f7</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H1_f1" sourceRef="H1_inicio" targetRef="H1_sacar" />
+      <bpmn:sequenceFlow id="H1_f2" sourceRef="H1_sacar" targetRef="H1_partir" />
+      <bpmn:sequenceFlow id="H1_f3" sourceRef="H1_partir" targetRef="H1_quitar" />
+      <bpmn:sequenceFlow id="H1_f4" sourceRef="H1_quitar" targetRef="H1_juntar" />
+      <bpmn:sequenceFlow id="H1_f5" sourceRef="H1_juntar" targetRef="H1_gw" />
+      <bpmn:sequenceFlow id="H1_f6" name="sí" sourceRef="H1_gw" targetRef="H1_fin_con" />
+      <bpmn:sequenceFlow id="H1_f7" name="no" sourceRef="H1_gw" targetRef="H1_fin_sin" />
+      <bpmn:textAnnotation id="H1_nota_partir">
+        <bpmn:text>Una pregunta que trae dos, juntas, deja que el registro conteste la mitad y el examen la dé por aprobada.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_partir" sourceRef="H1_partir" targetRef="H1_nota_partir" />
+      <bpmn:textAnnotation id="H1_nota_quitar">
+        <bpmn:text>Dos ganancias de un tiro: la pregunta sirve para cualquier caso, y ningún nombre real entra a un archivo — regla dura de este repositorio.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_quitar" sourceRef="H1_quitar" targetRef="H1_nota_quitar" />
+      <bpmn:textAnnotation id="H1_nota_juntar">
+        <bpmn:text>Va al final a propósito: hasta que están partidas y sin nombres propios no se ve que dos eran la misma pregunta.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_juntar" sourceRef="H1_juntar" targetRef="H1_nota_juntar" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="T_construir" name="Construir el registro">
+      <bpmn:incoming>F_gw1_construir</bpmn:incoming>
+      <bpmn:incoming>F_corregir_construir</bpmn:incoming>
+      <bpmn:outgoing>F_construir_gw2</bpmn:outgoing>
+      <bpmn:startEvent id="H3_inicio" name="Preguntas levantadas">
+        <bpmn:outgoing>H3_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="H3_reglas" name="Sacar las reglas dichas">
+        <bpmn:incoming>H3_f1</bpmn:incoming>
+        <bpmn:outgoing>H3_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_capacidades" name="Proponer las capacidades">
+        <bpmn:incoming>H3_f2</bpmn:incoming>
+        <bpmn:outgoing>H3_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_modulos" name="Proponer los módulos">
+        <bpmn:incoming>H3_f3</bpmn:incoming>
+        <bpmn:outgoing>H3_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_enlazar" name="Enlazar reglas y capacidades">
+        <bpmn:incoming>H3_f4</bpmn:incoming>
+        <bpmn:outgoing>H3_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_marcar" name="Marcar firmeza y origen">
+        <bpmn:incoming>H3_f5</bpmn:incoming>
+        <bpmn:outgoing>H3_f6</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_cazar" name="Cazar contradicciones y ambigüedades">
+        <bpmn:incoming>H3_f6</bpmn:incoming>
+        <bpmn:outgoing>H3_f6b</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H3_dudas" name="Anotar las dudas para el experto">
+        <bpmn:incoming>H3_f6b</bpmn:incoming>
+        <bpmn:outgoing>H3_f7</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H3_gw" name="¿Algo que preguntar?">
+        <bpmn:incoming>H3_f7</bpmn:incoming>
+        <bpmn:outgoing>H3_f8</bpmn:outgoing>
+        <bpmn:outgoing>H3_f9</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="H3_gw2" name="¿Es la primera vuelta?">
+        <bpmn:incoming>H3_f8</bpmn:incoming>
+        <bpmn:outgoing>H3_f10</bpmn:outgoing>
+        <bpmn:outgoing>H3_f11</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="H3_fin_sin" name="Sin dudas">
+        <bpmn:incoming>H3_f9</bpmn:incoming>
+        <bpmn:incoming>H3_f11</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="H3_fin_con" name="Con dudas">
+        <bpmn:incoming>H3_f10</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H3_f1" sourceRef="H3_inicio" targetRef="H3_reglas" />
+      <bpmn:sequenceFlow id="H3_f2" sourceRef="H3_reglas" targetRef="H3_capacidades" />
+      <bpmn:sequenceFlow id="H3_f3" sourceRef="H3_capacidades" targetRef="H3_modulos" />
+      <bpmn:sequenceFlow id="H3_f4" sourceRef="H3_modulos" targetRef="H3_enlazar" />
+      <bpmn:sequenceFlow id="H3_f5" sourceRef="H3_enlazar" targetRef="H3_marcar" />
+      <bpmn:sequenceFlow id="H3_f6" sourceRef="H3_marcar" targetRef="H3_cazar" />
+      <bpmn:sequenceFlow id="H3_f6b" sourceRef="H3_cazar" targetRef="H3_dudas" />
+      <bpmn:sequenceFlow id="H3_f7" sourceRef="H3_dudas" targetRef="H3_gw" />
+      <bpmn:sequenceFlow id="H3_f8" name="sí" sourceRef="H3_gw" targetRef="H3_gw2" />
+      <bpmn:sequenceFlow id="H3_f9" name="no" sourceRef="H3_gw" targetRef="H3_fin_sin" />
+      <bpmn:sequenceFlow id="H3_f10" name="sí" sourceRef="H3_gw2" targetRef="H3_fin_con" />
+      <bpmn:sequenceFlow id="H3_f11" name="no" sourceRef="H3_gw2" targetRef="H3_fin_sin" />
+      <bpmn:textAnnotation id="H3_nota_primera">
+        <bpmn:text>El experto contesta una sola vuelta. En la segunda corrida, lo que siga sin cerrar se registra como hueco y ya no para la línea: un freno que no se levanta no es freno, es candado.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc_primera" sourceRef="H3_gw2" targetRef="H3_nota_primera" />
+      <bpmn:textAnnotation id="H3_nota">
+        <bpmn:text>Dos marcas, no una. FIRMEZA: dicho / confirmado / abierto — las tres que ya exige el-item-va-flaco.ts:49. ORIGEN: escuchado o propuesto por el agente. Sólo lo escuchado se coteja contra la plática.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc" sourceRef="H3_marcar" targetRef="H3_nota" />
+      <bpmn:textAnnotation id="H3_nota_enlazar">
+        <bpmn:text>El enlace va en los dos sentidos: la capacidad lista sus reglas y la regla nombra su capacidad. Las preguntas se hacen desde los dos lados.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc_enlazar" sourceRef="H3_enlazar" targetRef="H3_nota_enlazar" />
+      <bpmn:textAnnotation id="H3_nota_dudas">
+        <bpmn:text>De aquí sale lo único que puede parar la línea. Sin dudas anotadas, el rombo de afuera no tiene qué medir y todo pasa de largo.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc_dudas" sourceRef="H3_dudas" targetRef="H3_nota_dudas" />
+      <bpmn:textAnnotation id="H3_nota_cazar">
+        <bpmn:text>Aquí se busca lo que choca entre sí y lo que quedó dicho a medias. La carta `afinar` define las cinco fallas que obligan a preguntarle al experto en vez de resolverlo solo.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H3_asoc_cazar" sourceRef="H3_cazar" targetRef="H3_nota_cazar" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="T_medir" name="Medir lo construido">
+      <bpmn:incoming>F_gw2_medir</bpmn:incoming>
+      <bpmn:outgoing>F_medir_gw3</bpmn:outgoing>
+      <bpmn:startEvent id="H2_inicio" name="Registro construido">
+        <bpmn:outgoing>H2_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:parallelGateway id="H2_abre">
+        <bpmn:incoming>H2_f1</bpmn:incoming>
+        <bpmn:outgoing>H2_f_frio</bpmn:outgoing>
+        <bpmn:outgoing>H2_f_cotejar</bpmn:outgoing>
+        <bpmn:outgoing>H2_f_vara</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:task id="H2_frio" name="Leer el registro en frío">
+        <bpmn:incoming>H2_f_frio</bpmn:incoming>
+        <bpmn:outgoing>H2_f_frio2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H2_cotejar" name="Cotejar lo dicho">
+        <bpmn:incoming>H2_f_cotejar</bpmn:incoming>
+        <bpmn:outgoing>H2_f_cotejar2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H2_contestar" name="Contestar el examen">
+        <bpmn:incoming>H2_f_vara</bpmn:incoming>
+        <bpmn:outgoing>H2_f_vara2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:parallelGateway id="H2_cierra">
+        <bpmn:incoming>H2_f_frio2</bpmn:incoming>
+        <bpmn:incoming>H2_f_cotejar2</bpmn:incoming>
+        <bpmn:incoming>H2_f_vara2</bpmn:incoming>
+        <bpmn:outgoing>H2_f_gw</bpmn:outgoing>
+      </bpmn:parallelGateway>
+      <bpmn:exclusiveGateway id="H2_gw" name="¿Las tres pasaron?">
+        <bpmn:incoming>H2_f_gw</bpmn:incoming>
+        <bpmn:outgoing>H2_f_si</bpmn:outgoing>
+        <bpmn:outgoing>H2_f_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="H2_fin_limpia" name="Medición limpia">
+        <bpmn:incoming>H2_f_si</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="H2_fin_fallida" name="Medición fallida">
+        <bpmn:incoming>H2_f_no</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H2_f1" sourceRef="H2_inicio" targetRef="H2_abre" />
+      <bpmn:sequenceFlow id="H2_f_frio" sourceRef="H2_abre" targetRef="H2_frio" />
+      <bpmn:sequenceFlow id="H2_f_cotejar" sourceRef="H2_abre" targetRef="H2_cotejar" />
+      <bpmn:sequenceFlow id="H2_f_vara" sourceRef="H2_abre" targetRef="H2_contestar" />
+      <bpmn:sequenceFlow id="H2_f_frio2" sourceRef="H2_frio" targetRef="H2_cierra" />
+      <bpmn:sequenceFlow id="H2_f_cotejar2" sourceRef="H2_cotejar" targetRef="H2_cierra" />
+      <bpmn:sequenceFlow id="H2_f_vara2" sourceRef="H2_contestar" targetRef="H2_cierra" />
+      <bpmn:sequenceFlow id="H2_f_gw" sourceRef="H2_cierra" targetRef="H2_gw" />
+      <bpmn:sequenceFlow id="H2_f_si" name="sí" sourceRef="H2_gw" targetRef="H2_fin_limpia" />
+      <bpmn:sequenceFlow id="H2_f_no" name="no" sourceRef="H2_gw" targetRef="H2_fin_fallida" />
+      <bpmn:textAnnotation id="H2_nota">
+        <bpmn:text>Las tres son independientes: corren juntas y se espera a las tres. El cotejo sólo pasa sobre las reglas — lo propuesto por el agente nadie lo dijo, y se mide con el examen.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H2_asoc" sourceRef="H2_cotejar" targetRef="H2_nota" />
+      <bpmn:textAnnotation id="H2_nota_frio">
+        <bpmn:text>Quien mide aquí no vio la plática: sólo lee lo escrito. Si para entender un renglón hay que haber estado en la sesión, el renglón falló.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H2_asoc_frio" sourceRef="H2_frio" targetRef="H2_nota_frio" />
+      <bpmn:textAnnotation id="H2_nota_examen">
+        <bpmn:text>Se le pregunta al conjunto enlazado, no archivo por archivo. Una respuesta se arma caminando de la capacidad a sus reglas; por separado siempre daría que no.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H2_asoc_examen" sourceRef="H2_contestar" targetRef="H2_nota_examen" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="F_inicio_sacar" sourceRef="Inicio" targetRef="T_sacar" />
+    <bpmn:sequenceFlow id="F_vara_gw1" sourceRef="T_vara" targetRef="GW_vara" />
+    <bpmn:sequenceFlow id="F_gw1_construir" name="con preguntas" sourceRef="GW_vara" targetRef="T_construir" />
+    <bpmn:sequenceFlow id="F_gw1_paro" name="sin preguntas" sourceRef="GW_vara" targetRef="Paro_vara" />
+    <bpmn:sequenceFlow id="F_construir_gw2" sourceRef="T_construir" targetRef="GW_construccion" />
+    <bpmn:sequenceFlow id="F_gw2_medir" name="sin dudas" sourceRef="GW_construccion" targetRef="T_medir" />
+    <bpmn:sequenceFlow id="F_medir_gw3" sourceRef="T_medir" targetRef="GW_medida" />
+    <bpmn:sequenceFlow id="F_gw3_asentar" name="medición limpia" sourceRef="GW_medida" targetRef="T_asentar" />
+    <bpmn:sequenceFlow id="F_gw3_vueltas" name="medición fallida" sourceRef="GW_medida" targetRef="GW_vueltas" />
+    <bpmn:sequenceFlow id="F_gw4_corregir" name="sí" sourceRef="GW_vueltas" targetRef="T_corregir" />
+    <bpmn:sequenceFlow id="F_gw4_asentar" name="no" sourceRef="GW_vueltas" targetRef="T_asentar" />
+    <bpmn:sequenceFlow id="F_corregir_construir" sourceRef="T_corregir" targetRef="T_construir" />
+    <bpmn:sequenceFlow id="F_asentar_auditar" sourceRef="T_asentar" targetRef="T_auditar" />
+    <bpmn:sequenceFlow id="F_auditar_marcar" sourceRef="T_auditar" targetRef="T_marcar" />
+    <bpmn:sequenceFlow id="F_marcar_guion" sourceRef="T_marcar" targetRef="T_guion" />
+    <bpmn:sequenceFlow id="F_guion_fin" sourceRef="T_guion" targetRef="GW_cierre" />
+    <bpmn:sequenceFlow id="F_cierre_listo" name="sin pendientes" sourceRef="GW_cierre" targetRef="Fin" />
+    <bpmn:sequenceFlow id="F_cierre_huecos" name="con pendientes" sourceRef="GW_cierre" targetRef="Fin_huecos" />
+    <bpmn:sequenceFlow id="F_sacar_vara" sourceRef="T_sacar" targetRef="T_vara" />
+    <bpmn:sequenceFlow id="F_gw2_paro" name="con dudas" sourceRef="GW_construccion" targetRef="Paro_construccion" />
+    <bpmn:endEvent id="Paro_construccion" name="Dudas devueltas al experto">
+      <bpmn:incoming>F_gw2_paro</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="T_guion" name="Armar lo que falta preguntar">
+      <bpmn:incoming>F_marcar_guion</bpmn:incoming>
+      <bpmn:outgoing>F_guion_fin</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="GW_cierre">
+      <bpmn:incoming>F_guion_fin</bpmn:incoming>
+      <bpmn:outgoing>F_cierre_listo</bpmn:outgoing>
+      <bpmn:outgoing>F_cierre_huecos</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fin" name="Paso registrado">
+      <bpmn:incoming>F_cierre_listo</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Fin_huecos" name="Paso registrado con huecos">
+      <bpmn:incoming>F_cierre_huecos</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:association id="Asoc_cierre" sourceRef="GW_cierre" targetRef="Nota_cierre" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_padre">
+    <bpmndi:BPMNPlane id="P_padre" bpmnElement="Colaboracion_molino">
+      <bpmndi:BPMNShape id="S_Pool" bpmnElement="Pool_molino" isHorizontal="true">
+        <dc:Bounds x="155" y="80" width="2071" height="740" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_auditor" bpmnElement="Lane_auditor" isHorizontal="true">
+        <dc:Bounds x="185" y="80" width="2041" height="540" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_escribano" bpmnElement="Lane_escribano" isHorizontal="true">
+        <dc:Bounds x="185" y="620" width="2041" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Inicio" bpmnElement="Inicio">
+        <dc:Bounds x="215" y="132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="190" y="175" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_GW_vara" bpmnElement="GW_vara" isMarkerVisible="true">
+        <dc:Bounds x="585" y="455" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="582" y="420" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Paro_vara" bpmnElement="Paro_vara">
+        <dc:Bounds x="592" y="550" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="454" y="556" width="112" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_GW_construccion" bpmnElement="GW_construccion" isMarkerVisible="true">
+        <dc:Bounds x="875" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="873" y="85" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_GW_medida" bpmnElement="GW_medida" isMarkerVisible="true">
+        <dc:Bounds x="1165" y="125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1146" y="85" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_GW_vueltas" bpmnElement="GW_vueltas" isMarkerVisible="true">
+        <dc:Bounds x="1165" y="285" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1160" y="342" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_corregir" bpmnElement="T_corregir">
+        <dc:Bounds x="995" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_asentar" bpmnElement="T_asentar">
+        <dc:Bounds x="1295" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_auditar" bpmnElement="T_auditar">
+        <dc:Bounds x="1555" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_marcar" bpmnElement="T_marcar">
+        <dc:Bounds x="1715" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_guion" bpmnElement="T_guion">
+        <dc:Bounds x="1875" y="360" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_GW_cierre" bpmnElement="GW_cierre" isMarkerVisible="true">
+        <dc:Bounds x="2025" y="375" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Fin" bpmnElement="Fin">
+        <dc:Bounds x="2170" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2004" y="425" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Fin_huecos" bpmnElement="Fin_huecos">
+        <dc:Bounds x="2032" y="502" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2001" y="545" width="98" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_sacar" bpmnElement="T_sacar" isExpanded="false">
+        <dc:Bounds x="285" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_vara" bpmnElement="T_vara" isExpanded="false">
+        <dc:Bounds x="435" y="440" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_construir" bpmnElement="T_construir" isExpanded="false">
+        <dc:Bounds x="725" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_T_medir" bpmnElement="T_medir" isExpanded="false">
+        <dc:Bounds x="1015" y="110" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Paro_construccion" bpmnElement="Paro_construccion">
+        <dc:Bounds x="882" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="859" y="263" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_asoc_cierre" bpmnElement="Asoc_cierre">
+        <di:waypoint x="2042" y="383" />
+        <di:waypoint x="2007" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E1" bpmnElement="F_inicio_sacar">
+        <di:waypoint x="251" y="150" />
+        <di:waypoint x="285" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E3" bpmnElement="F_vara_gw1">
+        <di:waypoint x="535" y="480" />
+        <di:waypoint x="585" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E4" bpmnElement="F_gw1_construir">
+        <di:waypoint x="635" y="480" />
+        <di:waypoint x="680" y="480" />
+        <di:waypoint x="680" y="150" />
+        <di:waypoint x="725" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="458" width="9" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E5" bpmnElement="F_gw1_paro">
+        <di:waypoint x="610" y="505" />
+        <di:waypoint x="610" y="550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="621" y="516" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E6" bpmnElement="F_construir_gw2">
+        <di:waypoint x="825" y="150" />
+        <di:waypoint x="875" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E7" bpmnElement="F_gw2_medir">
+        <di:waypoint x="925" y="150" />
+        <di:waypoint x="1015" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="964" y="128" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E9" bpmnElement="F_medir_gw3">
+        <di:waypoint x="1115" y="150" />
+        <di:waypoint x="1165" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E10" bpmnElement="F_gw3_asentar">
+        <di:waypoint x="1215" y="150" />
+        <di:waypoint x="1345" y="150" />
+        <di:waypoint x="1345" y="640" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1271" y="128" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E11" bpmnElement="F_gw3_vueltas">
+        <di:waypoint x="1190" y="175" />
+        <di:waypoint x="1190" y="285" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1201" y="223" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E12" bpmnElement="F_gw4_corregir">
+        <di:waypoint x="1165" y="310" />
+        <di:waypoint x="1095" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1126" y="288" width="9" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E14" bpmnElement="F_gw4_asentar">
+        <di:waypoint x="1190" y="335" />
+        <di:waypoint x="1190" y="695" />
+        <di:waypoint x="1295" y="695" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1201" y="380" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E13" bpmnElement="F_corregir_construir">
+        <di:waypoint x="995" y="310" />
+        <di:waypoint x="775" y="310" />
+        <di:waypoint x="775" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E15" bpmnElement="F_asentar_auditar">
+        <di:waypoint x="1395" y="680" />
+        <di:waypoint x="1525" y="680" />
+        <di:waypoint x="1525" y="150" />
+        <di:waypoint x="1555" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E16" bpmnElement="F_auditar_marcar">
+        <di:waypoint x="1655" y="150" />
+        <di:waypoint x="1685" y="150" />
+        <di:waypoint x="1685" y="680" />
+        <di:waypoint x="1715" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E17" bpmnElement="F_marcar_guion">
+        <di:waypoint x="1815" y="680" />
+        <di:waypoint x="1925" y="680" />
+        <di:waypoint x="1925" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E18" bpmnElement="F_guion_fin">
+        <di:waypoint x="1975" y="400" />
+        <di:waypoint x="2025" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E19" bpmnElement="F_cierre_listo">
+        <di:waypoint x="2075" y="400" />
+        <di:waypoint x="2170" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2087" y="378" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E20" bpmnElement="F_cierre_huecos">
+        <di:waypoint x="2050" y="425" />
+        <di:waypoint x="2050" y="502" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2064" y="449" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E2" bpmnElement="F_sacar_vara">
+        <di:waypoint x="385" y="150" />
+        <di:waypoint x="410" y="150" />
+        <di:waypoint x="410" y="480" />
+        <di:waypoint x="435" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E8" bpmnElement="F_gw2_paro">
+        <di:waypoint x="900" y="175" />
+        <di:waypoint x="900" y="222" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="913" y="187" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_marcar" bpmnElement="Asoc_marcar">
+        <di:waypoint x="1715" y="695" />
+        <di:waypoint x="1675" y="704" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_guion" bpmnElement="Asoc_guion">
+        <di:waypoint x="1875" y="415" />
+        <di:waypoint x="1845" y="435" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_vueltas" bpmnElement="Asoc_vueltas">
+        <di:waypoint x="1173" y="318" />
+        <di:waypoint x="1121" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_Nota_preguntas" bpmnElement="Nota_preguntas">
+        <dc:Bounds x="270" y="517" width="140" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_escribir" bpmnElement="Nota_escribir">
+        <dc:Bounds x="1185" y="730" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_asoc_escribir" bpmnElement="Asoc_escribir">
+        <di:waypoint x="1325" y="720" />
+        <di:waypoint x="1310" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_asoc_preguntas" bpmnElement="Asoc_preguntas">
+        <di:waypoint x="473" y="520" />
+        <di:waypoint x="410" y="556" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_Nota_marcar" bpmnElement="Nota_marcar">
+        <dc:Bounds x="1550" y="650" width="125" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_cierre" bpmnElement="Nota_cierre">
+        <dc:Bounds x="1870" y="200" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_guion" bpmnElement="Nota_guion">
+        <dc:Bounds x="1720" y="400" width="125" height="144" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_vueltas" bpmnElement="Nota_vueltas">
+        <dc:Bounds x="1060" y="360" width="120" height="129" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_sacar">
+    <bpmndi:BPMNPlane id="P_hijo_sacar" bpmnElement="T_sacar">
+      <bpmndi:BPMNShape id="S_H0_inicio" bpmnElement="H0_inicio">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="141" y="185" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_partir" bpmnElement="H0_partir">
+        <dc:Bounds x="240" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_descartar" bpmnElement="H0_descartar">
+        <dc:Bounds x="390" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_rescatar" bpmnElement="H0_rescatar">
+        <dc:Bounds x="540" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_texto" bpmnElement="H0_texto">
+        <dc:Bounds x="690" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_avisos" bpmnElement="H0_avisos">
+        <dc:Bounds x="840" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_vacios" bpmnElement="H0_vacios">
+        <dc:Bounds x="990" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_armar" bpmnElement="H0_armar">
+        <dc:Bounds x="1140" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_fin" bpmnElement="H0_fin">
+        <dc:Bounds x="1290" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1272" y="185" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota" bpmnElement="H0_nota">
+        <dc:Bounds x="680" y="360" width="290" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_descartar" bpmnElement="H0_nota_descartar">
+        <dc:Bounds x="330" y="250" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_texto" bpmnElement="H0_nota_texto">
+        <dc:Bounds x="700" y="250" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="EH0_1" bpmnElement="H0_f1">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="240" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_2" bpmnElement="H0_f2">
+        <di:waypoint x="340" y="160" />
+        <di:waypoint x="390" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_3" bpmnElement="H0_f3">
+        <di:waypoint x="490" y="160" />
+        <di:waypoint x="540" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_4" bpmnElement="H0_f4">
+        <di:waypoint x="640" y="160" />
+        <di:waypoint x="690" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_5" bpmnElement="H0_f5">
+        <di:waypoint x="790" y="160" />
+        <di:waypoint x="840" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_6" bpmnElement="H0_f6">
+        <di:waypoint x="940" y="160" />
+        <di:waypoint x="990" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_7" bpmnElement="H0_f7">
+        <di:waypoint x="1090" y="160" />
+        <di:waypoint x="1140" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_8" bpmnElement="H0_f8">
+        <di:waypoint x="1240" y="160" />
+        <di:waypoint x="1290" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_asoc" bpmnElement="H0_asoc">
+        <di:waypoint x="600" y="200" />
+        <di:waypoint x="690" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_asoc_descartar" bpmnElement="H0_asoc_descartar">
+        <di:waypoint x="440" y="200" />
+        <di:waypoint x="450" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH0_asoc_texto" bpmnElement="H0_asoc_texto">
+        <di:waypoint x="750" y="200" />
+        <di:waypoint x="790" y="250" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_vara">
+    <bpmndi:BPMNPlane id="P_hijo_vara" bpmnElement="T_vara">
+      <bpmndi:BPMNShape id="S_H1_inicio" bpmnElement="H1_inicio">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="146" y="185" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_sacar" bpmnElement="H1_sacar">
+        <dc:Bounds x="240" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_partir" bpmnElement="H1_partir">
+        <dc:Bounds x="390" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_quitar" bpmnElement="H1_quitar">
+        <dc:Bounds x="540" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_juntar" bpmnElement="H1_juntar">
+        <dc:Bounds x="690" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_gw" bpmnElement="H1_gw" isMarkerVisible="true">
+        <dc:Bounds x="840" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="828" y="95" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_fin_con" bpmnElement="H1_fin_con">
+        <dc:Bounds x="990" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="967" y="185" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_fin_sin" bpmnElement="H1_fin_sin">
+        <dc:Bounds x="847" y="300" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="824" y="343" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_partir" bpmnElement="H1_nota_partir">
+        <dc:Bounds x="290" y="250" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_quitar" bpmnElement="H1_nota_quitar">
+        <dc:Bounds x="560" y="370" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_juntar" bpmnElement="H1_nota_juntar">
+        <dc:Bounds x="830" y="250" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="EH1_1" bpmnElement="H1_f1">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="240" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_2" bpmnElement="H1_f2">
+        <di:waypoint x="340" y="160" />
+        <di:waypoint x="390" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_3" bpmnElement="H1_f3">
+        <di:waypoint x="490" y="160" />
+        <di:waypoint x="540" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_4" bpmnElement="H1_f4">
+        <di:waypoint x="640" y="160" />
+        <di:waypoint x="690" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_5" bpmnElement="H1_f5">
+        <di:waypoint x="790" y="160" />
+        <di:waypoint x="840" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_6" bpmnElement="H1_f6">
+        <di:waypoint x="890" y="160" />
+        <di:waypoint x="990" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="931" y="138" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_7" bpmnElement="H1_f7">
+        <di:waypoint x="865" y="185" />
+        <di:waypoint x="865" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="873" y="234" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_asoc_partir" bpmnElement="H1_asoc_partir">
+        <di:waypoint x="430" y="200" />
+        <di:waypoint x="415" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_asoc_quitar" bpmnElement="H1_asoc_quitar">
+        <di:waypoint x="590" y="200" />
+        <di:waypoint x="610" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH1_asoc_juntar" bpmnElement="H1_asoc_juntar">
+        <di:waypoint x="760" y="200" />
+        <di:waypoint x="880" y="250" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_construir">
+    <bpmndi:BPMNPlane id="P_hijo_construir" bpmnElement="T_construir">
+      <bpmndi:BPMNShape id="S_H3_inicio" bpmnElement="H3_inicio">
+        <dc:Bounds x="160" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="132" y="185" width="92" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_reglas" bpmnElement="H3_reglas">
+        <dc:Bounds x="240" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_capacidades" bpmnElement="H3_capacidades">
+        <dc:Bounds x="390" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_modulos" bpmnElement="H3_modulos">
+        <dc:Bounds x="540" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_enlazar" bpmnElement="H3_enlazar">
+        <dc:Bounds x="690" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_marcar" bpmnElement="H3_marcar">
+        <dc:Bounds x="840" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_cazar" bpmnElement="H3_cazar">
+        <dc:Bounds x="990" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_dudas" bpmnElement="H3_dudas">
+        <dc:Bounds x="1140" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_gw" bpmnElement="H3_gw" isMarkerVisible="true">
+        <dc:Bounds x="1290" y="135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1276" y="95" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_gw2" bpmnElement="H3_gw2" isMarkerVisible="true">
+        <dc:Bounds x="1290" y="280" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1180" y="292" width="100" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_fin_sin" bpmnElement="H3_fin_sin">
+        <dc:Bounds x="1450" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="185" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_fin_con" bpmnElement="H3_fin_con">
+        <dc:Bounds x="1450" y="287" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1436" y="330" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota_primera" bpmnElement="H3_nota_primera">
+        <dc:Bounds x="1130" y="400" width="270" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota" bpmnElement="H3_nota">
+        <dc:Bounds x="785" y="-70" width="140" height="129" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota_enlazar" bpmnElement="H3_nota_enlazar">
+        <dc:Bounds x="610" y="255" width="170" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota_dudas" bpmnElement="H3_nota_dudas">
+        <dc:Bounds x="1070" y="-20" width="160" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H3_nota_cazar" bpmnElement="H3_nota_cazar">
+        <dc:Bounds x="907" y="230" width="153" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="EH3_1" bpmnElement="H3_f1">
+        <di:waypoint x="196" y="160" />
+        <di:waypoint x="240" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_2" bpmnElement="H3_f2">
+        <di:waypoint x="340" y="160" />
+        <di:waypoint x="390" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_3" bpmnElement="H3_f3">
+        <di:waypoint x="490" y="160" />
+        <di:waypoint x="540" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_4" bpmnElement="H3_f4">
+        <di:waypoint x="640" y="160" />
+        <di:waypoint x="690" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_5" bpmnElement="H3_f5">
+        <di:waypoint x="790" y="160" />
+        <di:waypoint x="840" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_6" bpmnElement="H3_f6">
+        <di:waypoint x="940" y="160" />
+        <di:waypoint x="990" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_6b" bpmnElement="H3_f6b">
+        <di:waypoint x="1090" y="160" />
+        <di:waypoint x="1140" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_7" bpmnElement="H3_f7">
+        <di:waypoint x="1240" y="160" />
+        <di:waypoint x="1290" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_8" bpmnElement="H3_f8">
+        <di:waypoint x="1315" y="185" />
+        <di:waypoint x="1315" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1323" y="225" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_9" bpmnElement="H3_f9">
+        <di:waypoint x="1340" y="160" />
+        <di:waypoint x="1450" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="138" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_10" bpmnElement="H3_f10">
+        <di:waypoint x="1340" y="305" />
+        <di:waypoint x="1450" y="305" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1386" y="283" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_11" bpmnElement="H3_f11">
+        <di:waypoint x="1315" y="330" />
+        <di:waypoint x="1315" y="370" />
+        <di:waypoint x="1600" y="370" />
+        <di:waypoint x="1600" y="160" />
+        <di:waypoint x="1486" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1323" y="345" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc_primera" bpmnElement="H3_asoc_primera">
+        <di:waypoint x="1302" y="317" />
+        <di:waypoint x="1252" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc" bpmnElement="H3_asoc">
+        <di:waypoint x="883" y="120" />
+        <di:waypoint x="883" y="59" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc_enlazar" bpmnElement="H3_asoc_enlazar">
+        <di:waypoint x="738" y="200" />
+        <di:waypoint x="740" y="255" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc_dudas" bpmnElement="H3_asoc_dudas">
+        <di:waypoint x="1190" y="120" />
+        <di:waypoint x="1190" y="66" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH3_asoc_cazar" bpmnElement="H3_asoc_cazar">
+        <di:waypoint x="1041" y="200" />
+        <di:waypoint x="1041" y="230" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_medir">
+    <bpmndi:BPMNPlane id="P_hijo_medir" bpmnElement="T_medir">
+      <bpmndi:BPMNShape id="S_H2_inicio" bpmnElement="H2_inicio">
+        <dc:Bounds x="160" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="138" y="325" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_abre" bpmnElement="H2_abre">
+        <dc:Bounds x="250" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_frio" bpmnElement="H2_frio">
+        <dc:Bounds x="380" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_cotejar" bpmnElement="H2_cotejar">
+        <dc:Bounds x="380" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_contestar" bpmnElement="H2_contestar">
+        <dc:Bounds x="380" y="420" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_cierra" bpmnElement="H2_cierra">
+        <dc:Bounds x="560" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_gw" bpmnElement="H2_gw" isMarkerVisible="true">
+        <dc:Bounds x="660" y="275" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="643" y="235" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_fin_limpia" bpmnElement="H2_fin_limpia">
+        <dc:Bounds x="810" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="787" y="325" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_fin_fallida" bpmnElement="H2_fin_fallida">
+        <dc:Bounds x="667" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="644" y="463" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_nota" bpmnElement="H2_nota">
+        <dc:Bounds x="630" y="140" width="194" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_nota_frio" bpmnElement="H2_nota_frio">
+        <dc:Bounds x="380" y="-20" width="180" height="86" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_nota_examen" bpmnElement="H2_nota_examen">
+        <dc:Bounds x="367" y="530" width="156" height="129" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="EH2_1" bpmnElement="H2_f1">
+        <di:waypoint x="196" y="300" />
+        <di:waypoint x="250" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_frio" bpmnElement="H2_f_frio">
+        <di:waypoint x="275" y="275" />
+        <di:waypoint x="275" y="140" />
+        <di:waypoint x="380" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_cotejar" bpmnElement="H2_f_cotejar">
+        <di:waypoint x="300" y="300" />
+        <di:waypoint x="380" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_vara" bpmnElement="H2_f_vara">
+        <di:waypoint x="275" y="325" />
+        <di:waypoint x="275" y="460" />
+        <di:waypoint x="380" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_frio2" bpmnElement="H2_f_frio2">
+        <di:waypoint x="480" y="140" />
+        <di:waypoint x="585" y="140" />
+        <di:waypoint x="585" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_cotejar2" bpmnElement="H2_f_cotejar2">
+        <di:waypoint x="480" y="300" />
+        <di:waypoint x="560" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_vara2" bpmnElement="H2_f_vara2">
+        <di:waypoint x="480" y="460" />
+        <di:waypoint x="585" y="460" />
+        <di:waypoint x="585" y="325" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_gw" bpmnElement="H2_f_gw">
+        <di:waypoint x="610" y="300" />
+        <di:waypoint x="660" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_si" bpmnElement="H2_f_si">
+        <di:waypoint x="710" y="300" />
+        <di:waypoint x="810" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="751" y="278" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_no" bpmnElement="H2_f_no">
+        <di:waypoint x="685" y="325" />
+        <di:waypoint x="685" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="693" y="364" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_asoc" bpmnElement="H2_asoc">
+        <di:waypoint x="480" y="277" />
+        <di:waypoint x="630" y="208" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_asoc_frio" bpmnElement="H2_asoc_frio">
+        <di:waypoint x="430" y="100" />
+        <di:waypoint x="430" y="66" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="EH2_asoc_examen" bpmnElement="H2_asoc_examen">
+        <di:waypoint x="430" y="500" />
+        <di:waypoint x="430" y="530" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
