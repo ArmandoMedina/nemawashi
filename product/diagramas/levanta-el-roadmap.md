@@ -50,7 +50,9 @@ Con las de **BPMN Method and Style**, de Bruce Silver. Las que gobiernan aquí:
 
 ## Lo que el diagrama NO decide
 
-- **En qué carpeta escribe el molino.** Sin eso no hay qué implementar.
+- ~~**En qué carpeta escribe el molino.**~~ **Decidido el 2026-08-04:** en
+  `product/conocimiento/`, con una carpeta por tipo — `capacidades/`, `modulos/` y `reglas/`. El
+  techo `conocimiento/` existe porque «módulo» ya significa otra cosa en `product/modulos.md`.
 - **Qué tipo lleva cada enlace** — contiene, usa, requiere, contradice. Sin tipo se recorre el grafo
   pero no se razona sobre él.
 - **Si existe un nivel entre Capacidad y Regla.**
@@ -61,10 +63,15 @@ Con las de **BPMN Method and Style**, de Bruce Silver. Las que gobiernan aquí:
 
 Medido contra el repositorio el **2026-08-04**:
 
-- **Dos cajas no tienen carta**: *Gestionar las preguntas* y *Armar lo que falta preguntar*. Son del
-  auditor, pero su carta no existe. **Ahí está el trabajo, y es escribir cartas, no código.**
-- **Cuatro pruebas de contrato dejan de pasar**: `la-hora-no-se-inventa`,
-  `el-no-sirve-cuenta-como-falla`, `la-platica-la-saca-el-sacador` y `el-item-va-flaco`.
+- **Cinco cajas no tenían carta** — no dos, como decía este renglón antes de recorrer el diagrama
+  caja por caja: *Gestionar las preguntas*, *Construir el registro*, *Contestar el examen*,
+  *Escribir los archivos* y *Armar lo que falta preguntar*. Las cinco cartas se escribieron el
+  **2026-08-04** y viven en `.claude/skills/`; **ningún flujo las llama todavía.**
+- **Tres pruebas de contrato dejan de pasar** cuando el `.js` se reescriba:
+  `la-hora-no-se-inventa`, `el-no-sirve-cuenta-como-falla` y `la-platica-la-saca-el-sacador`. Las
+  tres cargan el workflow y lo ejecutan con un agente falso. `el-item-va-flaco` **no** está entre
+  ellas: no menciona el molino — corre `revisarItem` sobre los archivos de `roadmap/` y `backlog/`
+  en disco.
 - **`el-item-va-flaco.ts` exige `firmeza` con tres valores** — `dicho`, `confirmado`, `abierto`. El
   diagrama marca además el origen, que es otro eje y no la sustituye.
 - **El subproceso *Extraer conversación* no se implementa.** Dibuja lo que ya hace

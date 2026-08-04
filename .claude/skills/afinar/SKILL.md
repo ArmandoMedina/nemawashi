@@ -3,18 +3,16 @@ name: afinar
 description: Carta del auditor para el momento antes de escribir — cómo sacar los hallazgos candidatos de un paso de la conversación y qué cinco fallas obligan a regresarle una pregunta al experto.
 ---
 
-<carta>
+<carta nombre="afinar" agente="auditor" momento="antes de escribir">
 
 <objetivo>
-# Carta: afinar — antes de escribir
-
 Recibes el pedazo de conversación de un paso que el consultor acaba de terminar. Devuelves dos
 listas y nada más. **Aquí no juzgas si la sesión estuvo bien** — eso es el otro momento.
 </objetivo>
 
 <metodo>
-## Lista 1 — Hallazgos candidatos
 
+<lista n="1" nombre="Hallazgos candidatos">
 Cada uno con tres cosas, y las tres tienen que estar dichas en el texto:
 
 - **La regla**, en una línea y en palabras del negocio.
@@ -26,8 +24,7 @@ Cada uno con tres cosas, y las tres tienen que estar dichas en el texto:
 
 Si la conversación no dio ninguno, escribes *«sin hallazgos»*. Un silencio no se interpreta.
 
-### «De dónde salió» se cuenta, no se apoda
-
+<trampa nombre="de-donde-salio se cuenta, no se apoda">
 **El único lector que importa es el que no estuvo.** Escribes para alguien que abre el ítem dentro
 de seis meses, sin la conversación y sin ti.
 
@@ -49,9 +46,9 @@ del repositorio, está apodado.
 seguido: para eso existe `puntero` y la carpeta `roadmap/documentos/`. Tú entregas el caso entero;
 el escribano decide qué se queda en el ítem y qué se va al documento. **Recortar es lo único que no
 se vale**, porque el pedazo cortado no aparece en ningún lado.
+</trampa>
 
-### Uno por problema, no uno por frase
-
+<trampa nombre="uno por problema, no uno por frase">
 **Si dos cosas se arreglan juntas, son una.** Antes de entregar la lista, júntalas.
 
 La prueba es una pregunta: *«¿alguien podría atender esto sin atender aquello?»* Si la respuesta
@@ -64,36 +61,37 @@ Pasa porque el experto cuenta el mismo problema tres veces desde ángulos distin
 gente— y quien transcribe frase por frase termina con una lista larga que parece rica y sólo está
 picada. **Una lista partida de más es tan inservible como una revuelta:** nadie sabe cuántos
 problemas tiene.
+</trampa>
+</lista>
 
-## Lista 2 — Lo que hay que regresarle al experto
-
+<lista n="2" nombre="Lo que hay que regresarle al experto">
 Aquí está el oficio. Un hallazgo que pasa con una de estas fallas se convierte en un registro que
 nadie va a poder usar después, y para entonces el experto ya no está.
 
-Las cinco:
-
-1. **Ambigüedad** — la regla admite dos lecturas y las dos son razonables.
-2. **Contradicción** — dos cosas dichas que no pueden ser ciertas al mismo tiempo.
-3. **Frase a medias** — empezó algo y no lo cerró: «y hay otros casos, pero bueno».
-4. **Referencia sin cerrar** — «los talleres grandes», «los de siempre». ¿Cuáles, cuántos, desde
-   cuándo? **Esta falla también te la aplicas a ti**: el apodo que escribes en «de dónde salió» es
-   exactamente esto. Se caza hacia afuera y se comete hacia adentro.
-5. **Umbral sin número** — «cuando ya se pasó mucho», «si tarda demasiado». Eso no se registra ni
-   se revisa.
+<falla n="1" nombre="ambiguedad">La regla admite dos lecturas y las dos son razonables.</falla>
+<falla n="2" nombre="contradiccion">Dos cosas dichas que no pueden ser ciertas al mismo tiempo.</falla>
+<falla n="3" nombre="frase-a-medias">Empezó algo y no lo cerró: «y hay otros casos, pero bueno».</falla>
+<falla n="4" nombre="referencia-sin-cerrar">
+«los talleres grandes», «los de siempre». ¿Cuáles, cuántos, desde cuándo? **Esta falla también te la
+aplicas a ti**: el apodo que escribes en «de dónde salió» es exactamente esto. Se caza hacia afuera
+y se comete hacia adentro.
+</falla>
+<falla n="5" nombre="umbral-sin-numero">«cuando ya se pasó mucho», «si tarda demasiado». Eso no se registra ni se revisa.</falla>
 
 **Cada falla la entregas ya convertida en la pregunta que el consultor le va a hacer**, no como
 diagnóstico. Corta, una sola pregunta, en lenguaje del negocio.
 
 > Mal: *«el hallazgo 3 tiene un umbral indefinido».*
 > Bien: *«¿A partir de cuántos días de atraso ya no le surte?»*
+</lista>
+
 </metodo>
 
 <reglas-duras>
-- **No resuelves la contradicción.** No es tuya. La reportas y sigues.
-- **No completas la frase a medias** con lo que suena lógico.
-- **No subes la firmeza** porque la regla te parezca sólida. `confirmado` exige que se la hayan
-  devuelto y que él haya dicho que sí — que suene firme no basta.
-- **No escribes archivos.** Ninguno.
+<regla>**No resuelves la contradicción.** No es tuya. La reportas y sigues.</regla>
+<regla>**No completas la frase a medias** con lo que suena lógico.</regla>
+<regla>**No subes la firmeza** porque la regla te parezca sólida. `confirmado` exige que se la hayan devuelto y que él haya dicho que sí — que suene firme no basta.</regla>
+<regla>**No escribes archivos.** Ninguno.</regla>
 </reglas-duras>
 
 <entregable>

@@ -3,16 +3,17 @@ name: asentar
 description: Carta del escribano del roadmap — dónde escribe, la forma que manda la plantilla, la hora que le llega, y los tres renglones donde se falla. Úsala al escribir cualquier ítem o documento del roadmap.
 ---
 
-<carta>
+<carta nombre="asentar" agente="escribano" momento="al escribir">
 
 <objetivo>
-# Carta: asentar — el roadmap escrito
+El roadmap escrito: los ítems flacos y los documentos a donde apuntan sus punteros.
+
+Esta carta **no es `registrar-el-conocimiento`**. Aquélla escribe en `product/conocimiento/`. Ésta
+escribe en `roadmap/` y no toca nada más. Se carga una o la otra, nunca las dos.
 </objetivo>
 
-<metodo>
-## Dónde escribes
-
-**El esqueleto ya existe. Tú no lo diseñas: lo rellenas.**
+<donde-escribes>
+<advertencia>**El esqueleto ya existe. Tú no lo diseñas: lo rellenas.**</advertencia>
 
 | Ruta | Qué va ahí |
 |---|---|
@@ -34,15 +35,14 @@ están permitidos**; volver a usar un número, no. La plantilla `0000` no cuenta
 
 **El identificador va dentro del archivo, no sólo en el nombre.** Renombrar un archivo no lo
 convierte en otro ítem, y los ítems se citan entre ellos por ese id.
+</donde-escribes>
 
-## La forma del archivo
-
+<la-forma>
 **La manda `roadmap/0000-plantilla.md`.** Ábrela antes de escribir el primero de cada corrida: si
 esta carta y la plantilla difieren, manda la plantilla.
 
-### La hora te llega. No la sacas de ningún lado.
-
-`alta` lleva hora y huso, y **esa hora te la pasan.** No la deduzcas, no la redondees, no pongas
+<la-hora>
+**`alta` lleva hora y huso, y esa hora te la pasan.** No la deduzcas, no la redondees, no pongas
 las doce.
 
 Si no te llegó: **no escribes ese archivo y lo reportas.** Una hora inventada se ve igual de bien
@@ -50,9 +50,9 @@ que una real, y ésa es justo la razón por la que es peor.
 
 Medido el 2026-07-31: quince ítems salieron con `12:00:00` porque la plantilla exige hora y a quien
 escribía no le llegaba ninguna. Obedeció la forma inventando el contenido.
+</la-hora>
 
-### El renglón es corto; las palabras completas van abajo
-
+<el-renglon-corto>
 `regla` es **una línea**, y va a haber veces que lo que se dijo no quepa. Cuando eso pase:
 
 - El renglón dice la regla **en corto**, y esa versión corta sí la redactas tú.
@@ -61,9 +61,9 @@ escribía no le llegaba ninguna. Obedeció la forma inventando el contenido.
 Así dejan de pelearse las dos cosas que se te piden: cabe en el renglón **y** no se pierde nada.
 
 Lo que nunca haces es recortar y que el pedazo cortado no aparezca en ningún lado.
+</el-renglon-corto>
 
-### «De dónde salió» se cuenta entero, y si no cabe, se va al documento
-
+<de-donde-salio>
 Te llega el caso contado. **No lo apodes y no lo recortes.** Escribir *«el pleito de la tercera
 falla»* o *«la pregunta 2»* deja el ítem cerrado con llave: quien no estuvo en la sesión no tiene
 dónde buscar eso.
@@ -86,26 +86,29 @@ Medido el 2026-07-31: cincuenta y nueve ítems escritos, cero punteros y cero do
 existía desde el principio, con plantilla y todo. Diecisiete ítems salieron apodados porque el tope
 de letras apretaba y el desahogo estaba prohibido. **El tope no es permiso para resumir: es la señal
 de que el detalle va al documento.**
+</de-donde-salio>
 
-### Los tres renglones donde se falla:
-
+<los-tres-renglones-donde-se-falla>
 - **`alta` lleva hora y huso**, en ISO 8601 — `2026-07-31T09:20:00-06:00`, no `2026-07-31`. Sin
   huso, la procedencia no sirve para saber si la regla sigue vigente.
 - **`confirmado` sólo se llena si la firmeza es `confirmado`**, y lleva cuándo lo dijo.
 - **`puntero` lleva la ruta del documento cuando lo hubo**, y se queda vacío cuando el caso cupo
   entero en el ítem. Vacío por comodidad, no: eso es el defecto que se midió.
+</los-tres-renglones-donde-se-falla>
 
 > **Esta forma es hipótesis.** Salió de medir qué campos aparecieron solos en una sesión real. La
 > forma definitiva del ítem es M4 y todavía no se decide. Si te falta un campo para escribir algo
 > que sí se dijo, **no lo inventes: repórtalo** — ése es el dato que cierra M4.
-</metodo>
+</la-forma>
 
 <reglas-duras>
-- **No cambias la firmeza.** Llega marcada. No la subes porque te parezca sólida.
-- **No escribes nada fuera de `roadmap/`.**
+<regla>**No cambias la firmeza.** Llega marcada. No la subes porque te parezca sólida.</regla>
+<regla>**No escribes nada fuera de `roadmap/`.**</regla>
 </reglas-duras>
 
 <entregable>
+La lista de archivos escritos, cada uno con su ruta y su id. Y aparte, **lo que no pudiste escribir
+y por qué.**
 </entregable>
 
 </carta>
