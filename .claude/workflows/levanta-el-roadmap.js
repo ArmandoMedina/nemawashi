@@ -396,6 +396,35 @@ function piezasPorId(registro, ids) {
   return todasLasPiezas(registro).filter((p) => ids.indexOf(p.id) !== -1)
 }
 
+// La vuelta de correccion devuelve SOLO las piezas marcadas -asi se le pide, y asi hay que
+// recibirla. Reemplazar el registro entero con lo que vuelve pierde todo lo que estaba bien.
+//
+// Medido en la primera corrida real, el 2026-08-04: la vuelta devolvio capacidades sin ningun
+// modulo, el codigo cambio el registro completo por eso, y el escribano se nego a escribir
+// porque `CAP-1` citaba un `MOD-1` que ya no existia. **El escribano tenia razon y el molino
+// no.** Ninguna de las 29 pruebas lo cazo, porque el agente falso siempre devolvia el registro
+// entero -un doble mas complaciente que el agente real.
+//
+// Lo que sigue senalado se une en vez de reemplazarse: si una pieza se arreglo y aun asi queda
+// marcada, sale con hueco de mas. Ese es el lado seguro del error.
+function conLaCorreccionAplicada(registro, corregido) {
+  const fundir = (viejas, nuevas) => {
+    const corregidas = viejas.map((v) => nuevas.find((n) => n.id === v.id) ?? v)
+    const nacidas = nuevas.filter((n) => !viejas.some((v) => v.id === n.id))
+    return corregidas.concat(nacidas)
+  }
+
+  const senaladas = (corregido.senaladas ?? []).concat(registro.senaladas)
+
+  return {
+    capacidades: fundir(registro.capacidades, corregido.capacidades ?? []),
+    modulos: fundir(registro.modulos, corregido.modulos ?? []),
+    reglas: fundir(registro.reglas, corregido.reglas ?? []),
+    dudas: registro.dudas,
+    senaladas: senaladas.filter((id, i) => senaladas.indexOf(id) === i)
+  }
+}
+
 // --- Los prompts -----------------------------------------------------------
 
 function promptParaSacar(rutaPedida) {
@@ -847,7 +876,7 @@ if (marcadasVuelta1.length > 0) {
   )
 
   if (corregido) {
-    registro = corregido
+    registro = conLaCorreccionAplicada(registro, corregido)
 
     phase('Medir')
 
@@ -878,7 +907,7 @@ if (marcadasVuelta1.length > 0) {
       )
 
       if (recorregido) {
-        registro = recorregido
+        registro = conLaCorreccionAplicada(registro, recorregido)
 
         phase('Medir')
 

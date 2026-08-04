@@ -70,7 +70,7 @@ const REGLA = {
   firmeza: 'dicho',
   origen: 'escuchado',
   enSusPalabras: 'a un taller que apenas abre no se le fia',
-  deDondeSalio: 'salio al contar el caso de un taller que llevaba dos meses operando',
+  deDondeSalio: 'salio de la misma platica, al fijar el limite en tres meses de antiguedad',
   queQuedaAbierto: 'nada'
 }
 
@@ -435,6 +435,65 @@ describe('las vueltas de correccion tienen tope, y lo pone el codigo', () => {
     })
 
     expect(llamadas.filter((l) => l.opts.phase === 'Corregir')).toHaveLength(1)
+  })
+})
+
+/**
+ * Medido en la primera corrida real, el 2026-08-04. El molino cambiaba el registro entero por lo
+ * que devolvia la vuelta de correccion, y a la vuelta se le pide -en su propio prompt- que
+ * devuelva SOLO las piezas marcadas. El agente obedecio, mando una capacidad sin ningun modulo,
+ * y el escribano se nego a escribir porque `CAP-1` citaba un `MOD-1` que ya no existia.
+ *
+ * Ninguna de las pruebas de arriba lo cazo: el agente falso siempre devolvia el registro
+ * completo en la correccion. **Un doble mas complaciente que el agente real no mide nada.**
+ */
+describe('la correccion se funde con el registro, no lo reemplaza', () => {
+  const SOLO_LA_CAPACIDAD = {
+    capacidades: [{ ...CAPACIDAD, deDondeSalio: 'el caso completo, contado sin apodo' }],
+    modulos: [],
+    reglas: [],
+    dudas: [],
+    senaladas: []
+  }
+
+  const MARCA_LA_CAPACIDAD = { huecos: [{ id: 'CAP-1', renglon: CAPACIDAD.renglon, forma: 'apodo-de-caso' }], piezasLeidas: 3 }
+
+  it('lo que la vuelta no devuelve sigue en pie: el modulo y la regla no se pierden', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [MARCA_LA_CAPACIDAD, SIN_HUECOS],
+      correccion: SOLO_LA_CAPACIDAD
+    })
+
+    const registrar = llamadaDe(llamadas, 'Registrar')
+
+    expect(registrar.prompt).toContain('"id": "MOD-1"')
+    expect(registrar.prompt).toContain('"id": "REG-1"')
+  })
+
+  it('la pieza corregida si se reemplaza: llega la version nueva, no la vieja', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [MARCA_LA_CAPACIDAD, SIN_HUECOS],
+      correccion: SOLO_LA_CAPACIDAD
+    })
+
+    const registrar = llamadaDe(llamadas, 'Registrar')
+
+    expect(registrar.prompt).toContain('el caso completo, contado sin apodo')
+    expect(registrar.prompt).not.toContain(CAPACIDAD.deDondeSalio)
+  })
+
+  it('ningun enlace queda apuntando a la nada despues de la vuelta', async () => {
+    const { llamadas } = await correrMolino(ENTRADA, {
+      lecturas: [MARCA_LA_CAPACIDAD, SIN_HUECOS],
+      correccion: SOLO_LA_CAPACIDAD
+    })
+
+    const prompt = llamadaDe(llamadas, 'Registrar').prompt
+    const citados = (prompt.match(/"(?:modulo|reglas|capacidades)": (?:"[A-Z]+-\d+"|\[[^\]]*\])/g) ?? []).join(' ')
+    const ids = citados.match(/[A-Z]+-\d+/g) ?? []
+
+    expect(ids.length).toBeGreaterThan(0)
+    for (const id of ids) expect(prompt, `${id} se cita y no existe`).toContain(`"id": "${id}"`)
   })
 })
 
