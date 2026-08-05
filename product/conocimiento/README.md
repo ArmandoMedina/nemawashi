@@ -41,6 +41,26 @@ Las dos que más se confunden son **dominio y módulo**, y lo que las separa no 
 el módulo, por servir para clasificar. Por eso la plantilla del dominio tiene `<quien-lo-sabe>` y la
 del módulo no.
 
+### Por dónde se corta un módulo
+
+**Por el ciclo de vida de la cosa que el dominio trata**: qué le pasa, y en qué orden. En un dominio
+de comisiones, los módulos son darla de alta, calcularla, pagarla y registrarla en bitácora.
+
+Las otras dos maneras de cortar se ven razonables y las dos fallan:
+
+- **Por tema** parte en dos lo que ocurre en un solo momento, y entonces una capacidad cuelga de dos
+  módulos a la vez. Medido al levantar una operación de reparto: «la entrega» y «el cobro» salieron
+  como módulos distintos aunque son la misma persona, en la misma puerta, en el mismo instante. Tres
+  capacidades acabaron cruzando la frontera de un módulo, y el enlace de un solo padre dejó de
+  alcanzar.
+- **Por pantalla** mete una decisión del sistema en un documento que es del negocio. La pantalla se
+  diseña después, en [`design/`](../../design/), y sobre esto ya levantado. Un módulo llamado como
+  una ventana amarra el negocio a una interfaz que todavía no existe.
+
+La prueba de arriba sigue mandando: si el corte no te sirve para decidir dónde va una capacidad
+nueva, no es un módulo. El ciclo de vida la pasa porque una capacidad nueva siempre ocurre en algún
+punto de ese ciclo.
+
 ## Las palabras de la casa
 
 Sin esto, media página de arriba no se puede aplicar.
