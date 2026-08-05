@@ -126,6 +126,7 @@ type OpcionesCorrida = {
   correccion?: Record<string, unknown> | null
   escritos?: Record<string, unknown> | null
   dictamen?: Record<string, unknown> | null
+  respuestasSacadas?: Record<string, unknown> | null
 }
 
 /**
@@ -143,7 +144,8 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     examenes = [EXAMEN_APROBADO],
     correccion = null,
     escritos = ESCRITOS_LIMPIOS,
-    dictamen = SIN_FALLAS
+    dictamen = SIN_FALLAS,
+    respuestasSacadas = { respuestas: 'desde los tres meses', archivoLeido: 'respuestas.md' }
   } = opciones
 
   const llamadas: Llamada[] = []
@@ -156,7 +158,11 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     llamadas.push({ prompt, opts })
     const label = String(opts.label ?? '')
 
-    if (opts.phase === 'Sacar') return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+    // `sacar-respuestas:` comparte prefijo con `sacar:` -se prueba primero, el mas especifico.
+    if (opts.phase === 'Sacar') {
+      if (label.startsWith('sacar-respuestas')) return respuestasSacadas
+      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+    }
     if (opts.phase === 'Inventariar') return inventario
     if (opts.phase === 'Marcar') return marcado
     if (opts.phase === 'Levantar el examen') return examen
@@ -223,12 +229,17 @@ describe('cada caja del molino nombra la carta del agente que la hace', () => {
     }
   })
 
-  it('a «Sacar» se le dice que NO cargue ninguna carta: su tarea es mecanica', async () => {
-    const { llamadas } = await correrMolino(ENTRADA)
-    const sacar = llamadaDe(llamadas, 'Sacar')
+  it('a «Sacar» se le dice que NO cargue ninguna carta: su tarea es mecanica -en las dos llamadas', async () => {
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: 'respuestas.md' })
+    const deSacar = llamadas.filter((l) => l.opts.phase === 'Sacar')
 
-    expect(sacar.prompt).toContain('no cargues ninguna de tus cartas')
-    expect(sacar.prompt).not.toMatch(/Carga tu carta/)
+    expect(deSacar).toHaveLength(2)
+
+    for (const l of deSacar) {
+      const label = String(l.opts.label ?? '')
+      expect(l.prompt, `${label} no lo dice`).toContain('no cargues ninguna de tus cartas')
+      expect(l.prompt, `${label} carga una carta`).not.toMatch(/Carga tu carta/)
+    }
   })
 
   it('escribe el escribano, y todo lo demas lo mide el auditor', async () => {
@@ -435,7 +446,7 @@ describe('las dudas paran la corrida una vez, no para siempre', () => {
 
   it('con respuestas del experto, las mismas dudas ya no paran nada y se escribe', async () => {
     const { llamadas, salida } = await correrMolino(
-      { ...ENTRADA, respuestas: 'desde los tres meses' },
+      { ...ENTRADA, rutaRespuestas: 'respuestas.md' },
       { registro: { ...REGISTRO_LIMPIO, dudas: [{ pregunta: 'Desde cuantos meses si se le fia?', falla: 'umbral-sin-numero' }] } }
     )
 
@@ -444,7 +455,7 @@ describe('las dudas paran la corrida una vez, no para siempre', () => {
   })
 
   it('en la segunda corrida se le dice al constructor que no devuelva dudas -en las cuatro llamadas', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: 'respuestas.md' })
 
     for (const prefijo of PREFIJOS_DE_CONSTRUIR) {
       const construir = llamadaDe(llamadas, 'Construir', prefijo)
@@ -603,12 +614,16 @@ describe('el dictamen del auditor llega a los archivos', () => {
  * encontraba, y dictaminaba lo unico que podia con lo que tenia.
  */
 describe('quien audita ve todo lo que dijo el experto, no solo la grabacion', () => {
-  it('en una segunda corrida, las respuestas le llegan al auditor', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses, no antes' })
+  it('en una segunda corrida, las respuestas -y su ruta- le llegan al auditor', async () => {
+    const { llamadas } = await correrMolino(
+      { ...ENTRADA, rutaRespuestas: 'respuestas.md' },
+      { respuestasSacadas: { respuestas: 'desde los tres meses, no antes', archivoLeido: 'respuestas.md' } }
+    )
     const auditar = llamadaDe(llamadas, 'Auditar')
 
     expect(auditar.prompt).toContain('desde los tres meses, no antes')
     expect(auditar.prompt).toContain('El crudo son DOS cosas')
+    expect(auditar.prompt).toContain('respuestas.md')
   })
 
   it('en una primera corrida no hay respuestas y no se le inventa el bloque', async () => {
@@ -787,16 +802,20 @@ describe('ninguna llamada del molino manda un esquema mayor al tope', () => {
       piezasLeidas: 4
     }
 
-    const { llamadas } = await correrMolino(ENTRADA, {
-      lecturas: [marcaEnLosCuatroTipos, SIN_HUECOS],
-      correccion: REGISTRO_LIMPIO,
-      dictamen: { ...SIN_FALLAS, sirve: false, porque: 'no le alcanza a quien no estuvo' }
-    })
+    const { llamadas } = await correrMolino(
+      { ...ENTRADA, rutaRespuestas: 'respuestas.md' },
+      {
+        lecturas: [marcaEnLosCuatroTipos, SIN_HUECOS],
+        correccion: REGISTRO_LIMPIO,
+        dictamen: { ...SIN_FALLAS, sirve: false, porque: 'no le alcanza a quien no estuvo' }
+      }
+    )
 
     const conSchema = llamadas.filter((l) => l.opts.schema)
-    // Si esto no crece de aqui, la corrida de la prueba dejo de tocar Corregir o Marcar, y el
+    // Si esto no crece de aqui, la corrida de la prueba dejo de tocar Corregir o Marcar -o de
+    // leer las respuestas por ruta, que agrega su propio esquema `RESPUESTAS_SACADAS`-, y el
     // contrato quedaria midiendo menos de lo que dice medir.
-    expect(conSchema.length).toBeGreaterThanOrEqual(20)
+    expect(conSchema.length).toBeGreaterThanOrEqual(21)
 
     for (const l of conSchema) {
       const caracteres = JSON.stringify(l.opts.schema).length

@@ -60,10 +60,10 @@ const ESCRITOS = {
 }
 const SIN_FALLAS = { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'sesion.jsonl' }
 
-type OpcionesCorrida = { dictamen?: Record<string, unknown> | null }
+type OpcionesCorrida = { dictamen?: Record<string, unknown> | null; respuestasSacadas?: Record<string, unknown> | null }
 
 function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrida = {}): Promise<Corrida> {
-  const { dictamen = SIN_FALLAS } = opciones
+  const { dictamen = SIN_FALLAS, respuestasSacadas = null } = opciones
 
   const llamadas: Llamada[] = []
   const dichos: string[] = []
@@ -72,7 +72,11 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     llamadas.push({ prompt, opts })
     const label = String(opts.label ?? '')
 
-    if (opts.phase === 'Sacar') return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+    // `sacar-respuestas:` comparte prefijo con `sacar:` -se prueba primero, el mas especifico.
+    if (opts.phase === 'Sacar') {
+      if (label.startsWith('sacar-respuestas')) return respuestasSacadas
+      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+    }
     if (opts.phase === 'Levantar el examen') return { preguntas: ['Desde cuando se le fia a un taller?'] }
     if (opts.phase === 'Construir') {
       // Solo lo que le toca a cada llamada, no el registro entero -la misma leccion del
@@ -183,37 +187,49 @@ describe('la procedencia se cuenta entera, y el esquema no deja lugar para el ap
 })
 
 describe('lo que el experto contesto despues vale igual que la platica', () => {
+  const RUTA_RESPUESTAS = 'respuestas.md'
+  const TEXTO_RESPUESTAS = 'desde los tres meses'
+  const CON_RESPUESTAS = { respuestasSacadas: { respuestas: TEXTO_RESPUESTAS, archivoLeido: RUTA_RESPUESTAS } }
+
   it('quien construye ve la platica y las respuestas, las dos -en las cuatro llamadas, no solo en la primera', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: RUTA_RESPUESTAS }, CON_RESPUESTAS)
 
     for (const prefijo of ['construir:reglas', 'construir:capacidades', 'construir:modulos', 'construir:dominios']) {
       const construir = llamadaDe(llamadas, 'Construir', prefijo)
       expect(construir.prompt, `${prefijo} no ve la platica`).toContain(PLATICA_TEXTO)
-      expect(construir.prompt, `${prefijo} no ve las respuestas`).toContain('desde los tres meses')
+      expect(construir.prompt, `${prefijo} no ve las respuestas`).toContain(TEXTO_RESPUESTAS)
     }
   })
 
   it('el cotejador ve las dos, para que una pieza salida de las respuestas no parezca inventada', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: RUTA_RESPUESTAS }, CON_RESPUESTAS)
     const cotejador = llamadaDe(llamadas, 'Medir', 'cotejar')
 
     expect(cotejador.prompt).toContain(PLATICA_TEXTO)
-    expect(cotejador.prompt).toContain('desde los tres meses')
+    expect(cotejador.prompt).toContain(TEXTO_RESPUESTAS)
   })
 
   it('el lector en frio no ve ninguna de las dos: sigue a ciegas aunque haya respuestas', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
-    const lector = llamadaDe(llamadas, 'Medir', 'leer-en-frio')
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: RUTA_RESPUESTAS }, CON_RESPUESTAS)
 
+    // Control positivo, en la MISMA corrida: si el cotejador no viera el texto aqui, la
+    // comprobacion de abajo valdria cero -mediria que el material nunca entro a la corrida, no
+    // que el lector va a ciegas. Puesto en otra prueba se podria desincronizar; aqui es imposible.
+    expect(llamadaDe(llamadas, 'Medir', 'cotejar').prompt).toContain(TEXTO_RESPUESTAS)
+
+    const lector = llamadaDe(llamadas, 'Medir', 'leer-en-frio')
     expect(lector.prompt).not.toContain(PLATICA_TEXTO)
-    expect(lector.prompt).not.toContain('desde los tres meses')
+    expect(lector.prompt).not.toContain(TEXTO_RESPUESTAS)
   })
 
   it('quien contesta el examen tampoco las ve: mide el registro, no la conversacion', async () => {
-    const { llamadas } = await correrMolino({ ...ENTRADA, respuestas: 'desde los tres meses' })
-    const examinador = llamadaDe(llamadas, 'Medir', 'contestar-examen')
+    const { llamadas } = await correrMolino({ ...ENTRADA, rutaRespuestas: RUTA_RESPUESTAS }, CON_RESPUESTAS)
 
+    // Mismo control positivo, misma razon que en la prueba del lector en frio.
+    expect(llamadaDe(llamadas, 'Medir', 'cotejar').prompt).toContain(TEXTO_RESPUESTAS)
+
+    const examinador = llamadaDe(llamadas, 'Medir', 'contestar-examen')
     expect(examinador.prompt).not.toContain(PLATICA_TEXTO)
-    expect(examinador.prompt).not.toContain('desde los tres meses')
+    expect(examinador.prompt).not.toContain(TEXTO_RESPUESTAS)
   })
 })

@@ -1,7 +1,7 @@
 export const meta = {
   name: 'levanta-el-conocimiento',
   description: 'Muele lo platicado en un paso de la sesion y lo deja escrito como capacidades, modulos y reglas enlazadas, medidas contra el examen que se levanto antes de construirlas.',
-  whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan dudas por cerrar; se vuelve a correr con las respuestas.',
+  whenToUse: 'Al cerrar un paso del mapa, o cuando el experto lo pida. Para la linea si quedan dudas por cerrar; se vuelve a correr con la ruta de las respuestas.',
   phases: [
     { title: 'Sacar', detail: 'leer la grabacion de la sesion y sacar la platica limpia con el sacador' },
     { title: 'Inventariar', detail: 'listar lo que otras sesiones ya escribieron, para no volver a proponerlo' },
@@ -17,17 +17,22 @@ export const meta = {
 }
 
 // Lo que recibe:
-//   args.paso        - como se llamo el tramo de sesion. Va al campo `paso` de cada pieza.
-//   args.transcript  - opcional. La ruta del `.jsonl`. Si no llega, «Sacar» resuelve la de
-//                      esta misma sesion; el molino no la adivina -no tiene `fs` ni `process`.
-//   args.hora        - la hora real del alta, ISO 8601 con huso. Se estampa pieza por pieza.
-//                      El molino no la calcula: no tiene reloj.
-//   args.respuestas  - opcional. Lo que el experto contesto a las dudas de una corrida
-//                      anterior. Su presencia es lo que marca la segunda corrida.
+//   args.paso           - como se llamo el tramo de sesion. Va al campo `paso` de cada pieza.
+//   args.transcript     - opcional. La ruta del `.jsonl`. Si no llega, «Sacar» resuelve la de
+//                         esta misma sesion; el molino no la adivina -no tiene `fs` ni `process`.
+//   args.hora           - la hora real del alta, ISO 8601 con huso. Se estampa pieza por pieza.
+//                         El molino no la calcula: no tiene reloj.
+//   args.rutaRespuestas - opcional. La ruta del `.md` con lo que el experto contesto a las dudas
+//                         de una corrida anterior. Que el lector la abra y traiga algo dentro es
+//                         lo que marca la segunda corrida -nunca la ruta por si sola.
 //
-// Ya NO recibe `args.platica`. Antes, quien llamaba tecleaba el texto dentro de la llamada, y
-// esa mano acababa siendo el filtro -medido en corrida real: una version recortada se colo
-// como argumento y el auditor marco «perdido» material que nunca llego a entrar.
+// Ya NO recibe `args.platica` ni `args.respuestas`. Antes, quien llamaba tecleaba el texto
+// dentro de la llamada, y esa mano acababa siendo el filtro -medido en corrida real: una version
+// recortada se colo como argumento y el auditor marco «perdido» material que nunca llego a
+// entrar. Con las respuestas paso algo mas caro todavia, medido el 2026-08-05: pasar 15664
+// caracteres a mano rompe la reanudacion del workflow -un salto de linea de diferencia entre lo
+// tecleado y el archivo cambia el prompt, tira el cache de `resumeFromRunId` y obliga a rehacer
+// cuarenta minutos de agentes. Paso dos veces en la misma sesion.
 
 // --- Los esquemas ----------------------------------------------------------
 
@@ -52,6 +57,29 @@ const SACADO = {
     noSePudo: {
       type: 'string',
       description: 'Por que no se pudo leer el archivo o correr el sacador. Vacio si si se pudo.'
+    }
+  }
+}
+
+// El mismo trato que `SACADO`, con los mismos nombres de campo para que el paralelo se lea. Aqui
+// no hay nada que sacar -es un `.md` plano, no una grabacion- asi que basta con leerlo.
+const RESPUESTAS_SACADAS = {
+  type: 'object',
+  required: ['respuestas', 'archivoLeido'],
+  properties: {
+    respuestas: {
+      type: 'string',
+      description:
+        'Lo que el experto contesto, tal cual esta escrito en el archivo. Vacia si no se pudo ' +
+        'leer -nunca un resumen ni un invento.'
+    },
+    archivoLeido: {
+      type: 'string',
+      description: 'La ruta del `.md` que se leyo. Vacia si no se pudo determinar ni leer.'
+    },
+    noSePudo: {
+      type: 'string',
+      description: 'Por que no se pudo leer el archivo. Vacio si si se pudo.'
     }
   }
 }
@@ -680,6 +708,26 @@ function promptParaSacar(rutaPedida) {
   ].join('\n')
 }
 
+function promptParaSacarLasRespuestas(ruta) {
+  return [
+    'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
+    '',
+    `Lee con tu herramienta Read el archivo \`${ruta}\`: son las respuestas que el experto`,
+    'contesto a las dudas de una corrida anterior.',
+    '',
+    '**Es un `.md` plano, no una grabacion: no corras el sacador, no corras ningun comando y no',
+    'escribas ningun script.** Aqui basta con leer el archivo.',
+    '',
+    'Regresa el contenido tal cual en `respuestas` -sin resumir y sin recortar. Lo que recortes',
+    'aqui, mas adelante el auditor lo va a marcar como inventado, porque no lo va a encontrar en',
+    'el crudo. Y la ruta que leiste en `archivoLeido`.',
+    '',
+    'Si no pudiste leer el archivo, `respuestas` y `archivoLeido` van vacios y `noSePudo` dice',
+    'por que. **No lo escribas de memoria:** una respuesta inventada se ve igual de bien que una',
+    'real.'
+  ].join('\n')
+}
+
 function promptParaInventariar() {
   return [
     'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
@@ -1061,7 +1109,7 @@ function promptParaRegistrar(paso, registro, senaladas, razones, sinPieza, hora)
   ].join('\n')
 }
 
-function promptParaAuditar(paso, rutaTranscript, escritos, respuestas) {
+function promptParaAuditar(paso, rutaTranscript, escritos, respuestas, rutaRespuestas) {
   return [
     'Carga tu carta `auditar` antes de abrir nada.',
     '',
@@ -1073,9 +1121,8 @@ function promptParaAuditar(paso, rutaTranscript, escritos, respuestas) {
     respuestas
       ? [
           '**El crudo son DOS cosas en esta corrida.** La grabacion, y ademas lo que el experto',
-          'contesto despues, cuando la corrida se paro para consultarlo. Esas respuestas **no estan',
-          'en el `.jsonl`** -la grabacion se cerro antes de que el contestara- y valen exactamente',
-          'igual: lo que salga de ellas NO es inventado.',
+          `contesto despues, leido de \`${rutaRespuestas}\` -la grabacion se cerro antes de que el`,
+          'contestara- y valen exactamente igual: lo que salga de ellas NO es inventado.',
           '',
           '--- Lo que el experto contesto despues ---',
           respuestas,
@@ -1157,9 +1204,21 @@ function promptParaArmarLoQueFalta(paso, escritos, senalesSinPieza) {
 const entrada = comoDatos(args)
 
 const paso = entrada.paso ?? 'sin nombre'
-const respuestas = entrada.respuestas
 const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
+const rutaRespuestasPedida = typeof entrada.rutaRespuestas === 'string' && entrada.rutaRespuestas.trim() ? entrada.rutaRespuestas : undefined
 const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
+
+// El freno al argumento viejo. `args.respuestas` ya no se acepta: ese texto se tecleaba a mano
+// dentro de la llamada, y medido el 2026-08-05 eso rompio la reanudacion del workflow dos veces
+// en la misma sesion -un salto de linea de diferencia entre lo tecleado y el archivo cambia el
+// prompt y tira el cache de `resumeFromRunId`, obligando a rehacer cuarenta minutos de agentes.
+// Ignorarlo en silencio haria que una llamada a la vieja usanza corriera como PRIMERA corrida:
+// cuarenta minutos para acabar preguntando lo que el experto ya habia contestado. Por eso para
+// aqui, antes de gastar un solo agente.
+if (typeof entrada.respuestas === 'string' && entrada.respuestas.trim() && !rutaRespuestasPedida) {
+  log('Llego `args.respuestas` con texto y no `rutaRespuestas`. Ese argumento ya no se acepta: manda la ruta del archivo con las respuestas.')
+  return { estado: 'sin-respuestas', paso, motivo: 'llego `args.respuestas` en vez de `rutaRespuestas`' }
+}
 
 // --- Sacar -----------------------------------------------------------------
 
@@ -1190,12 +1249,46 @@ if (!platica.trim()) {
   return { estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' }
 }
 
+// Las respuestas de una corrida anterior se leen aparte, ya que se sabe que hay platica: es la
+// misma llamada de «Sacar», secuencial y con label propio, no otra fase -meta.phases no cambia.
+// Solo corre si llego una ruta; sin ella no hay respuestas que leer y la corrida sigue siendo la
+// primera.
+let respuestas = ''
+let rutaRespuestas = rutaRespuestasPedida
+
+if (rutaRespuestasPedida) {
+  const respuestasSacadas = await agent(promptParaSacarLasRespuestas(rutaRespuestasPedida), {
+    label: `sacar-respuestas:${paso}`,
+    phase: 'Sacar',
+    agentType: 'auditor',
+    schema: RESPUESTAS_SACADAS
+  })
+
+  rutaRespuestas = respuestasSacadas?.archivoLeido || rutaRespuestasPedida
+
+  // Para aqui en vez de degradar a primera corrida: es la misma forma que ya usa `sin-material`
+  // dos renglones arriba. Degradar en silencio haria que el molino le preguntara al experto lo
+  // que ya habia contestado.
+  if (!respuestasSacadas || !respuestasSacadas.respuestas.trim()) {
+    log(`No se pudieron leer las respuestas: ${respuestasSacadas?.noSePudo || 'el lector las devolvio vacias sin decir por que'}.`)
+    return {
+      estado: 'sin-respuestas',
+      paso,
+      motivo: respuestasSacadas?.noSePudo || 'las respuestas llegaron vacias o no llegaron'
+    }
+  }
+
+  respuestas = respuestasSacadas.respuestas
+}
+
 // Las respuestas de una corrida anterior son turno del experto igual que la platica, y valen
 // igual como respaldo. Van juntas a todo lo que compara contra lo dicho, para que una pieza que
 // sale de sus respuestas no parezca inventada.
 const loQueDijoElExperto = respuestas ? `${platica}\n\n--- Lo que el experto contesto despues ---\n${respuestas}` : platica
 
-const segundaCorrida = Boolean(respuestas && String(respuestas).trim())
+// Con el texto que devolvio el lector, nunca con la ruta: una ruta cualquiera no basta para que
+// la corrida salga `listo` sin que el experto haya contestado nada de verdad.
+const segundaCorrida = Boolean(respuestas)
 
 // --- Inventariar -----------------------------------------------------------
 
@@ -1499,7 +1592,7 @@ if (!escritos) {
 
 phase('Auditar')
 
-const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos, respuestas), {
+const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos, respuestas, rutaRespuestas), {
   label: `auditar:${paso}`,
   phase: 'Auditar',
   agentType: 'auditor',
