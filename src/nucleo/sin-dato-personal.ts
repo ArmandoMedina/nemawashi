@@ -41,7 +41,7 @@ export type Hallazgo = {
  * capa 2 (`src/contratos/sin-dato-personal.test.ts`) lo importa en vez de repetir la
  * lista, para que escanear mas tipos de archivo sea agregar una linea aqui, no dos.
  */
-export const EXTENSIONES_A_ESCANEAR = ['.ts', '.tsx', '.md', '.html', '.css', '.json', '.yml', '.yaml', '.txt']
+export const EXTENSIONES_A_ESCANEAR = ['.ts', '.tsx', '.md', '.html', '.css', '.json', '.jsonl', '.yml', '.yaml', '.txt']
 
 /**
  * Los archivos de este mismo gate contienen los patrones por naturaleza — el nucleo los

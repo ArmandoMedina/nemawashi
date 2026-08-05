@@ -264,8 +264,11 @@ describe('las respuestas tambien entran por ruta, y las lee un agente', () => {
 
     expect(salida.estado).toBe('sin-respuestas')
     expect(dichos.join('\n')).toContain('rutaRespuestas')
-    // Para antes de gastar un solo agente: ignorarlo en silencio corre como primera corrida, y
-    // eso son cuarenta minutos para acabar preguntando lo que el experto ya habia contestado.
-    expect(llamadas).toHaveLength(0)
+    // Para antes de gastar un solo agente DE LA CORRIDA: ignorarlo en silencio corre como
+    // primera corrida, y eso son cuarenta minutos para acabar preguntando lo que el experto ya
+    // habia contestado. Las dos llamadas que si quedan son mecanicas -de «Anotar», que deja el
+    // renglon de esta corrida aunque se haya cortado en el freno.
+    expect(llamadas).toHaveLength(2)
+    expect(llamadas.map((l) => l.opts.phase)).toEqual(['Anotar', 'Anotar'])
   })
 })

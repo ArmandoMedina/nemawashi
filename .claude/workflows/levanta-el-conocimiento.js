@@ -12,7 +12,8 @@ export const meta = {
     { title: 'Registrar', detail: 'un archivo por pieza, con la marca de lo que quedo a medias' },
     { title: 'Auditar', detail: 'leer el crudo y dictaminar' },
     { title: 'Marcar', detail: 'llevar el dictamen a los archivos, para que la medicion cuente' },
-    { title: 'Armar lo que falta', detail: 'lo que hay que preguntarle al experto la proxima vez' }
+    { title: 'Armar lo que falta', detail: 'lo que hay que preguntarle al experto la proxima vez' },
+    { title: 'Anotar', detail: 'dejar el renglon de esta corrida en docs/mediciones/corridas.jsonl' }
   ]
 }
 
@@ -520,6 +521,29 @@ const LO_QUE_FALTA = {
   }
 }
 
+// Las dos llamadas de «Anotar», la fase final. Mecanicas -no cargan carta-, igual que «Sacar» e
+// «Inventariar»: no hay juicio que hacer, solo leer un reloj y agregar una linea.
+const HORA_DE_CIERRE = {
+  type: 'object',
+  required: ['horaCierre'],
+  properties: {
+    horaCierre: { type: 'string', description: 'La hora de este instante, ISO 8601 con huso, de `date -Iseconds`.' },
+    duracionMin: {
+      type: 'number',
+      description: 'Minutos enteros desde la hora de arranque hasta ahora. `null` si no llego esa hora, o si la resta sale negativa.'
+    }
+  }
+}
+
+const ANOTADO = {
+  type: 'object',
+  required: ['anotado'],
+  properties: {
+    anotado: { type: 'boolean' },
+    noSePudo: { type: 'string', description: 'Por que no se pudo agregar la linea. Vacio si si se pudo.' }
+  }
+}
+
 // --- Los ayudantes ---------------------------------------------------------
 
 // Quien llama puede mandar los argumentos como datos o como texto JSON - las dos formas se han
@@ -665,6 +689,172 @@ function conLaCorreccionAplicada(registro, corregido) {
     dudas: registro.dudas,
     senaladas: senaladas.filter((id, i) => senaladas.indexOf(id) === i)
   }
+}
+
+// --- El renglon de la corrida ------------------------------------------------
+//
+// Pura, como el resto de este bloque: nada de `fs`, nada de `process`, nada de reloj -la
+// duracion llega ya calculada por `hora-de-cierre` (ver «Anotar», mas abajo). Vive aqui y no en
+// `src/nucleo/` porque el molino corre como cuerpo de funcion suelto, sin `import` posible
+// (`src/contratos/la-hora-no-se-inventa.test.ts`), igual que `idsSenalados` y sus vecinos.
+
+// El tipo se decide por la carpeta de `ruta`, nunca por el prefijo del id -la misma decision que
+// ya toma `piezasDelTipoMarcadas` un poco mas arriba.
+const CARPETA_POR_TIPO_DE_PIEZA = [
+  { carpeta: 'conocimiento/dominios/', tipo: 'dominios' },
+  { carpeta: 'conocimiento/modulos/', tipo: 'modulos' },
+  { carpeta: 'conocimiento/capacidades/', tipo: 'capacidades' },
+  { carpeta: 'conocimiento/reglas/', tipo: 'reglas' }
+]
+
+function tipoDeLaRutaDelRenglon(ruta) {
+  const normalizada = ruta.replace(/\\/g, '/')
+  const encontrada = CARPETA_POR_TIPO_DE_PIEZA.find((c) => normalizada.includes(c.carpeta))
+  return encontrada ? encontrada.tipo : null
+}
+
+function porTipoEnCero() {
+  return { dominios: 0, modulos: 0, capacidades: 0, reglas: 0 }
+}
+
+function contarPorTipoDelRenglon(archivos, cuentaEste) {
+  const conteo = porTipoEnCero()
+  for (const archivo of archivos) {
+    if (!cuentaEste(archivo)) continue
+    const tipo = tipoDeLaRutaDelRenglon(archivo.ruta)
+    if (tipo) conteo[tipo] += 1
+  }
+  return conteo
+}
+
+function idsUnicosDelRenglon(ids) {
+  return ids.filter((id, i) => ids.indexOf(id) === i)
+}
+
+// Las cuatro fuentes que `idsSenalados` aplana en una sola lista, aqui se cuentan por separado:
+// la suma de las cuatro puede ser mayor que el total de piezas senaladas -una pieza que dos
+// mediciones marcaron cuenta en las dos-, pero dentro de cada medidor los ids se deduplican.
+function marcoQuienDelRenglon(entrada) {
+  const alConstruir = idsUnicosDelRenglon(entrada.senaladasAlConstruir ?? [])
+  const alLeerEnFrio = idsUnicosDelRenglon((entrada.enFrio ? entrada.enFrio.huecos : []).map((h) => h.id))
+  const alCotejar = idsUnicosDelRenglon((entrada.cotejo ? entrada.cotejo.inventos : []).map((i) => i.id))
+
+  const respuestas = entrada.contestado ? entrada.contestado.respuestas : []
+  const idsDeCamino = respuestas.filter((r) => r.veredicto !== 'contestada').flatMap((r) => r.camino ?? [])
+  const alContestar = idsUnicosDelRenglon((entrada.contestado ? entrada.contestado.senaladas : []).concat(idsDeCamino))
+
+  return {
+    construir: alConstruir.length,
+    'leer-en-frio': alLeerEnFrio.length,
+    cotejar: alCotejar.length,
+    'contestar-examen': alContestar.length
+  }
+}
+
+function fallasDelRenglon(entrada) {
+  const huecos = entrada.enFrio ? entrada.enFrio.huecos : []
+  const contarForma = (forma) => huecos.filter((h) => h.forma === forma).length
+
+  const respuestas = entrada.contestado ? entrada.contestado.respuestas : []
+  const contarVeredicto = (v) => respuestas.filter((r) => r.veredicto === v).length
+
+  const dictamen = entrada.dictamen
+
+  return {
+    'apodo-de-caso': contarForma('apodo-de-caso'),
+    'puntero-a-la-nada': contarForma('puntero-a-la-nada'),
+    'procedencia-de-relleno': contarForma('procedencia-de-relleno'),
+    'palabra-sin-definir': contarForma('palabra-sin-definir'),
+    contestada: contarVeredicto('contestada'),
+    'a-medias': contarVeredicto('a-medias'),
+    'sin-contestar': contarVeredicto('sin-contestar'),
+    inventos: (entrada.cotejo ? entrada.cotejo.inventos.length : 0),
+    inventado: (dictamen ? dictamen.inventado.length : 0),
+    perdido: (dictamen ? dictamen.perdido.length : 0),
+    malMarcado: (dictamen ? dictamen.malMarcado.length : 0),
+    noSirve: dictamen ? dictamen.sirve === false : null
+  }
+}
+
+// Tolera ausencias: la entrada de un return temprano casi siempre esta casi vacia, y esta funcion
+// no puede reventar por eso. Todo lo que falte sale en cero, en `null` o en `[]` -nunca
+// `undefined`. `duracionMin` y `horaCierre` llegan ya calculados por `hora-de-cierre`: esta
+// funcion no lee ningun reloj, solo acomoda lo que le dan.
+function renglonDeCorrida(entrada) {
+  const archivos = entrada.archivosEscritos ?? []
+
+  return {
+    hora: entrada.hora ?? null,
+    horaCierre: entrada.horaCierre ?? null,
+    duracionMin: entrada.duracionMin ?? null,
+    paso: entrada.paso,
+    corrida: entrada.corrida,
+    estado: entrada.estado,
+    dondeParo: entrada.dondeParo ?? null,
+    escritas: contarPorTipoDelRenglon(archivos, () => true),
+    conHuecos: contarPorTipoDelRenglon(archivos, (a) => a.estado === 'con-huecos'),
+    marcoQuien: marcoQuienDelRenglon(entrada),
+    fallas: fallasDelRenglon(entrada),
+    dudas: entrada.dudas ?? 0,
+    noContestaron: [...(entrada.noContestaron ?? [])].sort(),
+    senaladasSinMarcar: entrada.senaladasSinMarcar ?? 0,
+    noEscritas: entrada.noEscritas ?? 0,
+    preguntasSinPieza: entrada.preguntasSinPieza ?? 0
+  }
+}
+
+// Una sola linea de JSON, sin sangria, terminada en salto de linea. Las llaves se ordenan a mano
+// -no se confia en el orden de insercion de `renglonDeCorrida`- para que el orden quede fijado
+// en un solo lugar y no dependa de que nadie reordene un `return` alla arriba.
+function renglonComoLinea(renglon) {
+  const ordenado = {
+    hora: renglon.hora,
+    horaCierre: renglon.horaCierre,
+    duracionMin: renglon.duracionMin,
+    paso: renglon.paso,
+    corrida: renglon.corrida,
+    estado: renglon.estado,
+    dondeParo: renglon.dondeParo,
+    escritas: {
+      dominios: renglon.escritas.dominios,
+      modulos: renglon.escritas.modulos,
+      capacidades: renglon.escritas.capacidades,
+      reglas: renglon.escritas.reglas
+    },
+    conHuecos: {
+      dominios: renglon.conHuecos.dominios,
+      modulos: renglon.conHuecos.modulos,
+      capacidades: renglon.conHuecos.capacidades,
+      reglas: renglon.conHuecos.reglas
+    },
+    marcoQuien: {
+      construir: renglon.marcoQuien.construir,
+      'leer-en-frio': renglon.marcoQuien['leer-en-frio'],
+      cotejar: renglon.marcoQuien.cotejar,
+      'contestar-examen': renglon.marcoQuien['contestar-examen']
+    },
+    fallas: {
+      'apodo-de-caso': renglon.fallas['apodo-de-caso'],
+      'puntero-a-la-nada': renglon.fallas['puntero-a-la-nada'],
+      'procedencia-de-relleno': renglon.fallas['procedencia-de-relleno'],
+      'palabra-sin-definir': renglon.fallas['palabra-sin-definir'],
+      contestada: renglon.fallas.contestada,
+      'a-medias': renglon.fallas['a-medias'],
+      'sin-contestar': renglon.fallas['sin-contestar'],
+      inventos: renglon.fallas.inventos,
+      inventado: renglon.fallas.inventado,
+      perdido: renglon.fallas.perdido,
+      malMarcado: renglon.fallas.malMarcado,
+      noSirve: renglon.fallas.noSirve
+    },
+    dudas: renglon.dudas,
+    noContestaron: renglon.noContestaron,
+    senaladasSinMarcar: renglon.senaladasSinMarcar,
+    noEscritas: renglon.noEscritas,
+    preguntasSinPieza: renglon.preguntasSinPieza
+  }
+
+  return `${JSON.stringify(ordenado)}\n`
 }
 
 // --- Los prompts -----------------------------------------------------------
@@ -1199,6 +1389,40 @@ function promptParaArmarLoQueFalta(paso, escritos, senalesSinPieza) {
   ].join('\n')
 }
 
+function promptParaLaHoraDeCierre(horaDeArranque) {
+  return [
+    'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
+    '',
+    'Con Bash, corre `date -Iseconds` y toma esa hora como `horaCierre`, en ISO 8601 con huso.',
+    '',
+    horaDeArranque
+      ? [
+          `La hora de arranque de esta corrida fue \`${horaDeArranque}\`. Resta: minutos enteros`,
+          'de esa hora a `horaCierre`, redondeando hacia abajo, y pon el resultado en',
+          '`duracionMin`. Si la resta sale negativa -un reloj que va para atras no es una',
+          'duracion-, `duracionMin` va en `null`.'
+        ].join('\n')
+      : 'No llego la hora de arranque de esta corrida: `duracionMin` va en `null`. No la inventes.'
+  ].join('\n')
+}
+
+function promptParaAnotarLaCorrida(linea) {
+  return [
+    'Tu tarea aqui es mecanica, no de juicio: no cargues ninguna de tus cartas para esto.',
+    '',
+    'Agrega esta linea al final de `docs/mediciones/corridas.jsonl`. Si el archivo ya existe,',
+    'leelo entero con `Read` y vuelve a escribirlo con `Write`, con la linea nueva al final -no',
+    'reordenes, no reescribas y no borres ninguna linea vieja. Si no existe, crea la carpeta',
+    '`docs/mediciones/` y escribelo con esta sola linea.',
+    '',
+    '**No le agregues ni un caracter a la linea: se pega tal cual, incluido su salto de linea',
+    'final.**',
+    '',
+    '--- La linea ---',
+    linea
+  ].join('\n')
+}
+
 // --- La corrida ------------------------------------------------------------
 
 const entrada = comoDatos(args)
@@ -1207,6 +1431,89 @@ const paso = entrada.paso ?? 'sin nombre'
 const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
 const rutaRespuestasPedida = typeof entrada.rutaRespuestas === 'string' && entrada.rutaRespuestas.trim() ? entrada.rutaRespuestas : undefined
 const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
+const corridaNumero = rutaRespuestasPedida ? 2 : 1
+
+// --- Lo que arma el renglon de esta corrida ---------------------------------
+//
+// Declarados aqui, antes de cualquier `return`, para que `cerrar` los pueda leer sin importar
+// en cual de los catorce se dispare: un `let` declarado mas abajo en el script truena con
+// «Cannot access before initialization» si algo lo lee antes de esa linea. Cada uno arranca en
+// su valor vacio y se actualiza en cuanto el dato real existe; si la corrida se corta antes de
+// esa actualizacion, el valor vacio es exactamente lo correcto -no se sabe mas que eso.
+let dondeParo = null
+let archivosEscritosParaElRenglon = []
+let senaladasAlConstruirParaElRenglon = []
+let enFrioParaElRenglon = null
+let cotejoParaElRenglon = null
+let contestadoParaElRenglon = null
+let dictamenParaElRenglon = null
+let dudasParaElRenglon = 0
+let senaladasSinMarcarParaElRenglon = 0
+let noEscritasParaElRenglon = 0
+let preguntasSinPiezaParaElRenglon = 0
+const noContestaron = []
+
+// Jidoka de verdad: no basta con tolerar que el agente devuelva vacio -tambien tiene que
+// sobrevivir a que truene. Un timeout o un rechazo de esquema no puede tumbar una corrida que
+// ya escribio piezas de verdad, y sin este `try/catch` si podia: `await agent(...)` propaga la
+// excepcion tal cual, y esa excepcion sale por el `return` de la fase que llamo a `cerrar`,
+// tumbando la corrida entera con ella.
+async function agentDeAnotarSinTronar(prompt, opts) {
+  try {
+    return await agent(prompt, opts)
+  } catch (e) {
+    log(`El agente "${opts.label}" de Anotar tronó: ${e?.message ?? e}. Anotar sigue sin el.`)
+    return null
+  }
+}
+
+// Jidoka: anotar es medicion, no es la linea de produccion. Si la hora o el escribano no
+// contestan -o truenan-, se dice y la corrida devuelve lo suyo igual. Cada uno de los catorce
+// `return` de aqui abajo pasa por esta funcion antes de salir.
+async function cerrar(salida) {
+  const medidaDeLaHora = await agentDeAnotarSinTronar(promptParaLaHoraDeCierre(hora), {
+    label: `hora-de-cierre:${paso}`,
+    phase: 'Anotar',
+    agentType: 'auditor',
+    schema: HORA_DE_CIERRE
+  })
+
+  if (!medidaDeLaHora) log('No se pudo medir la hora de cierre. El renglon de esta corrida sale sin duracion.')
+
+  const renglon = renglonDeCorrida({
+    paso,
+    corrida: corridaNumero,
+    estado: salida.estado,
+    hora: hora ?? null,
+    horaCierre: medidaDeLaHora?.horaCierre ?? null,
+    duracionMin: medidaDeLaHora?.duracionMin ?? null,
+    dondeParo,
+    archivosEscritos: archivosEscritosParaElRenglon,
+    senaladasAlConstruir: senaladasAlConstruirParaElRenglon,
+    enFrio: enFrioParaElRenglon,
+    cotejo: cotejoParaElRenglon,
+    contestado: contestadoParaElRenglon,
+    dictamen: dictamenParaElRenglon,
+    dudas: dudasParaElRenglon,
+    noContestaron,
+    senaladasSinMarcar: senaladasSinMarcarParaElRenglon,
+    noEscritas: noEscritasParaElRenglon,
+    preguntasSinPieza: preguntasSinPiezaParaElRenglon
+  })
+
+  const linea = renglonComoLinea(renglon)
+
+  const anotado = await agentDeAnotarSinTronar(promptParaAnotarLaCorrida(linea), {
+    label: `anotar-la-corrida:${paso}`,
+    phase: 'Anotar',
+    agentType: 'escribano',
+    schema: ANOTADO
+  })
+
+  if (!anotado || !anotado.anotado) log(`No se pudo anotar la corrida. Renglon completo: ${linea}`)
+
+  return salida
+}
 
 // El freno al argumento viejo. `args.respuestas` ya no se acepta: ese texto se tecleaba a mano
 // dentro de la llamada, y medido el 2026-08-05 eso rompio la reanudacion del workflow dos veces
@@ -1217,7 +1524,8 @@ const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.h
 // aqui, antes de gastar un solo agente.
 if (typeof entrada.respuestas === 'string' && entrada.respuestas.trim() && !rutaRespuestasPedida) {
   log('Llego `args.respuestas` con texto y no `rutaRespuestas`. Ese argumento ya no se acepta: manda la ruta del archivo con las respuestas.')
-  return { estado: 'sin-respuestas', paso, motivo: 'llego `args.respuestas` en vez de `rutaRespuestas`' }
+  dondeParo = 'freno'
+  return await cerrar({ estado: 'sin-respuestas', paso, motivo: 'llego `args.respuestas` en vez de `rutaRespuestas`' })
 }
 
 // --- Sacar -----------------------------------------------------------------
@@ -1238,7 +1546,9 @@ const sacado = await agent(promptParaSacar(rutaTranscriptPedida), {
 
 if (!sacado) {
   log('El sacador no contesto. No hay material que moler.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'sacar'
+  noContestaron.push('sacar')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 const platica = sacado.platica ?? ''
@@ -1246,7 +1556,9 @@ const rutaTranscript = sacado.transcriptLeido || rutaTranscriptPedida
 
 if (!platica.trim()) {
   log(`No se pudo sacar la platica: ${sacado.noSePudo || 'el sacador la devolvio vacia sin decir por que'}.`)
-  return { estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' }
+  dondeParo = 'sacar'
+  noContestaron.push('sacar')
+  return await cerrar({ estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' })
 }
 
 // Las respuestas de una corrida anterior se leen aparte, ya que se sabe que hay platica: es la
@@ -1271,11 +1583,13 @@ if (rutaRespuestasPedida) {
   // que ya habia contestado.
   if (!respuestasSacadas || !respuestasSacadas.respuestas.trim()) {
     log(`No se pudieron leer las respuestas: ${respuestasSacadas?.noSePudo || 'el lector las devolvio vacias sin decir por que'}.`)
-    return {
+    dondeParo = 'sacar-respuestas'
+    noContestaron.push('sacar-respuestas')
+    return await cerrar({
       estado: 'sin-respuestas',
       paso,
       motivo: respuestasSacadas?.noSePudo || 'las respuestas llegaron vacias o no llegaron'
-    }
+    })
   }
 
   respuestas = respuestasSacadas.respuestas
@@ -1311,6 +1625,7 @@ const inventario = await agent(promptParaInventariar(), {
 
 if (!inventario) {
   log('No se pudo inventariar lo ya escrito. Se construye a ciegas: puede salir repetido lo que ya existe.')
+  noContestaron.push('inventariar')
 } else if (inventario.noSePudo) {
   log(`El inventario salio incompleto: ${inventario.noSePudo}. Lo que no se leyo puede salir repetido.`)
 } else {
@@ -1335,12 +1650,16 @@ const examen = await agent(promptParaElExamen(paso, platica), {
 
 if (!examen) {
   log('Nadie levanto el examen. Sin el no hay con que medir lo que se construya.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'examen'
+  noContestaron.push('examen')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 if (examen.preguntas.length === 0) {
   log('La platica no dio ninguna pregunta que el registro tenga que contestar. No hay examen que aplicar.')
-  return { estado: 'sin-examen', paso }
+  dondeParo = 'examen'
+  noContestaron.push('examen')
+  return await cerrar({ estado: 'sin-examen', paso })
 }
 
 log(`${examen.preguntas.length} pregunta(s) levantadas. Contra eso se va a medir lo que se construya.`)
@@ -1366,7 +1685,9 @@ const construidoReglas = await agent(promptParaConstruirReglas(paso, loQueDijoEl
 
 if (!construidoReglas) {
   log('Nadie construyo las reglas. No hay nada que medir ni que escribir.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'construir:reglas'
+  noContestaron.push('construir:reglas')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 const construidoCapacidades = await agent(
@@ -1376,7 +1697,9 @@ const construidoCapacidades = await agent(
 
 if (!construidoCapacidades) {
   log('Nadie construyo las capacidades. No hay nada que medir ni que escribir.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'construir:capacidades'
+  noContestaron.push('construir:capacidades')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 // La regla no podia saber que capacidad la iba a citar cuando se construyo -no existia todavia-.
@@ -1392,7 +1715,9 @@ const construidoModulos = await agent(
 
 if (!construidoModulos) {
   log('Nadie construyo los modulos. No hay nada que medir ni que escribir.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'construir:modulos'
+  noContestaron.push('construir:modulos')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 // La misma inversion un nivel arriba: la capacidad no podia saber que modulo la iba a contener.
@@ -1408,7 +1733,9 @@ const construidoDominios = await agent(
 
 if (!construidoDominios) {
   log('Nadie construyo los dominios. No hay nada que medir ni que escribir.')
-  return { estado: 'sin-medicion', paso }
+  dondeParo = 'construir:dominios'
+  noContestaron.push('construir:dominios')
+  return await cerrar({ estado: 'sin-medicion', paso })
 }
 
 // Y otra vez, un nivel mas arriba: el modulo no podia saber que dominio lo iba a contener.
@@ -1425,23 +1752,30 @@ const construido = {
   senaladas: (construidoReglas.senaladas ?? []).concat(construidoCapacidades.senaladas ?? [])
 }
 
+// Las cuatro llamadas de Construir ya contestaron: lo que hayan senalado se guarda para el
+// renglon, sin importar si la corrida sigue o se corta aqui mismo por dudas o por salir vacia.
+senaladasAlConstruirParaElRenglon = construido.senaladas
+dudasParaElRenglon = construido.dudas.length
+
 // El andon para la linea una vez, no para siempre. Sin tope, cada corrida de respuestas destapa
 // dudas nuevas y nunca se escribe nada. Un freno que no se levanta no es freno, es candado. En
 // la segunda corrida el codigo ignora las dudas -y el prompt ya le dijo al agente que no las
 // devuelva-, porque el agente ya demostro que siempre encuentra una mas.
 if (construido.dudas.length > 0 && !segundaCorrida) {
   log(`${construido.dudas.length} duda(s) por cerrar con el experto. No se escribe todavia.`)
-  return {
+  dondeParo = 'construir'
+  return await cerrar({
     estado: 'dudas-devueltas',
     paso,
     dudas: construido.dudas,
     registroEnEspera: construido
-  }
+  })
 }
 
 if (todasLasPiezas(construido).length === 0) {
   log('El registro salio vacio: ninguna capacidad, ningun modulo y ninguna regla.')
-  return { estado: 'sin-material', paso, motivo: 'el registro salio sin una sola pieza' }
+  dondeParo = 'construir'
+  return await cerrar({ estado: 'sin-material', paso, motivo: 'el registro salio sin una sola pieza' })
 }
 
 let registro = construido
@@ -1501,6 +1835,8 @@ if (marcadasVuelta1.length > 0) {
     if (corregido) {
       registro = conLaCorreccionAplicada(registro, corregido)
       seCorrigioAlgoVuelta1 = true
+    } else {
+      noContestaron.push(`corregir:vuelta-1:${clave}`)
     }
   }
 
@@ -1542,6 +1878,8 @@ if (marcadasVuelta1.length > 0) {
         if (recorregido) {
           registro = conLaCorreccionAplicada(registro, recorregido)
           seCorrigioAlgoVuelta2 = true
+        } else {
+          noContestaron.push(`corregir:vuelta-2:${clave}`)
         }
       }
 
@@ -1567,6 +1905,14 @@ const senaladas = idsSenalados(registro.senaladas, enFrio, cotejo, contestado)
 const razones = razonesPorId(registro, enFrio, cotejo, contestado)
 const sinPieza = contestado ? contestado.sinPieza : []
 
+// `construido.senaladas` ya se guardo antes de Corregir; aqui se actualiza con lo que sobrevivio
+// a las correcciones -`registro.senaladas` es la union post-correccion que usa el propio
+// `idsSenalados` de arriba.
+senaladasAlConstruirParaElRenglon = registro.senaladas
+enFrioParaElRenglon = enFrio
+cotejoParaElRenglon = cotejo
+contestadoParaElRenglon = contestado
+
 const registroEstampado = {
   dominios: (registro.dominios ?? []).map((p) => conElPasoYLaHora(p, paso, hora)),
   capacidades: registro.capacidades.map((p) => conElPasoYLaHora(p, paso, hora)),
@@ -1585,8 +1931,13 @@ const escritos = await agent(promptParaRegistrar(paso, registroEstampado, senala
 
 if (!escritos) {
   log('El escribano no reporto. No se sabe que quedo escrito ni que no.')
-  return { estado: 'sin-registro', paso, registro: registroEstampado, senaladas }
+  dondeParo = 'registrar'
+  noContestaron.push('registrar')
+  return await cerrar({ estado: 'sin-registro', paso, registro: registroEstampado, senaladas })
 }
+
+archivosEscritosParaElRenglon = escritos.archivos
+noEscritasParaElRenglon = escritos.noEscritos.length
 
 // --- Auditar ---------------------------------------------------------------
 
@@ -1598,6 +1949,8 @@ const dictamen = await agent(promptParaAuditar(paso, rutaTranscript, escritos, r
   agentType: 'auditor',
   schema: DICTAMEN
 })
+
+dictamenParaElRenglon = dictamen
 
 // --- Marcar ----------------------------------------------------------------
 
@@ -1624,6 +1977,7 @@ if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
 
   if (!marcado) {
     log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+    noContestaron.push('marcar')
   }
 }
 
@@ -1661,13 +2015,16 @@ const fallasDelCrudo = dictamen ? dictamen.inventado.length + dictamen.perdido.l
 const noSirve = dictamen ? dictamen.sirve === false : false
 const preguntasSinPieza = escritos.senalesSinPieza ?? sinPieza
 
+senaladasSinMarcarParaElRenglon = senaladasSinMarcar.length
+preguntasSinPiezaParaElRenglon = preguntasSinPieza.length
+
 // Los agentes que no contestan se nombran uno por uno. Un silencio no es una aprobacion, y cada
 // uno de estos mide algo que ningun otro alcanza.
-if (!enFrio) log('El lector en frio no contesto. Nadie leyo las piezas como el que no estuvo.')
-if (!cotejo) log('El cotejador no contesto. Nadie coteja lo escuchado contra la platica.')
-if (!contestado) log('Nadie contesto el examen. El registro queda sin medir contra lo que se levanto antes.')
-if (!dictamen) log('El auditor no dictamino. Lo escrito queda sin medir contra el crudo.')
-if (!loQueFalta) log('Nadie armo lo que falta preguntar. La sesion siguiente abre sin primera plana.')
+if (!enFrio) { log('El lector en frio no contesto. Nadie leyo las piezas como el que no estuvo.'); noContestaron.push('leer-en-frio') }
+if (!cotejo) { log('El cotejador no contesto. Nadie coteja lo escuchado contra la platica.'); noContestaron.push('cotejar') }
+if (!contestado) { log('Nadie contesto el examen. El registro queda sin medir contra lo que se levanto antes.'); noContestaron.push('contestar-examen') }
+if (!dictamen) { log('El auditor no dictamino. Lo escrito queda sin medir contra el crudo.'); noContestaron.push('auditar') }
+if (!loQueFalta) { log('Nadie armo lo que falta preguntar. La sesion siguiente abre sin primera plana.'); noContestaron.push('falta') }
 
 log(`Paso "${paso}": ${escritos.archivos.length} pieza(s) escrita(s), ${conHuecos.length} con huecos.`)
 
@@ -1707,7 +2064,9 @@ if (senaladasSinMarcar.length > 0) {
   log(`${senaladasSinMarcar.length} pieza(s) las senalo una medicion y no quedaron marcadas en disco: ${senaladasSinMarcar.join(', ')}.`)
 }
 
-return {
+dondeParo = null
+
+return await cerrar({
   // Escrito no es lo mismo que listo. Si algo quedo marcado, el paso cierra con huecos, y de ese
   // estado no se deriva nada rio abajo hasta que se cierren. Cuenta lo que midieron las
   // mediciones aunque el reporte del escribano no lo traiga: una senal que no llego al archivo
@@ -1724,4 +2083,4 @@ return {
   enFrio,
   cotejo,
   contestado
-}
+})

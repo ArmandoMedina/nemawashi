@@ -245,9 +245,11 @@ describe('cada caja del molino nombra la carta del agente que la hace', () => {
   it('escribe el escribano, y todo lo demas lo mide el auditor', async () => {
     const { llamadas } = await correrMolino(ENTRADA)
 
+    // Desde que existe «Anotar», el escribano tambien deja la linea de la corrida en
+    // `docs/mediciones/corridas.jsonl` -esa es la segunda llamada, ademas de «Registrar».
     const escribanos = llamadas.filter((l) => l.opts.agentType === 'escribano')
-    expect(escribanos).toHaveLength(1)
-    expect(escribanos.map((l) => l.opts.phase)).toEqual(['Registrar'])
+    expect(escribanos).toHaveLength(2)
+    expect(escribanos.map((l) => l.opts.phase)).toEqual(['Registrar', 'Anotar'])
 
     for (const l of llamadas) {
       expect(['auditor', 'escribano']).toContain(l.opts.agentType)
