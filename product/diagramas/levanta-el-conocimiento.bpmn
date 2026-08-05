@@ -283,6 +283,10 @@
           <bpmn:text>Se ve un tramo, no la plática entera — y el tramo sale de «lo que dijo el experto», que es la plática MÁS lo que contestó a las dudas de la corrida anterior. Lo demás que le llega está dibujado afuera: el conocimiento ya escrito y lo propuesto en los tramos anteriores.</bpmn:text>
         </bpmn:textAnnotation>
         <bpmn:association id="TR_asoc_ve" sourceRef="TR_inicio" targetRef="TR_nota_ve" />
+        <bpmn:textAnnotation id="TR_nota_capacidades">
+          <bpmn:text>Una capacidad es lo que alguien hace; sus reglas son las condiciones de eso. Si la capacidad y su única regla dicen lo mismo con otro verbo, son una pieza y no dos: la regla se queda y la capacidad conjugada se tira. La prueba es tapar la regla y leer la capacidad sola. Medido al levantar una operación de reparto: 42 de 76 capacidades repetían su única regla.</bpmn:text>
+        </bpmn:textAnnotation>
+        <bpmn:association id="TR_asoc_capacidades" sourceRef="TR_capacidades" targetRef="TR_nota_capacidades" />
         <bpmn:textAnnotation id="TR_nota_marcar">
           <bpmn:text>Dos marcas, no una. FIRMEZA: dicho / confirmado / abierto — las tres que ya exige el-item-va-flaco.ts:49. ORIGEN: escuchado o propuesto por el agente. Sólo lo escuchado se coteja contra la plática.</bpmn:text>
         </bpmn:textAnnotation>
@@ -1202,6 +1206,9 @@
       <bpmndi:BPMNShape id="S_TR_nota_ve" bpmnElement="TR_nota_ve">
         <dc:Bounds x="100" y="260" width="230" height="95" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_TR_nota_capacidades" bpmnElement="TR_nota_capacidades">
+        <dc:Bounds x="350" y="260" width="200" height="130" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="S_TR_nota_marcar" bpmnElement="TR_nota_marcar">
         <dc:Bounds x="560" y="260" width="220" height="105" />
       </bpmndi:BPMNShape>
@@ -1231,6 +1238,10 @@
       <bpmndi:BPMNEdge id="ETR_asoc_ve" bpmnElement="TR_asoc_ve">
         <di:waypoint x="178" y="178" />
         <di:waypoint x="178" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="ETR_asoc_capacidades" bpmnElement="TR_asoc_capacidades">
+        <di:waypoint x="470" y="200" />
+        <di:waypoint x="450" y="260" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="ETR_asoc_marcar" bpmnElement="TR_asoc_marcar">
         <di:waypoint x="660" y="200" />

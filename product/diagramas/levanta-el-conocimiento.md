@@ -64,6 +64,7 @@ Se separan aquí porque confundirlas rompe el dibujo entero:
 | **El experto contesta una sola corrida** | Sin tope, cada revisión encuentra algo más y no se escribe nunca. Un freno que no se levanta no es freno, es candado |
 | **El paso puede cerrar «con huecos»** | Escrito no es lo mismo que listo |
 | **Corregir no vuelve a construir** | Corrige sólo las piezas marcadas y se funde con el registro que ya estaba. Reemplazarlo entero costó una corrida |
+| **Una capacidad que repite su única regla no es una capacidad** | Es la regla conjugada, y quedan dos archivos para un hecho. El día que el número cambie, uno de los dos se queda con el viejo |
 
 ## Lo que el bucle por tramos agrega
 

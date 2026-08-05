@@ -169,6 +169,27 @@ suelto no dice quién lo pide ni cuándo falla.
 
 **Casi ninguna capacidad se dice tal cual.** El experto cuenta casos, no capacidades. Sacarla del
 caso es el trabajo; lo que no se vale es callar que la sacaste tú.
+
+<trampa nombre="la regla en infinitivo">
+**Si la capacidad y su única regla dicen lo mismo con otro verbo, son una pieza, no dos.**
+
+> *Cancelar sola la guía que lleva siete días esperando su bulto.*
+> *Una guía sin bulto espera siete días y después se cancela sola.*
+
+Eso es una frase escrita en dos archivos. El día que los siete días pasen a diez, uno de los dos se
+queda en siete.
+
+**Qué hacer en su lugar:** la regla se queda como regla, y se cuelga de la capacidad que la usa —la
+que dice lo que alguien hace, no lo que el sistema prohíbe—. *Registrar la llegada del paquete* es
+una capacidad, y *un bulto sin guía no entra al inventario* es una de sus reglas. *Rechazar el bulto
+sin guía* no es ninguna de las dos: es la regla conjugada.
+
+**La prueba, antes de proponerla:** tapa la regla y lee la capacidad sola. Si sin la regla ya no
+dice nada —si lo único que aportaba era el número o la condición—, no era una capacidad.
+
+Medido al levantar una operación de reparto: **42 de 76 capacidades tenían una sola regla**, y en
+esos casos la capacidad repetía la regla. Es la falla más común de este paso.
+</trampa>
 </paso>
 
 <paso n="3" nombre="Proponer los modulos y los dominios">
