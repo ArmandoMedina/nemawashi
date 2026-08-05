@@ -85,6 +85,16 @@ recorre en una dirección y se pierde en la otra.
 | Capacidad | `modulo: MOD-0000` | `reglas: [REG-0000]` |
 | Regla | `capacidades: [CAP-0000]` | — |
 
+**Esta tabla se comprueba en cada corrida.** `src/nucleo/el-enlace-va-en-los-dos-sentidos.ts`
+recorre el grafo entero y falla si un id citado no existe como archivo, si existe pero es de otro
+tipo, o si el enlace está escrito de un solo lado. Los que hoy están de un solo lado quedan
+declarados como deuda, en una lista que sólo puede encoger: una falla nueva sin declarar pone rojo,
+y una deuda ya cerrada y no retirada también.
+
+Existe porque la escritura del registro no es atómica. Una corrida que se corta a la mitad deja
+piezas apuntando a otras que nunca se escribieron, y hasta el 2026-08-05 nada lo cazaba: lo pedía la
+carta del escribano, pero el que muere antes de llegar a ese párrafo no la corre.
+
 **Los enlaces no llevan tipo todavía.** Un enlace tipado diría *contiene*, *usa*, *requiere*,
 *contradice*; el de hoy sólo dice que hay liga. Sin tipo se recorre el grafo pero no se razona sobre
 él, y esa decisión sigue abierta.
@@ -117,8 +127,10 @@ Los valores y sus reglas viven en las plantillas, que son las que mandan. En cor
 
 - **`firmeza`** — qué tan cerrado está: `dicho`, `confirmado`, `abierto`. Son las mismas tres que
   exige `src/nucleo/el-item-va-flaco.ts` para los ítems del roadmap; se reusan aquí para no tener
-  dos vocabularios. **Ese validador no revisa estos archivos**: hoy sólo recorre `roadmap/` y
-  `backlog/`.
+  dos vocabularios. **Ese validador no revisa estos archivos**: sólo recorre `roadmap/` y
+  `backlog/`. Los de aquí los revisa `src/nucleo/el-conocimiento-no-se-escapa.ts`, que mide una
+  pieza a la vez —su forma, y que no delate la máquina donde se escribió—, y
+  `src/nucleo/el-enlace-va-en-los-dos-sentidos.ts`, que mide el grafo entero.
 - **`origen`** — quién lo puso ahí: `escuchado` o `propuesto`. **Sólo lo escuchado se coteja contra
   la plática**; lo propuesto se mide contestando el examen, porque nadie lo dijo.
 
