@@ -13,7 +13,12 @@ Esto es guía, no muro: es texto, y el texto pide. Lo que impide son los frenos 
   neutras: `D:\trabajo\proyecto-ejemplo`, `C:\Users\usuario\...`.
 
 - **Todo en español, en voz del método** (`docs/decisions/0001`): se nombra por la verdad que se
-  sostiene, no por el patrón que se usa ni por la función que se llama.
+  sostiene, no por el patrón que se usa ni por la función que se llama. **Y no se narra la
+  conversación que produjo el documento:** el sujeto es el método o la pieza, nunca la sesión ni
+  quien escribe — «un módulo sirve solo o no es módulo», no «se decidió que los módulos sirvan
+  solos». La anécdota no se borra, se destila al campo que la espera —`Procedencia`, `De dónde
+  salió`, `Porque`— y fuera de ahí no ocupa el cuerpo. **Se lee en frío o no sirve:** entenderlo no
+  puede exigir haber estado en una conversación ni conocer otro repositorio.
 
 - **Lo que no puedes hacer con `Write`, no lo hagas con un comando.** Si tu ficha no te dio `Write`
   ni `Edit`, es a propósito: crear, mover o borrar un archivo con `Bash` —redirigir a un archivo,

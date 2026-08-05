@@ -26,16 +26,16 @@ El auditor y el escribano no declaran cartas en su fichita: quien los llama les 
 | [`juntar`](skills/juntar/SKILL.md) | auditor | Antes de escribir: señalar los que son un mismo problema |
 | [`auditar`](skills/auditar/SKILL.md) | auditor | Después de escribir: contra el registro crudo |
 | [`asentar`](skills/asentar/SKILL.md) | escribano | Al escribir cualquier ítem o documento del roadmap |
-| [`afinar-el-backlog`](skills/afinar-el-backlog/SKILL.md) | auditor | Antes de escribir: las cinco fallas de una tarea candidata |
-| [`auditar-el-backlog`](skills/auditar-el-backlog/SKILL.md) | auditor | Después de escribir: contra el registro crudo |
-| [`asentar-el-backlog`](skills/asentar-el-backlog/SKILL.md) | escribano | Al escribir cualquier tarea o documento del backlog |
+| [`levantar-el-examen`](skills/levantar-el-examen/SKILL.md) | auditor | Antes de construir: las preguntas que el registro tendrá que contestar |
+| [`construir-el-registro`](skills/construir-el-registro/SKILL.md) | auditor | Antes de escribir: armar capacidades, módulos y reglas enlazados |
+| [`contestar-el-examen`](skills/contestar-el-examen/SKILL.md) | auditor | Antes de escribir: medir el registro por lo que contesta |
+| [`registrar-el-conocimiento`](skills/registrar-el-conocimiento/SKILL.md) | escribano | Al escribir cualquier archivo de `product/conocimiento/` |
+| [`marcar-lo-auditado`](skills/marcar-lo-auditado/SKILL.md) | escribano | Después de auditar: llevar el dictamen a los archivos ya escritos |
+| [`armar-lo-que-falta`](skills/armar-lo-que-falta/SKILL.md) | auditor | Al cerrar el paso: lo que hay que preguntar la próxima vez |
 | [`desarrollador`](skills/desarrollador/SKILL.md) | desarrollador | Al implementar cualquier cosa |
 | [`qa`](skills/qa/SKILL.md) | qa | Al escribir, clasificar o juzgar cualquier prueba |
 | [`disenador`](skills/disenador/SKILL.md) | disenador | Al proponer o revisar cualquier pantalla |
 | [`devops`](skills/devops/SKILL.md) | devops | Al tocar CI, compilación, empaque o el arranque de un proceso |
-
-Las tres del backlog no tienen flujo que las llame hoy: el suyo se dio de baja con el oficio
-desarrollador.
 
 ## Las reglas
 
@@ -53,7 +53,11 @@ No hay `CLAUDE.md`: lo que decía vive aquí, por tema.
 
 | Flujo | Sus fases, en orden |
 |---|---|
-| [`levanta-el-roadmap`](workflows/levanta-el-roadmap.js) | Sacar · Afinar · Leer en frío · Cotejar · Juntar · Asentar · Auditar |
+| [`levanta-el-conocimiento`](workflows/levanta-el-conocimiento.js) | Sacar · Inventariar · Levantar el examen · Construir · Medir · Corregir · Registrar · Auditar · Marcar · Armar lo que falta |
+
+El molino escribe en `product/conocimiento/` y ya corrió sobre una plática real. **`roadmap/` se
+quedó sin flujo que lo llene**, y con él las cartas `afinar`, `juntar` y `asentar`: siguen escritas y
+medidas, pero hoy no las llama nadie.
 
 ## Las personalidades de sesión
 

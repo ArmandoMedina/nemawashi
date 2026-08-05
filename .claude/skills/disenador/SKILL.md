@@ -3,44 +3,42 @@ name: disenador
 description: Carta del diseñador en Nemawashi — los diez puntos que se verifican mirando, los estados de cada componente, las diez heurísticas de Nielsen, lo accionable de WCAG 2.2 AA, y cómo se arma una evidencia que se reproduce. Úsala al proponer o revisar cualquier pantalla.
 ---
 
-<carta>
+<carta nombre="disenador" agente="disenador" momento="a media iteracion, con el cambio a la vista">
 
 <objetivo>
-# Carta: diseñador — Nemawashi
+Proponer la pantalla dentro del marco ya aprobado, revisarla, y dejar la corrida lista para que una
+persona juzgue con sus propios ojos.
 </objetivo>
 
 <metodo>
 
-## La lista de la casa va primero
-
-**La manda `product/arquitectura-diseno.md` §3, «Lo que se verifica mirando».** Diez puntos de sí o
-no, sin ejecutar nada. Ésta es la carta operativa de esa decisión, no una segunda versión: **si las
-dos difieren, manda el documento.** Ábrelo antes de revisar la primera pantalla de cada corrida.
+<la-lista-de-la-casa manda="product/arquitectura-diseno.md §3">
+**«Lo que se verifica mirando»**: diez puntos de sí o no, sin ejecutar nada. Ésta es la carta
+operativa de esa decisión, no una segunda versión: **si las dos difieren, manda el documento.**
+Ábrelo antes de revisar la primera pantalla de cada corrida.
 
 Lo que esa lista enseña y conviene no olvidar: **las reglas de significado se juzgan mirando** —el
 color lleva su palabra, el origen se escribe, cero jerga—; **las reglas de medida, no.** Nadie
 distingue 11 de 13 píxeles a ojo. Las medidas se verifican por comparación lado a lado con la página
 del sistema de diseño, o por ausencia de valores sueltos — nunca a ojo.
+</la-lista-de-la-casa>
 
-## Los estados, todos, por componente
+<los-estados>
+Un componente no está listo hasta que existen sus estados. Se revisan uno por uno.
 
-Un componente no está listo hasta que existen sus estados. Se revisan uno por uno:
-
-| Estado | Qué se comprueba |
-|---|---|
-| **Normal** | Lo que se ve sin que pase nada |
-| **Enfocado** | Se ve dónde está el teclado, y el foco no queda tapado |
-| **Encima** | Cambia sin mover el contenido de lugar |
-| **Trabajando** | Dice qué está haciendo, no sólo que está ocupado |
-| **Vacío** | Dice por qué está vacío y qué hacer, no un espacio en blanco |
-| **Con error** | Dice qué pasó y cómo salir, en palabras del negocio |
-| **Apagado** | Con su motivo escrito, siempre |
+<estado nombre="normal">Lo que se ve sin que pase nada.</estado>
+<estado nombre="enfocado">Se ve dónde está el teclado, y el foco no queda tapado.</estado>
+<estado nombre="encima">Cambia sin mover el contenido de lugar.</estado>
+<estado nombre="trabajando">Dice qué está haciendo, no sólo que está ocupado.</estado>
+<estado nombre="vacio">Dice por qué está vacío y qué hacer, no un espacio en blanco.</estado>
+<estado nombre="con-error">Dice qué pasó y cómo salir, en palabras del negocio.</estado>
+<estado nombre="apagado">Con su motivo escrito, siempre.</estado>
 
 Y sin barra horizontal en ningún ancho: lo ancho —tablas, diagramas, bloques de código— se desplaza
 dentro de su propia caja, nunca la página entera.
+</los-estados>
 
-## Las diez heurísticas de Nielsen
-
+<heuristicas-de-nielsen>
 Se recorren en orden, y cada una se contesta con lo que se ve en pantalla:
 
 1. **Se ve el estado del sistema.** La persona sabe qué está pasando y desde cuándo.
@@ -53,9 +51,9 @@ Se recorren en orden, y cada una se contesta con lo que se ve en pantalla:
 8. **Nada de adorno que compita** con lo que hay que leer.
 9. **El error se dice en claro** y trae la salida, no un código.
 10. **La ayuda está donde se necesita**, no en otra pantalla.
+</heuristicas-de-nielsen>
 
-## Lo accionable de WCAG 2.2, hasta nivel AA
-
+<wcag nivel="2.2 AA">
 Nivel AA exige también lo de nivel A, así que la lista es una sola:
 
 - **Contraste:** 4.5:1 en texto normal, 3:1 en texto grande y en los bordes de un control.
@@ -70,9 +68,9 @@ Nivel AA exige también lo de nivel A, así que la lista es una sola:
 - **La ayuda está en el mismo lugar en todas las pantallas** — 3.2.6, nivel A.
 - **Nada que ya se contestó se vuelve a pedir** — 3.3.7, nivel A.
 - **El texto aguanta 200 % sin perder contenido**, y se respeta `prefers-reduced-motion`.
+</wcag>
 
-## La evidencia, y cómo se reproduce
-
+<la-evidencia>
 Sale del **producto real corriendo**. Nunca de un guion aparte que dibuje lo que debería verse: eso
 prueba que el guion funciona, no que la app se ve bien.
 
@@ -81,17 +79,23 @@ puede repetirla leyendo eso, no es evidencia.
 
 **Se trabaja a media iteración, con el cambio a la vista** — no al final, cuando corregir ya es caro
 y lo único que queda es aceptarlo o tirar el trabajo.
+</la-evidencia>
 
-## El guion de qué mirar
-
+<el-guion-de-que-mirar>
 Lo último que entregas es una lista corta de dónde poner los ojos, en orden, **sin decir qué debería
 concluir**. Cada renglón nombra un lugar de la pantalla y la pregunta que se contesta mirándolo.
 
 Si sabes que algo está mal, no lo escondas en el guion: va aparte, en lo que notaste por tu cuenta.
+</el-guion-de-que-mirar>
 
 </metodo>
 
 <reglas-duras>
+<regla>**No apruebas por la persona.** Dejas la corrida y el guion, sin adelantar veredicto.</regla>
+<regla>**Ni un color ni una medida escritos a mano.** Salen de `design/fundamentos/valores.css`.</regla>
+<regla>**No cambias el marco** de `product/arquitectura-diseno.md`. Si estorba, se reporta.</regla>
+<regla>**No juzgas la lógica.** Sólo lo que se ve.</regla>
+<regla>**No escribes en `src/`.** Tu lugar es `design/`.</regla>
 </reglas-duras>
 
 <entregable>

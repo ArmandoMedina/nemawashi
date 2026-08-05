@@ -1,0 +1,1025 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_consultor" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.22.0">
+  <bpmn:collaboration id="Colaboracion_consultor">
+    <bpmn:participant id="Pool_consultor" name="La sesión con el experto" processRef="Proceso_consultor" />
+    <bpmn:textAnnotation id="Nota_moler">
+      <bpmn:text>Es la herramienta `Workflow` con `name: levanta-el-conocimiento`. No es una carta y por ahí no arranca. La plática no se le teclea: lee sola la grabación de esta misma sesión. Su interior está dibujado aparte, en `levanta-el-conocimiento.bpmn`.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_anunciar">
+      <bpmn:text>Se dice en voz alta: «de crédito ya saqué bastante, vámonos a la cobranza». Y se muele ahí mismo, antes de la primera pregunta del paso siguiente.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_guardar">
+      <bpmn:text>Si el experto pide guardar, se muele aunque estén a media rama. Los dos eventos interrumpen: al volver, el paso se excava desde el principio — se vuelve a pedir un caso y la cuenta de preguntas sin hallazgo arranca de cero.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_pasos">
+      <bpmn:text>Un paso no se da por cerrado hasta que se molió: lo que se queda en la plática se pierde. Por eso el molido está en el tronco y no al final de la sesión.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_cierre">
+      <bpmn:text>La lista se muestra completa cada cuatro o cinco intercambios, y otra vez al cerrar. No se cierra con hallazgos sin registrar.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:textAnnotation id="Nota_preguntas_molino">
+      <bpmn:text>Las preguntas que devuelve el molino no las contesta el consultor. Para eso está el experto enfrente, y en dos semanas ya no va a estar.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_guardar" sourceRef="C_guardar" targetRef="Nota_guardar" />
+    <bpmn:association id="Asoc_anunciar" sourceRef="C_anunciar" targetRef="Nota_anunciar" />
+    <bpmn:association id="Asoc_cierre" sourceRef="C_lista" targetRef="Nota_cierre" />
+    <bpmn:association id="Asoc_pasos" sourceRef="C_gw_pasos" targetRef="Nota_pasos" />
+    <bpmn:association id="Asoc_preguntas_molino" sourceRef="C_preguntas" targetRef="Nota_preguntas_molino" />
+    <bpmn:association id="Asoc_moler" sourceRef="C_moler" targetRef="Nota_moler" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proceso_consultor" name="Conducir a un experto de negocio" isExecutable="false">
+    <bpmn:laneSet id="Carriles_consultor">
+      <bpmn:lane id="Lane_molino" name="el molino">
+        <bpmn:flowNodeRef>C_moler</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_consultor" name="consultor">
+        <bpmn:flowNodeRef>C_inicio</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_tiempo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_guardar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_sintocar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_anunciar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_gw_molino</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_nada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_contar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_gw_pasos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_lista</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_gw_fin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_faltaron</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_fin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_fin_huecos</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_acotar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_excavar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>C_preguntas</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:dataObjectReference id="DO_mapa_ref" name="El mapa y la vara" dataObjectRef="DO_mapa" />
+    <bpmn:dataObject id="DO_mapa" />
+    <bpmn:startEvent id="C_inicio" name="Llega el experto">
+      <bpmn:outgoing>C_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:boundaryEvent id="C_tiempo" name="Se acabó el tiempo" attachedToRef="C_excavar">
+      <bpmn:outgoing>C_f_tiempo</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_10wuyxr" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="C_guardar" name="El experto pide guardar" attachedToRef="C_excavar">
+      <bpmn:outgoing>C_f_guardar</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDefinition_0z131e0" />
+    </bpmn:boundaryEvent>
+    <bpmn:dataObjectReference id="DO_hallazgos_ref" name="La lista de hallazgos" dataObjectRef="DO_hallazgos" />
+    <bpmn:dataObject id="DO_hallazgos" isCollection="true" />
+    <bpmn:subProcess id="C_acotar" name="Acotar el terreno">
+      <bpmn:incoming>C_f1</bpmn:incoming>
+      <bpmn:outgoing>C_f2</bpmn:outgoing>
+      <bpmn:dataOutputAssociation id="DA_mapa_out">
+        <bpmn:targetRef>DO_mapa_ref</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:startEvent id="H0_inicio" name="El experto llega con su tema">
+        <bpmn:outgoing>H0_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="H0_gw" name="¿Lo que trae ya opera?">
+        <bpmn:incoming>H0_f1</bpmn:incoming>
+        <bpmn:outgoing>H0_f_si</bpmn:outgoing>
+        <bpmn:outgoing>H0_f_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="H0_mapa" name="Pedir el proceso en tres a seis pasos">
+        <bpmn:incoming>H0_f_si</bpmn:incoming>
+        <bpmn:outgoing>H0_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_dia" name="Pedir cómo sería un día usándolo">
+        <bpmn:incoming>H0_f_no</bpmn:incoming>
+        <bpmn:outgoing>H0_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_devolver" name="Devolver el mapa con sus palabras">
+        <bpmn:incoming>H0_f2</bpmn:incoming>
+        <bpmn:incoming>H0_f3</bpmn:incoming>
+        <bpmn:outgoing>H0_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_criterio" name="Preguntar cuáles pasos exigen criterio">
+        <bpmn:incoming>H0_f4</bpmn:incoming>
+        <bpmn:outgoing>H0_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_vara" name="Preguntar qué se quedaría sin quien lo conteste">
+        <bpmn:incoming>H0_f5</bpmn:incoming>
+        <bpmn:outgoing>H0_f6</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H0_anotar" name="Anotar la vara como hallazgos">
+        <bpmn:incoming>H0_f6</bpmn:incoming>
+        <bpmn:outgoing>H0_f7</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="H0_fin" name="Mapa acotado y vara puesta">
+        <bpmn:incoming>H0_f7</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H0_f1" sourceRef="H0_inicio" targetRef="H0_gw" />
+      <bpmn:sequenceFlow id="H0_f_si" name="sí" sourceRef="H0_gw" targetRef="H0_mapa" />
+      <bpmn:sequenceFlow id="H0_f_no" name="no" sourceRef="H0_gw" targetRef="H0_dia" />
+      <bpmn:sequenceFlow id="H0_f2" sourceRef="H0_mapa" targetRef="H0_devolver" />
+      <bpmn:sequenceFlow id="H0_f3" sourceRef="H0_dia" targetRef="H0_devolver" />
+      <bpmn:sequenceFlow id="H0_f4" sourceRef="H0_devolver" targetRef="H0_criterio" />
+      <bpmn:sequenceFlow id="H0_f5" sourceRef="H0_criterio" targetRef="H0_vara" />
+      <bpmn:sequenceFlow id="H0_f6" sourceRef="H0_vara" targetRef="H0_anotar" />
+      <bpmn:sequenceFlow id="H0_f7" sourceRef="H0_anotar" targetRef="H0_fin" />
+      <bpmn:textAnnotation id="H0_nota_criterio">
+        <bpmn:text>Se excava sólo donde dos personas con la misma información podrían decidir distinto. En los demás pasos, no.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_criterio" sourceRef="H0_criterio" targetRef="H0_nota_criterio" />
+      <bpmn:textAnnotation id="H0_nota_vara">
+        <bpmn:text>«Si mañana no vinieras, ¿qué preguntas se quedarían sin quien las conteste?» No se hace antes del mapa: sin nada enfrente contesta una generalidad; con sus propios pasos a la vista contesta lo que de verdad sólo él sabe.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_vara" sourceRef="H0_vara" targetRef="H0_nota_vara" />
+      <bpmn:textAnnotation id="H0_nota_anotar">
+        <bpmn:text>Ésta es la vara con la que se mide todo lo que se registre después: si al final el registro no contesta estas preguntas, no sirvió, por completo que se vea.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_anotar" sourceRef="H0_anotar" targetRef="H0_nota_anotar" />
+      <bpmn:textAnnotation id="H0_nota_gw">
+        <bpmn:text>Lo que todavía no existe se acota al revés: los pasos salen de contar cómo sería un día usándolo, de principio a fin.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H0_asoc_gw" sourceRef="H0_gw" targetRef="H0_nota_gw" />
+    </bpmn:subProcess>
+    <bpmn:subProcess id="C_excavar" name="Excavar un paso">
+      <bpmn:incoming>C_f2</bpmn:incoming>
+      <bpmn:incoming>C_f_vuelta</bpmn:incoming>
+      <bpmn:outgoing>C_f3</bpmn:outgoing>
+      <bpmn:property id="Property_1ouhyiz" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DA_mapa_in">
+        <bpmn:sourceRef>DO_mapa_ref</bpmn:sourceRef>
+        <bpmn:targetRef>Property_1ouhyiz</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+      <bpmn:dataOutputAssociation id="DA_hallazgos_out">
+        <bpmn:targetRef>DO_hallazgos_ref</bpmn:targetRef>
+      </bpmn:dataOutputAssociation>
+      <bpmn:startEvent id="H1_inicio" name="Paso del mapa por excavar">
+        <bpmn:outgoing>H1_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="H1_caso" name="Pedir el último caso, o el que salió mal">
+        <bpmn:incoming>H1_f1</bpmn:incoming>
+        <bpmn:outgoing>H1_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_pregunta" name="Hacer una sola de las seis preguntas">
+        <bpmn:incoming>H1_f2</bpmn:incoming>
+        <bpmn:incoming>H1_f_sigue</bpmn:incoming>
+        <bpmn:outgoing>H1_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_reflejar" name="Reflejar la regla equivocándose a propósito">
+        <bpmn:incoming>H1_f3</bpmn:incoming>
+        <bpmn:outgoing>H1_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H1_gw_contesto" name="¿Alguien la pudo contestar?">
+        <bpmn:incoming>H1_f4</bpmn:incoming>
+        <bpmn:outgoing>H1_f_si</bpmn:outgoing>
+        <bpmn:outgoing>H1_f_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="H1_abierto" name="Anotar el hallazgo como abierto">
+        <bpmn:incoming>H1_f_no</bpmn:incoming>
+        <bpmn:outgoing>H1_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H1_marcar" name="Anotar el hallazgo con su origen y su firmeza">
+        <bpmn:incoming>H1_f_si</bpmn:incoming>
+        <bpmn:outgoing>H1_f6</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H1_gw_lista" name="¿Van cuatro o cinco intercambios?">
+        <bpmn:incoming>H1_f5</bpmn:incoming>
+        <bpmn:incoming>H1_f6</bpmn:incoming>
+        <bpmn:outgoing>H1_f_mostrar</bpmn:outgoing>
+        <bpmn:outgoing>H1_f_seguir</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="H1_mostrar" name="Mostrar la lista completa">
+        <bpmn:incoming>H1_f_mostrar</bpmn:incoming>
+        <bpmn:outgoing>H1_f7</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H1_gw_agotada" name="¿Tres preguntas seguidas sin hallazgo?">
+        <bpmn:incoming>H1_f_seguir</bpmn:incoming>
+        <bpmn:incoming>H1_f7</bpmn:incoming>
+        <bpmn:outgoing>H1_f_sigue</bpmn:outgoing>
+        <bpmn:outgoing>H1_f_fin</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="H1_fin" name="Rama agotada">
+        <bpmn:incoming>H1_f_fin</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H1_f1" sourceRef="H1_inicio" targetRef="H1_caso" />
+      <bpmn:sequenceFlow id="H1_f2" sourceRef="H1_caso" targetRef="H1_pregunta" />
+      <bpmn:sequenceFlow id="H1_f3" sourceRef="H1_pregunta" targetRef="H1_reflejar" />
+      <bpmn:sequenceFlow id="H1_f4" sourceRef="H1_reflejar" targetRef="H1_gw_contesto" />
+      <bpmn:sequenceFlow id="H1_f_no" name="no" sourceRef="H1_gw_contesto" targetRef="H1_abierto" />
+      <bpmn:sequenceFlow id="H1_f_si" name="sí" sourceRef="H1_gw_contesto" targetRef="H1_marcar" />
+      <bpmn:sequenceFlow id="H1_f5" sourceRef="H1_abierto" targetRef="H1_gw_lista" />
+      <bpmn:sequenceFlow id="H1_f6" sourceRef="H1_marcar" targetRef="H1_gw_lista" />
+      <bpmn:sequenceFlow id="H1_f_mostrar" name="sí" sourceRef="H1_gw_lista" targetRef="H1_mostrar" />
+      <bpmn:sequenceFlow id="H1_f_seguir" name="no" sourceRef="H1_gw_lista" targetRef="H1_gw_agotada" />
+      <bpmn:sequenceFlow id="H1_f7" sourceRef="H1_mostrar" targetRef="H1_gw_agotada" />
+      <bpmn:sequenceFlow id="H1_f_sigue" name="no" sourceRef="H1_gw_agotada" targetRef="H1_pregunta" />
+      <bpmn:sequenceFlow id="H1_f_fin" name="sí" sourceRef="H1_gw_agotada" targetRef="H1_fin" />
+      <bpmn:textAnnotation id="H1_nota_caso">
+        <bpmn:text>Un experto no puede contestar en abstracto; sobre un caso sí. «¿Cómo funciona tu proceso de crédito?» da el manual oficial; «cuéntame el último que rechazaste aunque cumplía» da la regla real. Si la pregunta se puede contestar con el manual, está mal hecha.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_caso" sourceRef="H1_caso" targetRef="H1_nota_caso" />
+      <bpmn:textAnnotation id="H1_nota_pregunta">
+        <bpmn:text>Panorama · Detección · Mañas del oficio · Improvisación · Pasado y futuro · Cuándo cambias de método. Una a la vez y no como cuestionario: dos preguntas juntas se contestan a medias, siempre. Las que más rinden son detección y mañas — justo lo que nadie documenta porque nadie cree que sea información.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_pregunta" sourceRef="H1_pregunta" targetRef="H1_nota_pregunta" />
+      <bpmn:textAnnotation id="H1_nota_reflejar">
+        <bpmn:text>Se dice en voz alta y se falla a propósito: «entonces, si el cliente lleva más de seis meses, pasa directo, ¿así?». El experto corrige mucho más rápido de lo que explica.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_reflejar" sourceRef="H1_reflejar" targetRef="H1_nota_reflejar" />
+      <bpmn:textAnnotation id="H1_nota_marcar">
+        <bpmn:text>Tres marcas, y la pone el consultor, no el experto: dicho — lo dijo y nadie lo ha revisado en frío; confirmado — se lo devolvió y dijo que sí, con esas palabras; abierto — nadie en la sala lo pudo contestar. Cada hallazgo lleva además de dónde salió: qué pregunta lo destapó o de qué caso salió.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_marcar" sourceRef="H1_marcar" targetRef="H1_nota_marcar" />
+      <bpmn:textAnnotation id="H1_nota_abierto">
+        <bpmn:text>Lo que nadie puede contestar no frena la conversación: se anota abierto y se sigue. No se resuelve ahí, no se deja en el aire, no se pierde.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H1_asoc_abierto" sourceRef="H1_abierto" targetRef="H1_nota_abierto" />
+    </bpmn:subProcess>
+    <bpmn:task id="C_sintocar" name="Anotar los pasos que quedaron sin tocar">
+      <bpmn:incoming>C_f_tiempo</bpmn:incoming>
+      <bpmn:outgoing>C_f_sintocar</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="C_anunciar" name="Anunciar el cambio de paso">
+      <bpmn:incoming>C_f3</bpmn:incoming>
+      <bpmn:outgoing>C_f4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="C_moler" name="Moler el paso">
+      <bpmn:incoming>C_f4</bpmn:incoming>
+      <bpmn:incoming>C_f_sintocar</bpmn:incoming>
+      <bpmn:incoming>C_f_guardar</bpmn:incoming>
+      <bpmn:incoming>C_f_remoler</bpmn:incoming>
+      <bpmn:outgoing>C_f5</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="C_gw_molino">
+      <bpmn:incoming>C_f5</bpmn:incoming>
+      <bpmn:outgoing>C_f_nada</bpmn:outgoing>
+      <bpmn:outgoing>C_f_listo</bpmn:outgoing>
+      <bpmn:outgoing>C_f_faltan</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="C_nada" name="Decir que ese paso no dejó nada firme">
+      <bpmn:incoming>C_f_nada</bpmn:incoming>
+      <bpmn:outgoing>C_f6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="C_contar" name="Contar al experto qué se guardó">
+      <bpmn:incoming>C_f_listo</bpmn:incoming>
+      <bpmn:outgoing>C_f7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:subProcess id="C_preguntas" name="Cerrar las preguntas con el experto">
+      <bpmn:incoming>C_f_faltan</bpmn:incoming>
+      <bpmn:outgoing>C_f_remoler</bpmn:outgoing>
+      <bpmn:startEvent id="H2_inicio" name="El molino paró la línea">
+        <bpmn:outgoing>H2_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="H2_traducir" name="Traducir las preguntas a palabras del negocio">
+        <bpmn:incoming>H2_f1</bpmn:incoming>
+        <bpmn:outgoing>H2_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H2_hacer" name="Hacer una pregunta a la vez">
+        <bpmn:incoming>H2_f2</bpmn:incoming>
+        <bpmn:incoming>H2_f_otra</bpmn:incoming>
+        <bpmn:outgoing>H2_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H2_gw" name="¿La contestó?">
+        <bpmn:incoming>H2_f3</bpmn:incoming>
+        <bpmn:outgoing>H2_f_si</bpmn:outgoing>
+        <bpmn:outgoing>H2_f_no</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="H2_anotar" name="Anotar la respuesta como hallazgo">
+        <bpmn:incoming>H2_f_si</bpmn:incoming>
+        <bpmn:outgoing>H2_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="H2_abierta" name="Dejarla abierta y seguir">
+        <bpmn:incoming>H2_f_no</bpmn:incoming>
+        <bpmn:outgoing>H2_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="H2_gw_quedan" name="¿Quedan preguntas?">
+        <bpmn:incoming>H2_f4</bpmn:incoming>
+        <bpmn:incoming>H2_f5</bpmn:incoming>
+        <bpmn:outgoing>H2_f_otra</bpmn:outgoing>
+        <bpmn:outgoing>H2_f_fin</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="H2_fin" name="Preguntas cerradas con el experto">
+        <bpmn:incoming>H2_f_fin</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="H2_f1" sourceRef="H2_inicio" targetRef="H2_traducir" />
+      <bpmn:sequenceFlow id="H2_f2" sourceRef="H2_traducir" targetRef="H2_hacer" />
+      <bpmn:sequenceFlow id="H2_f3" sourceRef="H2_hacer" targetRef="H2_gw" />
+      <bpmn:sequenceFlow id="H2_f_si" name="sí" sourceRef="H2_gw" targetRef="H2_anotar" />
+      <bpmn:sequenceFlow id="H2_f_no" name="no" sourceRef="H2_gw" targetRef="H2_abierta" />
+      <bpmn:sequenceFlow id="H2_f4" sourceRef="H2_anotar" targetRef="H2_gw_quedan" />
+      <bpmn:sequenceFlow id="H2_f5" sourceRef="H2_abierta" targetRef="H2_gw_quedan" />
+      <bpmn:sequenceFlow id="H2_f_otra" name="sí" sourceRef="H2_gw_quedan" targetRef="H2_hacer" />
+      <bpmn:sequenceFlow id="H2_f_fin" name="no" sourceRef="H2_gw_quedan" targetRef="H2_fin" />
+      <bpmn:textAnnotation id="H2_nota_traducir">
+        <bpmn:text>Llegan ya redactadas por el molino, pero llegan en su idioma. Al experto se le hacen en sus palabras: cero jerga, nada de esquema, campo, tabla o sistema.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H2_asoc_traducir" sourceRef="H2_traducir" targetRef="H2_nota_traducir" />
+      <bpmn:textAnnotation id="H2_nota_fin">
+        <bpmn:text>Cerradas las preguntas, el molino se vuelve a correr con las respuestas. El experto contesta una sola corrida: sin ese tope, cada revisión encuentra algo más y no se escribe nunca.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="H2_asoc_fin" sourceRef="H2_fin" targetRef="H2_nota_fin" />
+    </bpmn:subProcess>
+    <bpmn:exclusiveGateway id="C_gw_pasos" name="¿Quedan pasos y tiempo?">
+      <bpmn:incoming>C_f6</bpmn:incoming>
+      <bpmn:incoming>C_f7</bpmn:incoming>
+      <bpmn:outgoing>C_f_vuelta</bpmn:outgoing>
+      <bpmn:outgoing>C_f_cerrar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="C_lista" name="Mostrar la lista completa de hallazgos">
+      <bpmn:incoming>C_f_cerrar</bpmn:incoming>
+      <bpmn:outgoing>C_f8</bpmn:outgoing>
+      <bpmn:property id="Property_0yietvo" name="__targetRef_placeholder" />
+      <bpmn:dataInputAssociation id="DA_hallazgos_in">
+        <bpmn:sourceRef>DO_hallazgos_ref</bpmn:sourceRef>
+        <bpmn:targetRef>Property_0yietvo</bpmn:targetRef>
+      </bpmn:dataInputAssociation>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="C_gw_fin" name="¿Quedó algún paso sin tocar?">
+      <bpmn:incoming>C_f8</bpmn:incoming>
+      <bpmn:outgoing>C_f_huecos</bpmn:outgoing>
+      <bpmn:outgoing>C_f_limpio</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="C_faltaron" name="Decir cuáles quedaron sin tocar">
+      <bpmn:incoming>C_f_huecos</bpmn:incoming>
+      <bpmn:outgoing>C_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="C_fin" name="Sesión cerrada y todo molido">
+      <bpmn:incoming>C_f_limpio</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="C_fin_huecos" name="Sesión cerrada con pasos sin tocar">
+      <bpmn:incoming>C_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="C_f1" sourceRef="C_inicio" targetRef="C_acotar" />
+    <bpmn:sequenceFlow id="C_f_tiempo" sourceRef="C_tiempo" targetRef="C_sintocar" />
+    <bpmn:sequenceFlow id="C_f_guardar" sourceRef="C_guardar" targetRef="C_moler" />
+    <bpmn:sequenceFlow id="C_f2" sourceRef="C_acotar" targetRef="C_excavar" />
+    <bpmn:sequenceFlow id="C_f_vuelta" name="sí" sourceRef="C_gw_pasos" targetRef="C_excavar" />
+    <bpmn:sequenceFlow id="C_f3" sourceRef="C_excavar" targetRef="C_anunciar" />
+    <bpmn:sequenceFlow id="C_f_sintocar" sourceRef="C_sintocar" targetRef="C_moler" />
+    <bpmn:sequenceFlow id="C_f4" sourceRef="C_anunciar" targetRef="C_moler" />
+    <bpmn:sequenceFlow id="C_f_remoler" sourceRef="C_preguntas" targetRef="C_moler" />
+    <bpmn:sequenceFlow id="C_f5" sourceRef="C_moler" targetRef="C_gw_molino" />
+    <bpmn:sequenceFlow id="C_f_nada" name="sin-hallazgos" sourceRef="C_gw_molino" targetRef="C_nada" />
+    <bpmn:sequenceFlow id="C_f_listo" name="listo" sourceRef="C_gw_molino" targetRef="C_contar" />
+    <bpmn:sequenceFlow id="C_f_faltan" name="faltan-preguntas" sourceRef="C_gw_molino" targetRef="C_preguntas" />
+    <bpmn:sequenceFlow id="C_f6" sourceRef="C_nada" targetRef="C_gw_pasos" />
+    <bpmn:sequenceFlow id="C_f7" sourceRef="C_contar" targetRef="C_gw_pasos" />
+    <bpmn:sequenceFlow id="C_f_cerrar" name="no" sourceRef="C_gw_pasos" targetRef="C_lista" />
+    <bpmn:sequenceFlow id="C_f8" sourceRef="C_lista" targetRef="C_gw_fin" />
+    <bpmn:sequenceFlow id="C_f_huecos" name="sí" sourceRef="C_gw_fin" targetRef="C_faltaron" />
+    <bpmn:sequenceFlow id="C_f_limpio" name="no" sourceRef="C_gw_fin" targetRef="C_fin" />
+    <bpmn:sequenceFlow id="C_f9" sourceRef="C_faltaron" targetRef="C_fin_huecos" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_padre">
+    <bpmndi:BPMNPlane id="P_padre" bpmnElement="Colaboracion_consultor">
+      <bpmndi:BPMNShape id="S_Pool" bpmnElement="Pool_consultor" isHorizontal="true">
+        <dc:Bounds x="155" y="80" width="1620" height="900" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_molino" bpmnElement="Lane_molino" isHorizontal="true">
+        <dc:Bounds x="185" y="700" width="1590" height="280" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Lane_consultor" bpmnElement="Lane_consultor" isHorizontal="true">
+        <dc:Bounds x="185" y="80" width="1590" height="620" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DO_mapa" bpmnElement="DO_mapa_ref">
+        <dc:Bounds x="412" y="255" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="305" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_inicio" bpmnElement="C_inicio">
+        <dc:Bounds x="215" y="352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="195" y="395" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0hufi30_di" bpmnElement="C_tiempo">
+        <dc:Bounds x="472" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="401" y="432" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1gdq2vr_di" bpmnElement="C_guardar">
+        <dc:Bounds x="514" y="392" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="556" y="425" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DO_hallazgos" bpmnElement="DO_hallazgos_ref">
+        <dc:Bounds x="797" y="115" width="36" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="792" y="165" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_acotar" bpmnElement="C_acotar" isExpanded="false">
+        <dc:Bounds x="300" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_excavar" bpmnElement="C_excavar" isExpanded="false">
+        <dc:Bounds x="460" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_sintocar" bpmnElement="C_sintocar">
+        <dc:Bounds x="330" y="490" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_anunciar" bpmnElement="C_anunciar">
+        <dc:Bounds x="620" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_moler" bpmnElement="C_moler">
+        <dc:Bounds x="620" y="740" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_gw_molino" bpmnElement="C_gw_molino" isMarkerVisible="true">
+        <dc:Bounds x="790" y="345" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_nada" bpmnElement="C_nada">
+        <dc:Bounds x="890" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_contar" bpmnElement="C_contar">
+        <dc:Bounds x="890" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_preguntas" bpmnElement="C_preguntas" isExpanded="false">
+        <dc:Bounds x="890" y="480" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_gw_pasos" bpmnElement="C_gw_pasos" isMarkerVisible="true">
+        <dc:Bounds x="1060" y="345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1043" y="305" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_lista" bpmnElement="C_lista">
+        <dc:Bounds x="1160" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_gw_fin" bpmnElement="C_gw_fin" isMarkerVisible="true">
+        <dc:Bounds x="1320" y="345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1309" y="302" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_faltaron" bpmnElement="C_faltaron">
+        <dc:Bounds x="1420" y="450" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_fin" bpmnElement="C_fin">
+        <dc:Bounds x="1600" y="352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1578" y="395" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_C_fin_huecos" bpmnElement="C_fin_huecos">
+        <dc:Bounds x="1600" y="472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1582" y="515" width="74" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_Asoc_guardar" bpmnElement="Asoc_guardar">
+        <di:waypoint x="516" y="424" />
+        <di:waypoint x="400" y="730" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f1" bpmnElement="C_f1">
+        <di:waypoint x="251" y="370" />
+        <di:waypoint x="300" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f2" bpmnElement="C_f2">
+        <di:waypoint x="400" y="370" />
+        <di:waypoint x="460" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f3" bpmnElement="C_f3">
+        <di:waypoint x="560" y="370" />
+        <di:waypoint x="620" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f4" bpmnElement="C_f4">
+        <di:waypoint x="670" y="410" />
+        <di:waypoint x="670" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_tiempo" bpmnElement="C_f_tiempo">
+        <di:waypoint x="490" y="428" />
+        <di:waypoint x="490" y="470" />
+        <di:waypoint x="380" y="470" />
+        <di:waypoint x="380" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_sintocar" bpmnElement="C_f_sintocar">
+        <di:waypoint x="430" y="530" />
+        <di:waypoint x="470" y="530" />
+        <di:waypoint x="470" y="770" />
+        <di:waypoint x="620" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_guardar" bpmnElement="C_f_guardar">
+        <di:waypoint x="532" y="428" />
+        <di:waypoint x="532" y="800" />
+        <di:waypoint x="620" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f5" bpmnElement="C_f5">
+        <di:waypoint x="720" y="780" />
+        <di:waypoint x="765" y="780" />
+        <di:waypoint x="765" y="370" />
+        <di:waypoint x="790" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_nada" bpmnElement="C_f_nada">
+        <di:waypoint x="815" y="345" />
+        <di:waypoint x="815" y="260" />
+        <di:waypoint x="890" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="823" y="236" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_listo" bpmnElement="C_f_listo">
+        <di:waypoint x="840" y="370" />
+        <di:waypoint x="890" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="850" y="352" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_faltan" bpmnElement="C_f_faltan">
+        <di:waypoint x="815" y="395" />
+        <di:waypoint x="815" y="520" />
+        <di:waypoint x="890" y="520" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="800" y="533" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_remoler" bpmnElement="C_f_remoler">
+        <di:waypoint x="940" y="560" />
+        <di:waypoint x="940" y="800" />
+        <di:waypoint x="720" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f6" bpmnElement="C_f6">
+        <di:waypoint x="990" y="260" />
+        <di:waypoint x="1085" y="260" />
+        <di:waypoint x="1085" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f7" bpmnElement="C_f7">
+        <di:waypoint x="990" y="370" />
+        <di:waypoint x="1060" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_vuelta" bpmnElement="C_f_vuelta">
+        <di:waypoint x="1085" y="395" />
+        <di:waypoint x="1085" y="650" />
+        <di:waypoint x="510" y="650" />
+        <di:waypoint x="510" y="410" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1096" y="405" width="9" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_cerrar" bpmnElement="C_f_cerrar">
+        <di:waypoint x="1110" y="370" />
+        <di:waypoint x="1160" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1124" y="352" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f8" bpmnElement="C_f8">
+        <di:waypoint x="1260" y="370" />
+        <di:waypoint x="1320" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_huecos" bpmnElement="C_f_huecos">
+        <di:waypoint x="1345" y="395" />
+        <di:waypoint x="1345" y="490" />
+        <di:waypoint x="1420" y="490" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1356" y="460" width="9" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f_limpio" bpmnElement="C_f_limpio">
+        <di:waypoint x="1370" y="370" />
+        <di:waypoint x="1600" y="370" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1384" y="352" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_C_f9" bpmnElement="C_f9">
+        <di:waypoint x="1520" y="490" />
+        <di:waypoint x="1600" y="490" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_anunciar" bpmnElement="Asoc_anunciar">
+        <di:waypoint x="672" y="330" />
+        <di:waypoint x="660" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_cierre" bpmnElement="Asoc_cierre">
+        <di:waypoint x="1258" y="335" />
+        <di:waypoint x="1308" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_pasos" bpmnElement="Asoc_pasos">
+        <di:waypoint x="1089" y="391" />
+        <di:waypoint x="1171" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_preguntas_molino" bpmnElement="Asoc_preguntas_molino">
+        <di:waypoint x="990" y="527" />
+        <di:waypoint x="1093" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_moler" bpmnElement="Asoc_moler">
+        <di:waypoint x="673" y="820" />
+        <di:waypoint x="665" y="850" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DA_mapa_out" bpmnElement="DA_mapa_out">
+        <di:waypoint x="380" y="330" />
+        <di:waypoint x="412" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DA_mapa_in" bpmnElement="DA_mapa_in">
+        <di:waypoint x="448" y="290" />
+        <di:waypoint x="480" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DA_hallazgos_out" bpmnElement="DA_hallazgos_out">
+        <di:waypoint x="530" y="330" />
+        <di:waypoint x="530" y="140" />
+        <di:waypoint x="797" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DA_hallazgos_in" bpmnElement="DA_hallazgos_in">
+        <di:waypoint x="833" y="140" />
+        <di:waypoint x="1210" y="140" />
+        <di:waypoint x="1210" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_Nota_guardar" bpmnElement="Nota_guardar">
+        <dc:Bounds x="210" y="730" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_anunciar" bpmnElement="Nota_anunciar">
+        <dc:Bounds x="560" y="190" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_cierre" bpmnElement="Nota_cierre">
+        <dc:Bounds x="1240" y="195" width="230" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_pasos" bpmnElement="Nota_pasos">
+        <dc:Bounds x="1100" y="450" width="140" height="115" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_preguntas_molino" bpmnElement="Nota_preguntas_molino">
+        <dc:Bounds x="990" y="720" width="290" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_moler" bpmnElement="Nota_moler">
+        <dc:Bounds x="560" y="850" width="290" height="120" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_acotar">
+    <bpmndi:BPMNPlane id="P_hijo_acotar" bpmnElement="C_acotar">
+      <bpmndi:BPMNShape id="S_H0_inicio" bpmnElement="H0_inicio">
+        <dc:Bounds x="180" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="235" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_gw" bpmnElement="H0_gw" isMarkerVisible="true">
+        <dc:Bounds x="275" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="262" y="145" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_mapa" bpmnElement="H0_mapa">
+        <dc:Bounds x="400" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_dia" bpmnElement="H0_dia">
+        <dc:Bounds x="400" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_devolver" bpmnElement="H0_devolver">
+        <dc:Bounds x="570" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_criterio" bpmnElement="H0_criterio">
+        <dc:Bounds x="730" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_vara" bpmnElement="H0_vara">
+        <dc:Bounds x="890" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_anotar" bpmnElement="H0_anotar">
+        <dc:Bounds x="1050" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_fin" bpmnElement="H0_fin">
+        <dc:Bounds x="1220" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1198" y="235" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_criterio" bpmnElement="H0_nota_criterio">
+        <dc:Bounds x="680" y="380" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_vara" bpmnElement="H0_nota_vara">
+        <dc:Bounds x="860" y="40" width="250" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_anotar" bpmnElement="H0_nota_anotar">
+        <dc:Bounds x="960" y="380" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H0_nota_gw" bpmnElement="H0_nota_gw">
+        <dc:Bounds x="220" y="380" width="220" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_H0_f1" bpmnElement="H0_f1">
+        <di:waypoint x="216" y="210" />
+        <di:waypoint x="275" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f_si" bpmnElement="H0_f_si">
+        <di:waypoint x="300" y="185" />
+        <di:waypoint x="300" y="100" />
+        <di:waypoint x="400" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="80" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f_no" bpmnElement="H0_f_no">
+        <di:waypoint x="300" y="235" />
+        <di:waypoint x="300" y="310" />
+        <di:waypoint x="400" y="310" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="305" y="285" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f2" bpmnElement="H0_f2">
+        <di:waypoint x="500" y="100" />
+        <di:waypoint x="620" y="100" />
+        <di:waypoint x="620" y="170" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f3" bpmnElement="H0_f3">
+        <di:waypoint x="500" y="310" />
+        <di:waypoint x="620" y="310" />
+        <di:waypoint x="620" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f4" bpmnElement="H0_f4">
+        <di:waypoint x="670" y="210" />
+        <di:waypoint x="730" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f5" bpmnElement="H0_f5">
+        <di:waypoint x="830" y="210" />
+        <di:waypoint x="890" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f6" bpmnElement="H0_f6">
+        <di:waypoint x="990" y="210" />
+        <di:waypoint x="1050" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_f7" bpmnElement="H0_f7">
+        <di:waypoint x="1150" y="210" />
+        <di:waypoint x="1220" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_asoc_criterio" bpmnElement="H0_asoc_criterio">
+        <di:waypoint x="780" y="250" />
+        <di:waypoint x="790" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_asoc_vara" bpmnElement="H0_asoc_vara">
+        <di:waypoint x="940" y="170" />
+        <di:waypoint x="960" y="150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_asoc_anotar" bpmnElement="H0_asoc_anotar">
+        <di:waypoint x="1100" y="250" />
+        <di:waypoint x="1110" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H0_asoc_gw" bpmnElement="H0_asoc_gw">
+        <di:waypoint x="300" y="235" />
+        <di:waypoint x="320" y="380" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_excavar">
+    <bpmndi:BPMNPlane id="P_hijo_excavar" bpmnElement="C_excavar">
+      <bpmndi:BPMNShape id="S_H1_inicio" bpmnElement="H1_inicio">
+        <dc:Bounds x="180" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="265" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_caso" bpmnElement="H1_caso">
+        <dc:Bounds x="270" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_pregunta" bpmnElement="H1_pregunta">
+        <dc:Bounds x="430" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_reflejar" bpmnElement="H1_reflejar">
+        <dc:Bounds x="590" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_gw_contesto" bpmnElement="H1_gw_contesto" isMarkerVisible="true">
+        <dc:Bounds x="760" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="746" y="175" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_marcar" bpmnElement="H1_marcar">
+        <dc:Bounds x="870" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_gw_lista" bpmnElement="H1_gw_lista" isMarkerVisible="true">
+        <dc:Bounds x="1040" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="180" width="69" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_mostrar" bpmnElement="H1_mostrar">
+        <dc:Bounds x="1140" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_gw_agotada" bpmnElement="H1_gw_agotada" isMarkerVisible="true">
+        <dc:Bounds x="1310" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1296" y="290" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_fin" bpmnElement="H1_fin">
+        <dc:Bounds x="1450" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1434" y="265" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_abierto" bpmnElement="H1_abierto">
+        <dc:Bounds x="870" y="300" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_H1_asoc_marcar" bpmnElement="H1_asoc_marcar">
+        <di:waypoint x="924" y="200" />
+        <di:waypoint x="944" y="50" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_asoc_abierto" bpmnElement="H1_asoc_abierto">
+        <di:waypoint x="958" y="380" />
+        <di:waypoint x="969" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_H1_nota_caso" bpmnElement="H1_nota_caso">
+        <dc:Bounds x="180" y="450" width="260" height="120" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_pregunta" bpmnElement="H1_nota_pregunta">
+        <dc:Bounds x="470" y="450" width="260" height="130" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_reflejar" bpmnElement="H1_nota_reflejar">
+        <dc:Bounds x="560" y="40" width="240" height="100" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_H1_f1" bpmnElement="H1_f1">
+        <di:waypoint x="216" y="240" />
+        <di:waypoint x="270" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f2" bpmnElement="H1_f2">
+        <di:waypoint x="370" y="240" />
+        <di:waypoint x="430" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f3" bpmnElement="H1_f3">
+        <di:waypoint x="530" y="240" />
+        <di:waypoint x="590" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f4" bpmnElement="H1_f4">
+        <di:waypoint x="690" y="240" />
+        <di:waypoint x="760" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_no" bpmnElement="H1_f_no">
+        <di:waypoint x="785" y="265" />
+        <di:waypoint x="785" y="340" />
+        <di:waypoint x="870" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="316" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_si" bpmnElement="H1_f_si">
+        <di:waypoint x="810" y="240" />
+        <di:waypoint x="870" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="815" y="222" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f5" bpmnElement="H1_f5">
+        <di:waypoint x="970" y="340" />
+        <di:waypoint x="1065" y="340" />
+        <di:waypoint x="1065" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f6" bpmnElement="H1_f6">
+        <di:waypoint x="970" y="240" />
+        <di:waypoint x="1040" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_mostrar" bpmnElement="H1_f_mostrar">
+        <di:waypoint x="1065" y="215" />
+        <di:waypoint x="1065" y="130" />
+        <di:waypoint x="1140" y="130" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1070" y="170" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_seguir" bpmnElement="H1_f_seguir">
+        <di:waypoint x="1090" y="240" />
+        <di:waypoint x="1310" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1100" y="222" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f7" bpmnElement="H1_f7">
+        <di:waypoint x="1240" y="130" />
+        <di:waypoint x="1335" y="130" />
+        <di:waypoint x="1335" y="215" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_sigue" bpmnElement="H1_f_sigue">
+        <di:waypoint x="1335" y="265" />
+        <di:waypoint x="1335" y="410" />
+        <di:waypoint x="480" y="410" />
+        <di:waypoint x="480" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1344" y="311" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_f_fin" bpmnElement="H1_f_fin">
+        <di:waypoint x="1360" y="240" />
+        <di:waypoint x="1450" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1370" y="222" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_asoc_caso" bpmnElement="H1_asoc_caso">
+        <di:waypoint x="310" y="280" />
+        <di:waypoint x="310" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_asoc_pregunta" bpmnElement="H1_asoc_pregunta">
+        <di:waypoint x="500" y="280" />
+        <di:waypoint x="560" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H1_asoc_reflejar" bpmnElement="H1_asoc_reflejar">
+        <di:waypoint x="640" y="200" />
+        <di:waypoint x="660" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="S_H1_nota_marcar" bpmnElement="H1_nota_marcar">
+        <dc:Bounds x="820" y="-90" width="280" height="140" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H1_nota_abierto" bpmnElement="H1_nota_abierto">
+        <dc:Bounds x="835" y="450" width="250" height="90" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="D_hijo_preguntas">
+    <bpmndi:BPMNPlane id="P_hijo_preguntas" bpmnElement="C_preguntas">
+      <bpmndi:BPMNShape id="S_H2_inicio" bpmnElement="H2_inicio">
+        <dc:Bounds x="180" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="235" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_traducir" bpmnElement="H2_traducir">
+        <dc:Bounds x="270" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_hacer" bpmnElement="H2_hacer">
+        <dc:Bounds x="430" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_gw" bpmnElement="H2_gw" isMarkerVisible="true">
+        <dc:Bounds x="600" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="588" y="145" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_anotar" bpmnElement="H2_anotar">
+        <dc:Bounds x="710" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_abierta" bpmnElement="H2_abierta">
+        <dc:Bounds x="710" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_gw_quedan" bpmnElement="H2_gw_quedan" isMarkerVisible="true">
+        <dc:Bounds x="880" y="185" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="866" y="145" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_fin" bpmnElement="H2_fin">
+        <dc:Bounds x="1010" y="192" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="988" y="235" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_nota_traducir" bpmnElement="H2_nota_traducir">
+        <dc:Bounds x="220" y="400" width="240" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_H2_nota_fin" bpmnElement="H2_nota_fin">
+        <dc:Bounds x="900" y="400" width="250" height="90" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_H2_f1" bpmnElement="H2_f1">
+        <di:waypoint x="216" y="210" />
+        <di:waypoint x="270" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f2" bpmnElement="H2_f2">
+        <di:waypoint x="370" y="210" />
+        <di:waypoint x="430" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f3" bpmnElement="H2_f3">
+        <di:waypoint x="530" y="210" />
+        <di:waypoint x="600" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f_si" bpmnElement="H2_f_si">
+        <di:waypoint x="650" y="210" />
+        <di:waypoint x="710" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="655" y="192" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f_no" bpmnElement="H2_f_no">
+        <di:waypoint x="625" y="185" />
+        <di:waypoint x="625" y="100" />
+        <di:waypoint x="710" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="630" y="76" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f4" bpmnElement="H2_f4">
+        <di:waypoint x="810" y="210" />
+        <di:waypoint x="880" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f5" bpmnElement="H2_f5">
+        <di:waypoint x="810" y="100" />
+        <di:waypoint x="905" y="100" />
+        <di:waypoint x="905" y="185" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f_otra" bpmnElement="H2_f_otra">
+        <di:waypoint x="905" y="235" />
+        <di:waypoint x="905" y="320" />
+        <di:waypoint x="480" y="320" />
+        <di:waypoint x="480" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="910" y="260" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_f_fin" bpmnElement="H2_f_fin">
+        <di:waypoint x="930" y="210" />
+        <di:waypoint x="1010" y="210" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="192" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_asoc_traducir" bpmnElement="H2_asoc_traducir">
+        <di:waypoint x="320" y="250" />
+        <di:waypoint x="330" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_H2_asoc_fin" bpmnElement="H2_asoc_fin">
+        <di:waypoint x="1028" y="228" />
+        <di:waypoint x="1020" y="400" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

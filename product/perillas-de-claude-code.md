@@ -312,7 +312,7 @@ fórmula, no medido en 200 K.
 
 1. **Se come primero las cartas de Nemawashi.** El código excluye explícitamente las de fábrica de la lista de candidatos a recorte. El daño cae entero del lado del proyecto.
 2. **El aviso no llega.** El binario emite *«descriptions will be truncated… raise `skillListingBudgetFraction`»*, pero va al registro de depuración. **Se buscó en las salidas crudas de las seis corridas, incluidas las dos donde el recorte sí ocurrió: no aparece.** Sin `--debug` o un freno que lo vigile, Nemawashi no se entera.
-3. **Los flujos gastan del mismo presupuesto.** `levanta-el-roadmap` aparece en el listado de cartas aunque sea un `.js`. El molino no es gratis en esta cuenta.
+3. **Los flujos gastan del mismo presupuesto.** `levanta-el-conocimiento` aparece en el listado de cartas aunque sea un `.js`. El molino no es gratis en esta cuenta.
 
 **Nota de método:** el campo `skills` del arranque trae **sólo nombres, no descripciones**. No
 sirve para comparar contra el frontmatter; lo que sí sirve es mover los topes y medir si

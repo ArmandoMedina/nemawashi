@@ -3,26 +3,31 @@ import { resolve } from 'node:path'
 import { describe, it, expect } from 'vitest'
 
 /**
- * El contrato del cambio: el molino ya no recibe el texto de la platica en `args.platica`.
- * Recibe -o resuelve el solo- la ruta de un `.jsonl` de sesion, y saca la platica de ahi
- * con el sacador que ya existe (`sacarTurnos` / `platicaComoTexto` en
- * `src/nucleo/sacar-turnos.ts`). Antes, quien llamaba tecleaba el material adentro de la
- * llamada, y esa mano acababa siendo el filtro: en una corrida real se paso una version
- * recortada de la conversacion y el auditor marco como «perdido» material que nunca llego
- * a entrar.
+ * El contrato: el molino no recibe texto tecleado a mano. Ni la platica -en `args.platica`- ni
+ * las respuestas de una corrida anterior -en `args.respuestas`. Las dos entran por ruta, y las
+ * dos las lee un agente: la platica con el sacador que ya existe (`sacarTurnos` /
+ * `platicaComoTexto` en `src/nucleo/sacar-turnos.ts`), las respuestas con un simple `Read` -son
+ * un `.md` plano, no una grabacion.
  *
- * Orden nuevo: una fase «Sacar», antes de «Afinar», que le pide a un agente -el unico con
- * `Bash` entre los que ya existen- que lea la grabacion y corra el sacador. Si no llega
- * `args.transcript`, ese mismo agente resuelve la grabacion de la sesion en curso; el molino
- * no la adivina por su cuenta -no tiene `process` ni `fs` para hacerlo.
+ * Antes, quien llamaba tecleaba el material adentro de la llamada, y esa mano acababa siendo el
+ * filtro: en una corrida real se paso una version recortada de la conversacion y el auditor
+ * marco como «perdido» material que nunca llego a entrar. Con las respuestas paso algo mas caro
+ * todavia, medido el 2026-08-05: pasar 15664 caracteres a mano rompe la reanudacion del
+ * workflow -un salto de linea de diferencia entre lo tecleado y el archivo cambia el prompt y
+ * tira el cache de `resumeFromRunId`, obligando a rehacer cuarenta minutos de agentes.
  *
- * Igual que los otros contratos del molino: no es un modulo TypeScript importable, lo
- * ejecuta el runtime de Claude Code inyectando `args`, `agent`, `log` y `phase`. Aqui se
- * reproduce esa invocacion con un `agent` falso que contesta lo minimo que cada schema
- * exige, y nada mas.
+ * Orden: una fase «Sacar» antes de todo, con dos llamadas si hay respuestas que leer. La primera
+ * -el unico agente con `Bash` entre los que ya existen- lee la grabacion y corre el sacador; si
+ * no llega `args.transcript`, ese mismo agente resuelve la grabacion de la sesion en curso -el
+ * molino no la adivina por su cuenta, no tiene `process` ni `fs` para hacerlo. La segunda, solo
+ * si llego `args.rutaRespuestas`, lee ese archivo con `Read` y nada mas.
+ *
+ * Igual que los otros contratos del molino: no es un modulo TypeScript importable, lo ejecuta el
+ * runtime de Claude Code inyectando `args`, `agent`, `log` y `phase`. Aqui se reproduce esa
+ * invocacion con un `agent` falso que contesta lo minimo que cada schema exige, y nada mas.
  */
 
-const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-roadmap.js')
+const RUTA_MOLINO = resolve(process.cwd(), '.claude/workflows/levanta-el-conocimiento.js')
 
 type Llamada = { prompt: string; opts: Record<string, unknown> }
 type Corrida = { llamadas: Llamada[]; dichos: string[]; salida: Record<string, unknown> }
@@ -37,35 +42,61 @@ function cargarMolino(): (...args: unknown[]) => Promise<unknown> {
 
 const PLATICA_SACADA = 'EXPERTO: algo se dijo\n\nAGENTE: algo se contesto'
 
-type Sacado = { platica: string; transcriptLeido: string; noSePudo?: string } | null
-
-type OpcionesCorrida = {
-  sacado?: Sacado
-  dictamen?: Record<string, unknown> | null
+const PIEZA = {
+  id: 'REG-1',
+  renglon: 'una regla dicha',
+  capacidades: [],
+  firmeza: 'dicho',
+  origen: 'escuchado',
+  enSusPalabras: 'algo se dijo',
+  deDondeSalio: 'el caso contado entero',
+  queQuedaAbierto: 'nada'
 }
 
-const SIN_FALLAS = { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'x' }
-const HALLAZGO = { regla: 'una regla dicha', deDondeSalio: 'el caso contado', firmeza: 'dicho' }
-const SIN_HUECOS = { huecos: [], itemsLeidos: 1 }
-const SIN_INVENTOS = { inventos: [], hallazgosCotejados: 1 }
-const SIN_GRUPOS = { grupos: [], hallazgosRevisados: 1 }
+const REGISTRO = { capacidades: [], modulos: [], reglas: [PIEZA], dudas: [], senaladas: [] }
+const ESCRITOS = {
+  archivos: [{ ruta: 'product/conocimiento/reglas/0001-de-prueba.md', id: 'REG-0001', idDeTrabajo: 'REG-1', estado: 'completa' }],
+  noEscritos: [],
+  senalesSinPieza: []
+}
+const SIN_FALLAS = { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'sesion.jsonl' }
 
-function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrida = {}): Promise<Corrida> {
-  const { sacado = { platica: PLATICA_SACADA, transcriptLeido: 'sesion.jsonl' }, dictamen = SIN_FALLAS } = opciones
+type Sacado = { platica: string; transcriptLeido: string; noSePudo?: string } | null
+type RespuestasSacadas = { respuestas: string; archivoLeido: string; noSePudo?: string } | null
+
+function correrMolino(
+  entrada: Record<string, unknown>,
+  opciones: { sacado?: Sacado; respuestasSacadas?: RespuestasSacadas } = {}
+): Promise<Corrida> {
+  const {
+    sacado = { platica: PLATICA_SACADA, transcriptLeido: 'sesion.jsonl' },
+    respuestasSacadas = { respuestas: 'una respuesta cualquiera', archivoLeido: 'respuestas.md' }
+  } = opciones
 
   const llamadas: Llamada[] = []
   const dichos: string[] = []
 
   const agent = async (prompt: string, opts: Record<string, unknown>) => {
     llamadas.push({ prompt, opts })
+    const label = String(opts.label ?? '')
 
-    if (opts.phase === 'Sacar') return sacado
-    if (opts.phase === 'Afinar') return { hallazgos: [HALLAZGO], preguntas: [] }
-    if (opts.phase === 'Leer en frio') return SIN_HUECOS
-    if (opts.phase === 'Cotejar') return SIN_INVENTOS
-    if (opts.phase === 'Juntar') return SIN_GRUPOS
-    if (opts.phase === 'Asentar') return { archivos: [{ ruta: 'roadmap/0099-de-prueba.md', regla: 'una regla dicha' }], noEscritos: [] }
-    if (opts.phase === 'Auditar') return dictamen
+    // La trampa a evitar: `sacar:` y `sacar-respuestas:` comparten prefijo. Se prueba el mas
+    // largo -y mas especifico- primero, o la llamada de las respuestas caeria en la rama del
+    // sacador y contestaria con lo que no le toca.
+    if (opts.phase === 'Sacar') {
+      if (label.startsWith('sacar-respuestas')) return respuestasSacadas
+      return sacado
+    }
+    if (opts.phase === 'Levantar el examen') return { preguntas: ['algo que contestar?'] }
+    if (opts.phase === 'Construir') return REGISTRO
+    if (opts.phase === 'Medir') {
+      if (label.startsWith('leer-en-frio')) return { huecos: [], piezasLeidas: 1 }
+      if (label.startsWith('cotejar')) return { inventos: [], piezasCotejadas: 1 }
+      return { respuestas: [{ pregunta: 'algo que contestar?', veredicto: 'contestada' }], senaladas: [], sinPieza: [] }
+    }
+    if (opts.phase === 'Registrar') return ESCRITOS
+    if (opts.phase === 'Auditar') return SIN_FALLAS
+    if (opts.phase === 'Armar lo que falta') return { deEstePaso: [], deAntes: [], archivosRecorridos: 1 }
     return null
   }
 
@@ -83,15 +114,15 @@ function promptDeFase(llamadas: Llamada[], fase: string): string {
   return llamada.prompt
 }
 
-describe('el molino ya no recibe texto: recibe -o resuelve- la ruta del transcript', () => {
-  it('«Sacar» corre antes que «Afinar»', async () => {
+describe('el molino no recibe texto: recibe -o resuelve- la ruta del transcript', () => {
+  it('«Sacar» corre antes que todo lo demas', async () => {
     const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl' })
 
     const indiceSacar = llamadas.findIndex((l) => l.opts.phase === 'Sacar')
-    const indiceAfinar = llamadas.findIndex((l) => l.opts.phase === 'Afinar')
+    const indiceExamen = llamadas.findIndex((l) => l.opts.phase === 'Levantar el examen')
 
-    expect(indiceSacar).toBeGreaterThanOrEqual(0)
-    expect(indiceAfinar).toBeGreaterThan(indiceSacar)
+    expect(indiceSacar).toBe(0)
+    expect(indiceExamen).toBeGreaterThan(indiceSacar)
   })
 
   it('a «Sacar» se le pide correr el sacador que ya existe, no inventar uno', async () => {
@@ -100,51 +131,42 @@ describe('el molino ya no recibe texto: recibe -o resuelve- la ruta del transcri
 
     expect(sacar).toContain('sacarTurnos')
     expect(sacar).toContain('platicaComoTexto')
+    expect(sacar).toContain('src/nucleo/sacar-turnos.ts')
   })
 
-  it('con `args.transcript`, el prompt de «Sacar» trae esa ruta y no las instrucciones de sesion en curso', async () => {
-    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'D:/repos/cliente/sesion-de-prueba.jsonl' })
+  it('con `args.transcript` el prompt trae esa ruta y no manda buscar la sesion', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl' })
     const sacar = promptDeFase(llamadas, 'Sacar')
 
-    expect(sacar).toContain('D:/repos/cliente/sesion-de-prueba.jsonl')
+    expect(sacar).toContain('una-ruta.jsonl')
     expect(sacar).not.toContain('CLAUDE_CODE_SESSION_ID')
   })
 
-  it('sin `args.transcript`, el prompt de «Sacar» dice como resolver la sesion en curso, sin inventar una ruta', async () => {
+  it('sin `args.transcript` se le dice como resolverla, y que no la invente', async () => {
     const { llamadas } = await correrMolino({ paso: 'paso de prueba' })
     const sacar = promptDeFase(llamadas, 'Sacar')
 
     expect(sacar).toContain('CLAUDE_CODE_SESSION_ID')
-    expect(sacar.toLowerCase()).toContain('no inventes')
+    expect(sacar).toContain('No inventes una ruta')
   })
 
-  it('la platica que devuelve «Sacar» es la que llega al prompt de «Afinar»', async () => {
-    const { llamadas } = await correrMolino(
-      { paso: 'paso de prueba', transcript: 'una-ruta.jsonl' },
-      { sacado: { platica: PLATICA_SACADA, transcriptLeido: 'una-ruta.jsonl' } }
-    )
-    const afinar = promptDeFase(llamadas, 'Afinar')
+  it('aunque llegue `args.platica`, no reemplaza lo que saca el sacador', async () => {
+    const { llamadas } = await correrMolino({
+      paso: 'paso de prueba',
+      transcript: 'una-ruta.jsonl',
+      platica: 'ESTE TEXTO LO TECLEO ALGUIEN A MANO'
+    })
 
-    expect(afinar).toContain(PLATICA_SACADA)
+    const examen = promptDeFase(llamadas, 'Levantar el examen')
+    expect(examen).toContain(PLATICA_SACADA)
+    expect(examen).not.toContain('ESTE TEXTO LO TECLEO ALGUIEN A MANO')
   })
 
-  it('`args.platica` ya no existe en el contrato: aunque llegue, no reemplaza lo que saca el sacador', async () => {
-    const { llamadas } = await correrMolino(
-      { paso: 'paso de prueba', transcript: 'una-ruta.jsonl', platica: 'texto tecleado a mano, fuera del contrato' },
-      { sacado: { platica: PLATICA_SACADA, transcriptLeido: 'una-ruta.jsonl' } }
-    )
-    const afinar = promptDeFase(llamadas, 'Afinar')
+  it('si «Sacar» no contesta, el molino para ahi: no hay material que moler', async () => {
+    const { llamadas, salida } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl' }, { sacado: null })
 
-    expect(afinar).toContain(PLATICA_SACADA)
-    expect(afinar).not.toContain('texto tecleado a mano, fuera del contrato')
-  })
-
-  it('si «Sacar» no contesta, el molino para ahi: no hay material que afinar', async () => {
-    const { llamadas, salida, dichos } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl' }, { sacado: null })
-
-    expect(llamadas.find((l) => l.opts.phase === 'Afinar')).toBeUndefined()
+    expect(llamadas.find((l) => l.opts.phase === 'Levantar el examen')).toBeUndefined()
     expect(salida.estado).toBe('sin-medicion')
-    expect(dichos.join('\n')).toContain('sacador')
   })
 
   it('si «Sacar» devuelve la platica vacia, el motivo reportado es el `noSePudo` del sacador', async () => {
@@ -153,18 +175,100 @@ describe('el molino ya no recibe texto: recibe -o resuelve- la ruta del transcri
       { sacado: { platica: '', transcriptLeido: '', noSePudo: 'el archivo no se pudo leer' } }
     )
 
-    expect(llamadas.find((l) => l.opts.phase === 'Afinar')).toBeUndefined()
+    expect(llamadas.find((l) => l.opts.phase === 'Levantar el examen')).toBeUndefined()
     expect(salida.estado).toBe('sin-material')
     expect(salida.motivo).toContain('el archivo no se pudo leer')
   })
 
-  it('el `transcriptLeido` que resolvio «Sacar» es el que se usa al auditar contra el crudo', async () => {
+  it('el `transcriptLeido` que resolvio el sacador es el que se le pasa a quien audita', async () => {
     const { llamadas } = await correrMolino(
       { paso: 'paso de prueba' },
-      { sacado: { platica: PLATICA_SACADA, transcriptLeido: '/ruta/que/resolvio/sacar/sesion.jsonl' } }
+      { sacado: { platica: PLATICA_SACADA, transcriptLeido: 'la-que-de-verdad-leyo.jsonl' } }
     )
-    const auditar = promptDeFase(llamadas, 'Auditar')
 
-    expect(auditar).toContain('/ruta/que/resolvio/sacar/sesion.jsonl')
+    expect(promptDeFase(llamadas, 'Auditar')).toContain('la-que-de-verdad-leyo.jsonl')
+  })
+})
+
+describe('las respuestas tambien entran por ruta, y las lee un agente', () => {
+  it('con `rutaRespuestas` corre una segunda llamada en fase «Sacar», con esa ruta en el prompt', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: 'respuestas.md' })
+
+    const sacarRespuestas = llamadas.find((l) => String(l.opts.label ?? '').startsWith('sacar-respuestas'))
+
+    expect(sacarRespuestas).toBeDefined()
+    expect(sacarRespuestas!.opts.phase).toBe('Sacar')
+    expect(sacarRespuestas!.opts.agentType).toBe('auditor')
+    expect(sacarRespuestas!.prompt).toContain('respuestas.md')
+  })
+
+  it('a esa llamada no se le pide correr el sacador: es un `.md` plano, no una grabacion', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: 'respuestas.md' })
+
+    const sacarRespuestas = llamadas.find((l) => String(l.opts.label ?? '').startsWith('sacar-respuestas'))!
+
+    expect(sacarRespuestas.prompt).not.toContain('sacarTurnos')
+    expect(sacarRespuestas.prompt).not.toContain('npx tsx')
+  })
+
+  it('sin `rutaRespuestas` hay una sola llamada de «Sacar»', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl' })
+
+    expect(llamadas.filter((l) => l.opts.phase === 'Sacar')).toHaveLength(1)
+  })
+
+  it('`rutaRespuestas` en blanco se trata como que no llego -la particion que hoy no existe por no validar el argumento', async () => {
+    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: '   ' })
+
+    expect(llamadas.filter((l) => l.opts.phase === 'Sacar')).toHaveLength(1)
+  })
+
+  it('si el lector de respuestas las devuelve vacias, la corrida para con «sin-respuestas» y no registra', async () => {
+    const { llamadas, salida } = await correrMolino(
+      { paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: 'respuestas.md' },
+      { respuestasSacadas: { respuestas: '', archivoLeido: '', noSePudo: 'el archivo no existe' } }
+    )
+
+    expect(salida.estado).toBe('sin-respuestas')
+    expect(salida.motivo).toContain('el archivo no existe')
+    expect(llamadas.find((l) => l.opts.phase === 'Registrar')).toBeUndefined()
+  })
+
+  it('unas respuestas vacias tampoco corren como primera corrida: no hay llamada de «Construir»', async () => {
+    const { llamadas } = await correrMolino(
+      { paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: 'respuestas.md' },
+      { respuestasSacadas: { respuestas: '', archivoLeido: '', noSePudo: 'el archivo no existe' } }
+    )
+
+    expect(llamadas.find((l) => l.opts.phase === 'Construir')).toBeUndefined()
+  })
+
+  it('a «Construir» le llega el texto que devolvio el lector, no la ruta que se le pidio', async () => {
+    const { llamadas } = await correrMolino(
+      { paso: 'paso de prueba', transcript: 'una-ruta.jsonl', rutaRespuestas: 'respuestas.md' },
+      { respuestasSacadas: { respuestas: 'desde los tres meses', archivoLeido: 'respuestas.md' } }
+    )
+
+    const construir = llamadas.find((l) => l.opts.phase === 'Construir')!
+
+    expect(construir.prompt).toContain('desde los tres meses')
+    expect(construir.prompt).not.toContain('respuestas.md')
+  })
+
+  it('`args.respuestas` con texto ya no se acepta: para con «sin-respuestas» y el log nombra `rutaRespuestas`', async () => {
+    const { llamadas, dichos, salida } = await correrMolino({
+      paso: 'paso de prueba',
+      transcript: 'una-ruta.jsonl',
+      respuestas: 'desde los tres meses'
+    })
+
+    expect(salida.estado).toBe('sin-respuestas')
+    expect(dichos.join('\n')).toContain('rutaRespuestas')
+    // Para antes de gastar un solo agente DE LA CORRIDA: ignorarlo en silencio corre como
+    // primera corrida, y eso son cuarenta minutos para acabar preguntando lo que el experto ya
+    // habia contestado. Las dos llamadas que si quedan son mecanicas -de «Anotar», que deja el
+    // renglon de esta corrida aunque se haya cortado en el freno.
+    expect(llamadas).toHaveLength(2)
+    expect(llamadas.map((l) => l.opts.phase)).toEqual(['Anotar', 'Anotar'])
   })
 })

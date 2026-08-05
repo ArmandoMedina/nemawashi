@@ -3,7 +3,8 @@ import {
   encontrarDatoPersonal,
   buscarCadenasDeDenylist,
   dominioEstaPermitido,
-  segmentoEsMarcador
+  segmentoEsMarcador,
+  EXTENSIONES_A_ESCANEAR
 } from './sin-dato-personal'
 
 /**
@@ -177,6 +178,12 @@ describe('casos generales', () => {
     expect(hallazgos.map((h) => h.clase).sort()).toEqual(
       ['correo-con-dominio-real', 'ruta-de-perfil-windows'].sort()
     )
+  })
+})
+
+describe('extensiones a escanear', () => {
+  it('incluye .jsonl: docs/mediciones/corridas.jsonl se versiona y le aplica la misma regla', () => {
+    expect(EXTENSIONES_A_ESCANEAR).toContain('.jsonl')
   })
 })
 
