@@ -3,11 +3,17 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { encontrarDatoPersonal } from '../nucleo/sin-dato-personal'
 import { revisarPieza, encontrarRutaDeMaquina, type Falla, type TipoDePieza } from '../nucleo/el-conocimiento-no-se-escapa'
+import {
+  aristasDelGrafo,
+  revisarElGrafo,
+  claveDeDeuda as claveDeDeudaDeEnlace,
+  type PiezaLeida
+} from '../nucleo/el-enlace-va-en-los-dos-sentidos'
 
 /**
  * Contrato: ninguna pieza de `product/conocimiento/` se escapa.
  *
- * La capa 1 prueba las tres reglas con datos a la medida. Esta prueba las aplica a los
+ * La capa 1 prueba las cuatro reglas con datos a la medida. Esta prueba las aplica a los
  * archivos de verdad, que es donde el escape ocurre: nadie escribe una ruta de maquina a
  * proposito, se cuela en una corrida real del molino.
  *
@@ -62,6 +68,39 @@ function comoTexto(fallas: Falla[]): string {
   return fallas.map((f) => (f.detalle ? `${f.clave} (${f.detalle})` : f.clave)).join(', ')
 }
 
+/**
+ * Todas las piezas de verdad, para el grafo. `piezasDe` es la unica que decide que archivo
+ * cuenta y cual no -un segundo lector con otro criterio es el dia que uno de los dos cambie
+ * una pieza y quede fuera sin que nada avise. La ruta va relativa al repositorio y con
+ * barras normales: es la que se escribe en `DEUDA_DE_ENLACE`, y no empieza con letra de
+ * unidad.
+ */
+const TODAS: PiezaLeida[] = (['dominio', 'modulo', 'capacidad', 'regla'] as const).flatMap((tipo) =>
+  piezasDe(tipo).map((archivo) => ({
+    ruta: archivo.slice(RAIZ.length + 1).split('\\').join('/'),
+    tipo,
+    texto: readFileSync(archivo, 'utf8')
+  }))
+)
+
+/**
+ * Deuda del enlace: aristas de un solo lado que hoy existen en el registro, y en una linea de
+ * negocio por que sigue sin cerrar. Igual que `DEUDA_DE_FORMA`, cierra por los dos lados: si
+ * la falla sigue, el suite no truena; si la falla ya no esta, esta misma prueba avisa.
+ */
+const DEUDA_DE_ENLACE: Record<string, string> = {
+  'product/conocimiento/capacidades/0015-instalar-y-abrir-como-cualquier-programa.md enlace-de-un-solo-lado reglas:REG-0001':
+    'la capacidad cita la regla de instalarse como cualquier programa, y esa regla solo devuelve la cita a la capacidad de escoger o crear proyecto',
+  'product/conocimiento/capacidades/0016-construir-hablando-el-mapa-del-sistema.md enlace-de-un-solo-lado reglas:REG-0001':
+    'la capacidad cita la misma regla de instalarse como cualquier programa, que tampoco la devuelve',
+  'product/conocimiento/dominios/0001-el-levantamiento-hablado-del-negocio.md enlace-de-un-solo-lado modulos:MOD-0002':
+    'el dominio cita el modulo del registro de lo dicho, que no declara ningun dominio de vuelta',
+  'product/conocimiento/dominios/0001-el-levantamiento-hablado-del-negocio.md enlace-de-un-solo-lado modulos:MOD-0004':
+    'el dominio cita el modulo del programa en manos de quien no sabe, que declara el campo dominio vacio',
+  'product/conocimiento/modulos/0004-el-programa-en-manos-de-quien-no-sabe.md enlace-de-un-solo-lado capacidades:CAP-0015':
+    'el modulo cita la capacidad de instalar y abrir el programa, que declara el campo modulo vacio'
+}
+
 describe('el conocimiento no se escapa, en los archivos de verdad', () => {
   for (const tipo of ['dominio', 'modulo', 'capacidad', 'regla'] as const) {
     describe(CARPETA_POR_TIPO[tipo], () => {
@@ -112,4 +151,31 @@ describe('el conocimiento no se escapa, en los archivos de verdad', () => {
       }
     })
   }
+})
+
+describe('el enlace va en los dos sentidos, en el grafo de verdad', () => {
+  const fallas = revisarElGrafo(TODAS)
+
+  it('ninguna falla nueva sin declarar como deuda', () => {
+    const sinDeclarar = fallas.filter((f) => DEUDA_DE_ENLACE[claveDeDeudaDeEnlace(f)] === undefined)
+    if (sinDeclarar.length > 0) {
+      const detalle = sinDeclarar
+        .map((f) => `  ${f.ruta} ${f.clave} campo ${f.campo}, citado "${f.citado}"`)
+        .join('\n')
+      throw new Error(`${sinDeclarar.length} enlace(s) roto(s) sin declarar en DEUDA_DE_ENLACE:\n${detalle}`)
+    }
+  })
+
+  it('la deuda ya cerrada se saca de la lista', () => {
+    const llavesVivas = new Set(fallas.map(claveDeDeudaDeEnlace))
+    for (const llave of Object.keys(DEUDA_DE_ENLACE)) {
+      if (!llavesVivas.has(llave)) {
+        throw new Error(`${llave} ya cumple -sacala de DEUDA_DE_ENLACE (traia: ${DEUDA_DE_ENLACE[llave]})`)
+      }
+    }
+  })
+
+  it('un piso de aristas: si esto cae, algo del recorrido se rompio en silencio', () => {
+    expect(aristasDelGrafo(TODAS).length).toBeGreaterThan(60)
+  })
 })
