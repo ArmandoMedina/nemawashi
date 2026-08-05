@@ -7,7 +7,8 @@
  * de `product/conocimiento/`. `.claude/rules/valen-en-toda-sesion.md` ya lo prohibia -«ni
  * la ruta de una maquina real entra a un archivo versionado»- pero nada media esos
  * archivos: el gate de dato personal (`sin-dato-personal.ts`) solo reconoce la ruta de un
- * perfil de usuario (`C:\Users\...`), no una ruta absoluta cualquiera, y ninguna otra
+ * perfil de usuario de Windows -la letra de unidad seguida de `\Users\` y el nombre de la
+ * cuenta-, no una ruta absoluta cualquiera, y ninguna otra
  * prueba recorria `product/conocimiento/`.
  *
  * Nucleo: funciones puras. No abre archivos — reciben el texto ya leido y devuelven los
