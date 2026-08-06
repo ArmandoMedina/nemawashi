@@ -75,7 +75,7 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     // `sacar-respuestas:` comparte prefijo con `sacar:` -se prueba primero, el mas especifico.
     if (opts.phase === 'Sacar') {
       if (label.startsWith('sacar-respuestas')) return respuestasSacadas
-      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl', horaDeAlta: '2026-08-04T11:00:00-06:00' }
     }
     if (opts.phase === 'Levantar el examen') return { preguntas: ['Desde cuando se le fia a un taller?'] }
     if (opts.phase === 'Construir') {
