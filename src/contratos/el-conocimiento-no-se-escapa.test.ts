@@ -98,7 +98,9 @@ const DEUDA_DE_ENLACE: Record<string, string> = {
   'product/conocimiento/dominios/0001-el-levantamiento-hablado-del-negocio.md enlace-de-un-solo-lado modulos:MOD-0004':
     'el dominio cita el modulo del programa en manos de quien no sabe, que declara el campo dominio vacio',
   'product/conocimiento/modulos/0004-el-programa-en-manos-de-quien-no-sabe.md enlace-de-un-solo-lado capacidades:CAP-0015':
-    'el modulo cita la capacidad de instalar y abrir el programa, que declara el campo modulo vacio'
+    'el modulo cita la capacidad de instalar y abrir el programa, que declara el campo modulo vacio',
+  'product/conocimiento/reglas/0027-el-experto-platica-directo-con-la-ia.md sin-quien-lo-contenga capacidades:':
+    'la regla dice que el experto platica directo con la ia porque le sigue el ritmo, y en el levantamiento nadie dijo de que capacidad cuelga; colgarla de una seria inventar el enlace'
 }
 
 describe('el conocimiento no se escapa, en los archivos de verdad', () => {
