@@ -2,14 +2,14 @@
 id: CAP-0016
 capacidad: Construir hablando el mapa de lo que un sistema tiene que hacer, sin ver una terminal ni escribir código.
 modulo: MOD-0004
-reglas: [REG-0001]
+reglas: [REG-0001, REG-0026, REG-0029]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T15:19:13-06:00
 confirmado:
-marcado: 2026-08-04T15:19:13-06:00
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <capacidad>

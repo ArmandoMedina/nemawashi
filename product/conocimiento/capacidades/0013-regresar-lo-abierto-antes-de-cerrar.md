@@ -2,13 +2,14 @@
 id: CAP-0013
 capacidad: Regresarle al experto lo que quedó abierto antes de que se levante, y cerrar lo que pueda contestar.
 modulo: MOD-0001
-reglas: [REG-0013]
+reglas: [REG-0013, REG-0033, REG-0034]
 firmeza: dicho
 origen: escuchado
 estado: completa
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <capacidad>

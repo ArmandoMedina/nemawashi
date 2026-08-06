@@ -1,14 +1,14 @@
 ---
 id: MOD-0002
 modulo: El registro de lo que se dijo: lo que queda escrito, con su firmeza y su procedencia.
-capacidades: [CAP-0006, CAP-0007, CAP-0008, CAP-0012]
+capacidades: [CAP-0006, CAP-0007, CAP-0008, CAP-0012, CAP-0031]
 firmeza: dicho
 origen: propuesto
 estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
-marcado: 2026-08-06T09:04:12-06:00
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <modulo>

@@ -1,14 +1,14 @@
 ---
 id: MOD-0001
 modulo: La sesión: escoger proyecto, fijar el tema, conducir la plática y decidir por dónde sigue.
-capacidades: [CAP-0001, CAP-0002, CAP-0003, CAP-0004, CAP-0005, CAP-0013, CAP-0014]
+capacidades: [CAP-0001, CAP-0002, CAP-0003, CAP-0004, CAP-0005, CAP-0013, CAP-0014, CAP-0030]
 firmeza: dicho
 origen: propuesto
 estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
-marcado: 2026-08-06T09:04:12-06:00
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <modulo>
