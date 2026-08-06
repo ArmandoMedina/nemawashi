@@ -8,7 +8,7 @@ estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
-marcado: 2026-08-04T15:19:13-06:00
+marcado: 2026-08-06T09:04:12-06:00
 ---
 
 <modulo>
@@ -42,6 +42,8 @@ dónde va una capacidad nueva que sólo toca lo escrito.
 Auditoría del 2026-08-04:
 
 - Mal marcado. Enlace de un solo lado, DOM-0001 → MOD-0002. Este archivo no tiene siquiera campo `dominio` en su frontmatter, así que no nombra de vuelta a `product/conocimiento/dominios/0001-el-levantamiento-hablado-del-negocio.md`, que en su línea 4 lo lista dentro de `modulos: [MOD-0004, MOD-0002]`. Y contradice lo que el mismo DOM-0001 argumenta en sus líneas 37 y 45: ahí deja fuera a MOD-0001 y MOD-0003 precisamente por no dejar «un enlace escrito de un solo lado», y a MOD-0002 lo lista aunque está exactamente en la misma condición («Los dos están en disco sin campo de dominio en su frontmatter, medido» — cierto también de MOD-0002).
+
+Auditoría del 2026-08-06: mal marcado. Enlace roto sin declarar: product/conocimiento/capacidades/0031-entregar-lo-levantado-en-fragmentos.md dice `modulo: MOD-0002` y este archivo no la nombra de vuelta. No está en la lista de deuda declarada (`DEUDA_DE_ENLACE`), que hoy sólo tiene cinco entradas y todas de corridas anteriores. Prueba: `npx vitest run src/contratos/el-conocimiento-no-se-escapa.test.ts` falla con «11 enlace(s) roto(s) sin declarar».
 </que-queda-abierto>
 
 </modulo>

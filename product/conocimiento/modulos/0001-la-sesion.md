@@ -4,10 +4,11 @@ modulo: La sesión: escoger proyecto, fijar el tema, conducir la plática y deci
 capacidades: [CAP-0001, CAP-0002, CAP-0003, CAP-0004, CAP-0005, CAP-0013, CAP-0014]
 firmeza: dicho
 origen: propuesto
-estado: completa
+estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-06T09:04:12-06:00
 ---
 
 <modulo>
@@ -39,7 +40,7 @@ qué pasa con los archivos.
 </de-donde-salio>
 
 <que-queda-abierto>
-nada
+Auditoría del 2026-08-06: mal marcado. Enlace roto sin declarar: product/conocimiento/capacidades/0030-impedir-el-dar-por-sabido.md dice `modulo: MOD-0001` y este archivo no la nombra de vuelta en `capacidades`. No está en la lista de deuda declarada (`DEUDA_DE_ENLACE`), que hoy sólo tiene cinco entradas y todas de corridas anteriores. Prueba: `npx vitest run src/contratos/el-conocimiento-no-se-escapa.test.ts` falla con «11 enlace(s) roto(s) sin declarar».
 </que-queda-abierto>
 
 </modulo>
