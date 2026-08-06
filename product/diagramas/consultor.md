@@ -109,6 +109,5 @@ sigue siendo ése: se comprueba, y luego se mira.
 > **Sin fuente declarada:** las tres desviaciones propias de este dibujo y las cinco cosas que el
 > dibujo agrega. Salieron de aquí y nadie las ha medido.
 >
-> **El corte de qué merece dibujo propio:** un proceso, un dibujo — y proceso es lo que tiene
-> disparador propio y fin. La sesión del consultor lo tiene; un agente al que otro llama, no: su
-> camino es un pedazo del camino de quien lo llamó, y ahí se dibuja.
+> **El corte de qué merece dibujo propio vive en [`README.md`](README.md)**, con el resto del método
+> de dibujar. La sesión del consultor lo merece porque tiene disparador propio y fin.

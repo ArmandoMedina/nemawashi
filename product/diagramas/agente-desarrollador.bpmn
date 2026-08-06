@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definiciones_desarrollador" targetNamespace="http://nemawashi/diagramas" exporter="escrito a mano" exporterVersion="1.0">
+  <bpmn:process id="Proceso_desarrollador" name="Implementar con la prueba en el mismo cambio" isExecutable="false">
+    <bpmn:startEvent id="D_inicio" name="Encargo recibido">
+      <bpmn:outgoing>D_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="D_arquitectura" name="Leer la arquitectura ya decidida">
+      <bpmn:incoming>D_f1</bpmn:incoming>
+      <bpmn:outgoing>D_f2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="D_gw_decidido" name="¿La pieza está decidida?">
+      <bpmn:incoming>D_f2</bpmn:incoming>
+      <bpmn:outgoing>D_f3</bpmn:outgoing>
+      <bpmn:outgoing>D_f_pregunta</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="D_fin_pregunta" name="Pregunta devuelta a quien decide">
+      <bpmn:incoming>D_f_pregunta</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="D_clasificar" name="Clasificar la prueba en las cinco capas">
+      <bpmn:incoming>D_f3</bpmn:incoming>
+      <bpmn:outgoing>D_f4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="D_roja" name="Escribir la prueba que falla">
+      <bpmn:incoming>D_f4</bpmn:incoming>
+      <bpmn:incoming>D_f_rehacer</bpmn:incoming>
+      <bpmn:outgoing>D_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="D_gw_razon" name="¿Falla por la razón correcta?">
+      <bpmn:incoming>D_f5</bpmn:incoming>
+      <bpmn:outgoing>D_f6</bpmn:outgoing>
+      <bpmn:outgoing>D_f_rehacer</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="D_verde" name="Escribir el mínimo código para verde">
+      <bpmn:incoming>D_f6</bpmn:incoming>
+      <bpmn:incoming>D_f_corregir</bpmn:incoming>
+      <bpmn:outgoing>D_f7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="D_bordes" name="Cubrir los bordes">
+      <bpmn:incoming>D_f7</bpmn:incoming>
+      <bpmn:outgoing>D_f8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="D_suite" name="Correr la suite de cierre">
+      <bpmn:incoming>D_f8</bpmn:incoming>
+      <bpmn:outgoing>D_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="D_gw_verde" name="¿Pasó entera?">
+      <bpmn:incoming>D_f9</bpmn:incoming>
+      <bpmn:outgoing>D_f10</bpmn:outgoing>
+      <bpmn:outgoing>D_f_corregir</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="D_fin" name="Cambio con su prueba en verde">
+      <bpmn:incoming>D_f10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="D_f1" sourceRef="D_inicio" targetRef="D_arquitectura" />
+    <bpmn:sequenceFlow id="D_f2" sourceRef="D_arquitectura" targetRef="D_gw_decidido" />
+    <bpmn:sequenceFlow id="D_f3" name="sí" sourceRef="D_gw_decidido" targetRef="D_clasificar" />
+    <bpmn:sequenceFlow id="D_f_pregunta" name="no" sourceRef="D_gw_decidido" targetRef="D_fin_pregunta" />
+    <bpmn:sequenceFlow id="D_f4" sourceRef="D_clasificar" targetRef="D_roja" />
+    <bpmn:sequenceFlow id="D_f5" sourceRef="D_roja" targetRef="D_gw_razon" />
+    <bpmn:sequenceFlow id="D_f6" name="sí" sourceRef="D_gw_razon" targetRef="D_verde" />
+    <bpmn:sequenceFlow id="D_f_rehacer" name="no" sourceRef="D_gw_razon" targetRef="D_roja" />
+    <bpmn:sequenceFlow id="D_f7" sourceRef="D_verde" targetRef="D_bordes" />
+    <bpmn:sequenceFlow id="D_f8" sourceRef="D_bordes" targetRef="D_suite" />
+    <bpmn:sequenceFlow id="D_f9" sourceRef="D_suite" targetRef="D_gw_verde" />
+    <bpmn:sequenceFlow id="D_f10" name="sí" sourceRef="D_gw_verde" targetRef="D_fin" />
+    <bpmn:sequenceFlow id="D_f_corregir" name="no" sourceRef="D_gw_verde" targetRef="D_verde" />
+    <bpmn:textAnnotation id="D_nota_razon">
+      <bpmn:text>Un rojo por un import roto no es rojo: la prueba tiene que fallar por lo que el código va a arreglar.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="D_asoc_razon" sourceRef="D_gw_razon" targetRef="D_nota_razon" />
+    <bpmn:textAnnotation id="D_nota_suite">
+      <bpmn:text>La suite de cierre no se sustituye: un comando inventado que sale verde es el defecto más caro de este oficio.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="D_asoc_suite" sourceRef="D_suite" targetRef="D_nota_suite" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="D_diagrama">
+    <bpmndi:BPMNPlane id="D_plano" bpmnElement="Proceso_desarrollador">
+      <bpmndi:BPMNShape id="S_D_inicio" bpmnElement="D_inicio">
+        <dc:Bounds x="160" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="165" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_arquitectura" bpmnElement="D_arquitectura">
+        <dc:Bounds x="250" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_gw_decidido" bpmnElement="D_gw_decidido" isMarkerVisible="true">
+        <dc:Bounds x="400" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="385" y="72" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_fin_pregunta" bpmnElement="D_fin_pregunta">
+        <dc:Bounds x="407" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="382" y="295" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_clasificar" bpmnElement="D_clasificar">
+        <dc:Bounds x="500" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_roja" bpmnElement="D_roja">
+        <dc:Bounds x="650" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_gw_razon" bpmnElement="D_gw_razon" isMarkerVisible="true">
+        <dc:Bounds x="800" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="785" y="72" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_verde" bpmnElement="D_verde">
+        <dc:Bounds x="900" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_bordes" bpmnElement="D_bordes">
+        <dc:Bounds x="1050" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_suite" bpmnElement="D_suite">
+        <dc:Bounds x="1200" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_gw_verde" bpmnElement="D_gw_verde" isMarkerVisible="true">
+        <dc:Bounds x="1350" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1345" y="72" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_fin" bpmnElement="D_fin">
+        <dc:Bounds x="1462" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1437" y="165" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_nota_razon" bpmnElement="D_nota_razon">
+        <dc:Bounds x="700" y="370" width="190" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_D_nota_suite" bpmnElement="D_nota_suite">
+        <dc:Bounds x="1180" y="370" width="200" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_D_f1" bpmnElement="D_f1">
+        <di:waypoint x="196" y="140" />
+        <di:waypoint x="250" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f2" bpmnElement="D_f2">
+        <di:waypoint x="350" y="140" />
+        <di:waypoint x="400" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f3" bpmnElement="D_f3">
+        <di:waypoint x="450" y="140" />
+        <di:waypoint x="500" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="466" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f_pregunta" bpmnElement="D_f_pregunta">
+        <di:waypoint x="425" y="165" />
+        <di:waypoint x="425" y="252" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="435" y="196" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f4" bpmnElement="D_f4">
+        <di:waypoint x="600" y="140" />
+        <di:waypoint x="650" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f5" bpmnElement="D_f5">
+        <di:waypoint x="750" y="140" />
+        <di:waypoint x="800" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f6" bpmnElement="D_f6">
+        <di:waypoint x="850" y="140" />
+        <di:waypoint x="900" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="866" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f_rehacer" bpmnElement="D_f_rehacer">
+        <di:waypoint x="825" y="165" />
+        <di:waypoint x="825" y="230" />
+        <di:waypoint x="700" y="230" />
+        <di:waypoint x="700" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="835" y="190" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f7" bpmnElement="D_f7">
+        <di:waypoint x="1000" y="140" />
+        <di:waypoint x="1050" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f8" bpmnElement="D_f8">
+        <di:waypoint x="1150" y="140" />
+        <di:waypoint x="1200" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f9" bpmnElement="D_f9">
+        <di:waypoint x="1300" y="140" />
+        <di:waypoint x="1350" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f10" bpmnElement="D_f10">
+        <di:waypoint x="1400" y="140" />
+        <di:waypoint x="1462" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1422" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_f_corregir" bpmnElement="D_f_corregir">
+        <di:waypoint x="1375" y="165" />
+        <di:waypoint x="1375" y="300" />
+        <di:waypoint x="950" y="300" />
+        <di:waypoint x="950" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1385" y="220" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_asoc_razon" bpmnElement="D_asoc_razon">
+        <di:waypoint x="820" y="160" />
+        <di:waypoint x="790" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_D_asoc_suite" bpmnElement="D_asoc_suite">
+        <di:waypoint x="1250" y="180" />
+        <di:waypoint x="1280" y="370" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

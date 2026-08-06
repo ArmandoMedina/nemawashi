@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definiciones_auditor" targetNamespace="http://nemawashi/diagramas" exporter="escrito a mano" exporterVersion="1.0">
+  <bpmn:process id="Proceso_auditor_auditar" name="Auditar lo escrito contra el crudo" isExecutable="false">
+    <bpmn:startEvent id="A_inicio" name="Algo ya escrito">
+      <bpmn:outgoing>A_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="A_gw_donde" name="¿Te dijeron dónde se escribió?">
+      <bpmn:incoming>A_f1</bpmn:incoming>
+      <bpmn:outgoing>A_f2</bpmn:outgoing>
+      <bpmn:outgoing>A_f_donde</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="A_fin_donde" name="Pregunta devuelta antes de abrir nada">
+      <bpmn:incoming>A_f_donde</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="A_crudo" name="Leer el registro crudo">
+      <bpmn:incoming>A_f2</bpmn:incoming>
+      <bpmn:outgoing>A_f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="A_gw_completo" name="¿Está completo el crudo?">
+      <bpmn:incoming>A_f3</bpmn:incoming>
+      <bpmn:outgoing>A_f4</bpmn:outgoing>
+      <bpmn:outgoing>A_f_declarar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="A_declarar" name="Declarar qué no se va a poder medir">
+      <bpmn:incoming>A_f_declarar</bpmn:incoming>
+      <bpmn:outgoing>A_f_declarar2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="A_abrir" name="Abrir lo escrito">
+      <bpmn:incoming>A_f4</bpmn:incoming>
+      <bpmn:incoming>A_f_declarar2</bpmn:incoming>
+      <bpmn:outgoing>A_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="A_abre_par">
+      <bpmn:incoming>A_f5</bpmn:incoming>
+      <bpmn:outgoing>A_f_inventado</bpmn:outgoing>
+      <bpmn:outgoing>A_f_perdido</bpmn:outgoing>
+      <bpmn:outgoing>A_f_marcado</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="A_inventado" name="Buscar lo escrito que nadie dijo">
+      <bpmn:incoming>A_f_inventado</bpmn:incoming>
+      <bpmn:outgoing>A_f_inventado2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="A_perdido" name="Buscar lo dicho que no quedó escrito">
+      <bpmn:incoming>A_f_perdido</bpmn:incoming>
+      <bpmn:outgoing>A_f_perdido2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="A_marcado" name="Comprobar la firmeza y los enlaces">
+      <bpmn:incoming>A_f_marcado</bpmn:incoming>
+      <bpmn:outgoing>A_f_marcado2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="A_cierra_par">
+      <bpmn:incoming>A_f_inventado2</bpmn:incoming>
+      <bpmn:incoming>A_f_perdido2</bpmn:incoming>
+      <bpmn:incoming>A_f_marcado2</bpmn:incoming>
+      <bpmn:outgoing>A_f6</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="A_frio" name="Leerlo como el que no estuvo">
+      <bpmn:incoming>A_f6</bpmn:incoming>
+      <bpmn:outgoing>A_f7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="A_fin" name="Dictamen con su prueba">
+      <bpmn:incoming>A_f7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="A_f1" sourceRef="A_inicio" targetRef="A_gw_donde" />
+    <bpmn:sequenceFlow id="A_f2" name="sí" sourceRef="A_gw_donde" targetRef="A_crudo" />
+    <bpmn:sequenceFlow id="A_f_donde" name="no" sourceRef="A_gw_donde" targetRef="A_fin_donde" />
+    <bpmn:sequenceFlow id="A_f3" sourceRef="A_crudo" targetRef="A_gw_completo" />
+    <bpmn:sequenceFlow id="A_f4" name="sí" sourceRef="A_gw_completo" targetRef="A_abrir" />
+    <bpmn:sequenceFlow id="A_f_declarar" name="no" sourceRef="A_gw_completo" targetRef="A_declarar" />
+    <bpmn:sequenceFlow id="A_f_declarar2" sourceRef="A_declarar" targetRef="A_abrir" />
+    <bpmn:sequenceFlow id="A_f5" sourceRef="A_abrir" targetRef="A_abre_par" />
+    <bpmn:sequenceFlow id="A_f_inventado" sourceRef="A_abre_par" targetRef="A_inventado" />
+    <bpmn:sequenceFlow id="A_f_perdido" sourceRef="A_abre_par" targetRef="A_perdido" />
+    <bpmn:sequenceFlow id="A_f_marcado" sourceRef="A_abre_par" targetRef="A_marcado" />
+    <bpmn:sequenceFlow id="A_f_inventado2" sourceRef="A_inventado" targetRef="A_cierra_par" />
+    <bpmn:sequenceFlow id="A_f_perdido2" sourceRef="A_perdido" targetRef="A_cierra_par" />
+    <bpmn:sequenceFlow id="A_f_marcado2" sourceRef="A_marcado" targetRef="A_cierra_par" />
+    <bpmn:sequenceFlow id="A_f6" sourceRef="A_cierra_par" targetRef="A_frio" />
+    <bpmn:sequenceFlow id="A_f7" sourceRef="A_frio" targetRef="A_fin" />
+    <bpmn:textAnnotation id="A_nota_orden">
+      <bpmn:text>Primero el crudo, después lo escrito, y no se invierte. Al revés no se audita: se confirma.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="A_asoc_orden" sourceRef="A_crudo" targetRef="A_nota_orden" />
+    <bpmn:textAnnotation id="A_nota_completo">
+      <bpmn:text>El crudo son dos cosas: la grabación y lo que el experto contestó después, que no está en ella.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="A_asoc_completo" sourceRef="A_gw_completo" targetRef="A_nota_completo" />
+    <bpmn:textAnnotation id="A_nota_frio">
+      <bpmn:text>La cuarta falla va después de las otras tres: ¿le alcanza a alguien que no estuvo?</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="A_asoc_frio" sourceRef="A_frio" targetRef="A_nota_frio" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="A_diagrama">
+    <bpmndi:BPMNPlane id="A_plano" bpmnElement="Proceso_auditor_auditar">
+      <bpmndi:BPMNShape id="S_A_inicio" bpmnElement="A_inicio">
+        <dc:Bounds x="160" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="265" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_gw_donde" bpmnElement="A_gw_donde" isMarkerVisible="true">
+        <dc:Bounds x="250" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="230" y="270" width="92" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_fin_donde" bpmnElement="A_fin_donde">
+        <dc:Bounds x="257" y="100" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="232" y="60" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_crudo" bpmnElement="A_crudo">
+        <dc:Bounds x="350" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_gw_completo" bpmnElement="A_gw_completo" isMarkerVisible="true">
+        <dc:Bounds x="500" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="485" y="165" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_declarar" bpmnElement="A_declarar">
+        <dc:Bounds x="580" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_abrir" bpmnElement="A_abrir">
+        <dc:Bounds x="660" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_abre_par" bpmnElement="A_abre_par">
+        <dc:Bounds x="810" y="215" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_inventado" bpmnElement="A_inventado">
+        <dc:Bounds x="910" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_perdido" bpmnElement="A_perdido">
+        <dc:Bounds x="910" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_marcado" bpmnElement="A_marcado">
+        <dc:Bounds x="910" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_cierra_par" bpmnElement="A_cierra_par">
+        <dc:Bounds x="1060" y="215" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_frio" bpmnElement="A_frio">
+        <dc:Bounds x="1160" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_fin" bpmnElement="A_fin">
+        <dc:Bounds x="1320" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1295" y="265" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_nota_orden" bpmnElement="A_nota_orden">
+        <dc:Bounds x="320" y="480" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_nota_completo" bpmnElement="A_nota_completo">
+        <dc:Bounds x="560" y="480" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_A_nota_frio" bpmnElement="A_nota_frio">
+        <dc:Bounds x="1080" y="480" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_A_f1" bpmnElement="A_f1">
+        <di:waypoint x="196" y="240" />
+        <di:waypoint x="250" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f2" bpmnElement="A_f2">
+        <di:waypoint x="300" y="240" />
+        <di:waypoint x="350" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="316" y="218" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_donde" bpmnElement="A_f_donde">
+        <di:waypoint x="275" y="215" />
+        <di:waypoint x="275" y="136" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="285" y="168" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f3" bpmnElement="A_f3">
+        <di:waypoint x="450" y="240" />
+        <di:waypoint x="500" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f4" bpmnElement="A_f4">
+        <di:waypoint x="550" y="240" />
+        <di:waypoint x="660" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="596" y="218" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_declarar" bpmnElement="A_f_declarar">
+        <di:waypoint x="525" y="265" />
+        <di:waypoint x="525" y="380" />
+        <di:waypoint x="580" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="310" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_declarar2" bpmnElement="A_f_declarar2">
+        <di:waypoint x="680" y="340" />
+        <di:waypoint x="700" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f5" bpmnElement="A_f5">
+        <di:waypoint x="760" y="240" />
+        <di:waypoint x="810" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_inventado" bpmnElement="A_f_inventado">
+        <di:waypoint x="835" y="215" />
+        <di:waypoint x="835" y="120" />
+        <di:waypoint x="910" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_perdido" bpmnElement="A_f_perdido">
+        <di:waypoint x="860" y="240" />
+        <di:waypoint x="910" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_marcado" bpmnElement="A_f_marcado">
+        <di:waypoint x="835" y="265" />
+        <di:waypoint x="835" y="360" />
+        <di:waypoint x="910" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_inventado2" bpmnElement="A_f_inventado2">
+        <di:waypoint x="1010" y="120" />
+        <di:waypoint x="1085" y="120" />
+        <di:waypoint x="1085" y="215" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_perdido2" bpmnElement="A_f_perdido2">
+        <di:waypoint x="1010" y="240" />
+        <di:waypoint x="1060" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f_marcado2" bpmnElement="A_f_marcado2">
+        <di:waypoint x="1010" y="360" />
+        <di:waypoint x="1085" y="360" />
+        <di:waypoint x="1085" y="265" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f6" bpmnElement="A_f6">
+        <di:waypoint x="1110" y="240" />
+        <di:waypoint x="1160" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_f7" bpmnElement="A_f7">
+        <di:waypoint x="1260" y="240" />
+        <di:waypoint x="1320" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_asoc_orden" bpmnElement="A_asoc_orden">
+        <di:waypoint x="400" y="280" />
+        <di:waypoint x="410" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_asoc_completo" bpmnElement="A_asoc_completo">
+        <di:waypoint x="525" y="265" />
+        <di:waypoint x="620" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_A_asoc_frio" bpmnElement="A_asoc_frio">
+        <di:waypoint x="1200" y="280" />
+        <di:waypoint x="1170" y="480" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

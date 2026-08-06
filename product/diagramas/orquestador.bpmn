@@ -1,0 +1,922 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definiciones_orquestador" targetNamespace="http://nemawashi/diagramas" exporter="escrito a mano" exporterVersion="1.0">
+  <bpmn:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="agente-desarrollador.bpmn" namespace="http://nemawashi/diagramas" />
+  <bpmn:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="agente-qa.bpmn" namespace="http://nemawashi/diagramas" />
+  <bpmn:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="agente-auditor.bpmn" namespace="http://nemawashi/diagramas" />
+  <bpmn:import importType="http://www.omg.org/spec/BPMN/20100524/MODEL" location="agente-escribano.bpmn" namespace="http://nemawashi/diagramas" />
+  <bpmn:collaboration id="Colaboracion_orquestador">
+    <bpmn:participant id="Pool_orquestador" name="La sesión del orquestador" processRef="Proceso_orquestador" />
+    <bpmn:textAnnotation id="Nota_asiento">
+      <bpmn:text>¿Hay un agente cuya carta cubra esto? Si la hay, no es del orquestador. Y sobre-mandar también es falla.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_asiento" sourceRef="O_gw_asiento" targetRef="Nota_asiento" />
+    <bpmn:textAnnotation id="Nota_verificar">
+      <bpmn:text>Al subagente no se le cree: su reporte es una afirmación, y quien encargó mide después.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_verificar" sourceRef="O_verificar" targetRef="Nota_verificar" />
+    <bpmn:textAnnotation id="Nota_tejer">
+      <bpmn:text>La síntesis es lo único de este trabajo que no se delega.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Asoc_tejer" sourceRef="O_tejer" targetRef="Nota_tejer" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proceso_orquestador" name="Decidir con el dueño del producto y mandar a trabajar" isExecutable="false">
+    <bpmn:startEvent id="O_inicio" name="Llega el dueño del producto">
+      <bpmn:outgoing>O_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:subProcess id="SP_abrir" name="Abrir la sesión">
+      <bpmn:incoming>O_f1</bpmn:incoming>
+      <bpmn:outgoing>O_f2</bpmn:outgoing>
+      <bpmn:startEvent id="AB_inicio" name="Sesión nueva">
+        <bpmn:outgoing>AB_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="AB_gw" name="¿Llega con la tarea clara?">
+        <bpmn:incoming>AB_f1</bpmn:incoming>
+        <bpmn:outgoing>AB_f2</bpmn:outgoing>
+        <bpmn:outgoing>AB_f3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="AB_confirmar" name="Confirmar la línea en sus palabras">
+        <bpmn:incoming>AB_f2</bpmn:incoming>
+        <bpmn:outgoing>AB_f4</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="AB_escoger" name="Escoger con él cuál es la de hoy">
+        <bpmn:incoming>AB_f3</bpmn:incoming>
+        <bpmn:outgoing>AB_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="AB_escribir" name="Escribir la hoja">
+        <bpmn:incoming>AB_f4</bpmn:incoming>
+        <bpmn:incoming>AB_f5</bpmn:incoming>
+        <bpmn:outgoing>AB_f6</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:endEvent id="AB_fin" name="Objetivo fijado">
+        <bpmn:incoming>AB_f6</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="AB_f1" sourceRef="AB_inicio" targetRef="AB_gw" />
+      <bpmn:sequenceFlow id="AB_f2" name="sí" sourceRef="AB_gw" targetRef="AB_confirmar" />
+      <bpmn:sequenceFlow id="AB_f3" name="no" sourceRef="AB_gw" targetRef="AB_escoger" />
+      <bpmn:sequenceFlow id="AB_f4" sourceRef="AB_confirmar" targetRef="AB_escribir" />
+      <bpmn:sequenceFlow id="AB_f5" sourceRef="AB_escoger" targetRef="AB_escribir" />
+      <bpmn:sequenceFlow id="AB_f6" sourceRef="AB_escribir" targetRef="AB_fin" />
+      <bpmn:textAnnotation id="AB_nota_hoja">
+        <bpmn:text>Una línea con el objetivo, y debajo lo aparcado. Vive en el scratchpad, nunca en el repositorio.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="AB_asoc_hoja" sourceRef="AB_escribir" targetRef="AB_nota_hoja" />
+    </bpmn:subProcess>
+    <bpmn:task id="O_recibir" name="Recibir lo que pide">
+      <bpmn:incoming>O_f2</bpmn:incoming>
+      <bpmn:incoming>O_f_sigue</bpmn:incoming>
+      <bpmn:outgoing>O_f3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="O_gw_hecho" name="¿Es un hecho?">
+      <bpmn:incoming>O_f3</bpmn:incoming>
+      <bpmn:outgoing>O_f_hecho</bpmn:outgoing>
+      <bpmn:outgoing>O_f4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="O_hecho" name="Contestar el hecho">
+      <bpmn:incoming>O_f_hecho</bpmn:incoming>
+      <bpmn:outgoing>O_f_hecho2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:subProcess id="SP_decidir" name="Decidir juntos">
+      <bpmn:incoming>O_f4</bpmn:incoming>
+      <bpmn:outgoing>O_f5</bpmn:outgoing>
+      <bpmn:startEvent id="DE_inicio" name="Hay algo que decidir">
+        <bpmn:outgoing>DE_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="DE_nombrar" name="Nombrar la decisión que hay que tomar">
+        <bpmn:incoming>DE_f1</bpmn:incoming>
+        <bpmn:outgoing>DE_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="DE_preguntar" name="Preguntarle qué ve él">
+        <bpmn:incoming>DE_f2</bpmn:incoming>
+        <bpmn:outgoing>DE_f3</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="DE_gw_dime" name="¿Te dijo «dime tú»?">
+        <bpmn:incoming>DE_f3</bpmn:incoming>
+        <bpmn:outgoing>DE_f_dime</bpmn:outgoing>
+        <bpmn:outgoing>DE_f4</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="DE_decir" name="Decir y seguir">
+        <bpmn:incoming>DE_f_dime</bpmn:incoming>
+        <bpmn:outgoing>DE_f_dime2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:task id="DE_posicion" name="Dar la posición con su razón y su crux">
+        <bpmn:incoming>DE_f4</bpmn:incoming>
+        <bpmn:incoming>DE_f_otra</bpmn:incoming>
+        <bpmn:outgoing>DE_f5</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="DE_gw_si" name="¿Salió el sí en sus palabras?">
+        <bpmn:incoming>DE_f5</bpmn:incoming>
+        <bpmn:outgoing>DE_f6</bpmn:outgoing>
+        <bpmn:outgoing>DE_f_rebote</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:task id="DE_ajustar" name="Recibir el rebote y ajustar la propuesta">
+        <bpmn:incoming>DE_f_rebote</bpmn:incoming>
+        <bpmn:outgoing>DE_f7</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="DE_gw_vivo" name="¿Sigue vivo el tema?">
+        <bpmn:incoming>DE_f7</bpmn:incoming>
+        <bpmn:outgoing>DE_f_otra</bpmn:outgoing>
+        <bpmn:outgoing>DE_f8</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="DE_fin_cerrado" name="Cerrado con su sí">
+        <bpmn:incoming>DE_f6</bpmn:incoming>
+        <bpmn:incoming>DE_f_dime2</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="DE_fin_abierto" name="Sin cerrar">
+        <bpmn:incoming>DE_f8</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="DE_f1" sourceRef="DE_inicio" targetRef="DE_nombrar" />
+      <bpmn:sequenceFlow id="DE_f2" sourceRef="DE_nombrar" targetRef="DE_preguntar" />
+      <bpmn:sequenceFlow id="DE_f3" sourceRef="DE_preguntar" targetRef="DE_gw_dime" />
+      <bpmn:sequenceFlow id="DE_f_dime" name="sí" sourceRef="DE_gw_dime" targetRef="DE_decir" />
+      <bpmn:sequenceFlow id="DE_f_dime2" sourceRef="DE_decir" targetRef="DE_fin_cerrado" />
+      <bpmn:sequenceFlow id="DE_f4" name="no" sourceRef="DE_gw_dime" targetRef="DE_posicion" />
+      <bpmn:sequenceFlow id="DE_f5" sourceRef="DE_posicion" targetRef="DE_gw_si" />
+      <bpmn:sequenceFlow id="DE_f6" name="sí" sourceRef="DE_gw_si" targetRef="DE_fin_cerrado" />
+      <bpmn:sequenceFlow id="DE_f_rebote" name="no" sourceRef="DE_gw_si" targetRef="DE_ajustar" />
+      <bpmn:sequenceFlow id="DE_f7" sourceRef="DE_ajustar" targetRef="DE_gw_vivo" />
+      <bpmn:sequenceFlow id="DE_f_otra" name="sí" sourceRef="DE_gw_vivo" targetRef="DE_posicion" />
+      <bpmn:sequenceFlow id="DE_f8" name="no" sourceRef="DE_gw_vivo" targetRef="DE_fin_abierto" />
+      <bpmn:textAnnotation id="DE_nota_preguntar">
+        <bpmn:text>Va antes de dar la posición: que se comprometa con algo primero es lo que evita que acepte lo tuyo por inercia.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="DE_asoc_preguntar" sourceRef="DE_preguntar" targetRef="DE_nota_preguntar" />
+      <bpmn:textAnnotation id="DE_nota_si">
+        <bpmn:text>Recomendar no es decidir. Un «bueno, como digas» no es un sí, y sin el sí no se ejecuta nada.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="DE_asoc_si" sourceRef="DE_gw_si" targetRef="DE_nota_si" />
+      <bpmn:textAnnotation id="DE_nota_abierto">
+        <bpmn:text>Lo no decidido se marca como no decidido, y no se escribe como si lo estuviera.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="DE_asoc_abierto" sourceRef="DE_fin_abierto" targetRef="DE_nota_abierto" />
+    </bpmn:subProcess>
+    <bpmn:boundaryEvent id="O_desvio" name="Sale algo que no es de hoy" attachedToRef="SP_decidir" cancelActivity="false">
+      <bpmn:outgoing>O_f_desvio</bpmn:outgoing>
+    </bpmn:boundaryEvent>
+    <bpmn:task id="O_aparcar" name="Aparcar en la hoja y volver">
+      <bpmn:incoming>O_f_desvio</bpmn:incoming>
+      <bpmn:outgoing>O_f_desvio2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="O_fin_aparcado" name="Anotado, sin perseguirlo">
+      <bpmn:incoming>O_f_desvio2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="O_gw_decision">
+      <bpmn:incoming>O_f5</bpmn:incoming>
+      <bpmn:outgoing>O_f6</bpmn:outgoing>
+      <bpmn:outgoing>O_f_sincerrar</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="O_marcar" name="Marcar lo que quedó sin decidir">
+      <bpmn:incoming>O_f_sincerrar</bpmn:incoming>
+      <bpmn:outgoing>O_f_marcar2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="O_gw_asiento" name="¿Hay un asiento que lo cubra?">
+      <bpmn:incoming>O_f6</bpmn:incoming>
+      <bpmn:outgoing>O_f7</bpmn:outgoing>
+      <bpmn:outgoing>O_f_propio</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="O_propio" name="Escribir lo que ningún asiento cubre">
+      <bpmn:incoming>O_f_propio</bpmn:incoming>
+      <bpmn:outgoing>O_f_propio2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:subProcess id="SP_mandar" name="Mandar a trabajar">
+      <bpmn:incoming>O_f7</bpmn:incoming>
+      <bpmn:incoming>O_f_devolver2</bpmn:incoming>
+      <bpmn:outgoing>O_f8</bpmn:outgoing>
+      <bpmn:startEvent id="MA_inicio" name="Trabajo por repartir">
+        <bpmn:outgoing>MA_f1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:task id="MA_encargo" name="Escribir el encargo">
+        <bpmn:incoming>MA_f1</bpmn:incoming>
+        <bpmn:outgoing>MA_f2</bpmn:outgoing>
+      </bpmn:task>
+      <bpmn:exclusiveGateway id="MA_gw" name="¿Qué asiento lo cubre?">
+        <bpmn:incoming>MA_f2</bpmn:incoming>
+        <bpmn:outgoing>MA_f_desarrollador</bpmn:outgoing>
+        <bpmn:outgoing>MA_f_qa</bpmn:outgoing>
+        <bpmn:outgoing>MA_f_auditor</bpmn:outgoing>
+        <bpmn:outgoing>MA_f_escribano</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:callActivity id="CA_desarrollador" name="Implementar con la prueba en el mismo cambio" calledElement="Proceso_desarrollador">
+        <bpmn:incoming>MA_f_desarrollador</bpmn:incoming>
+        <bpmn:outgoing>MA_f_desarrollador2</bpmn:outgoing>
+      </bpmn:callActivity>
+      <bpmn:callActivity id="CA_qa" name="Cerrar por medición" calledElement="Proceso_qa">
+        <bpmn:incoming>MA_f_qa</bpmn:incoming>
+        <bpmn:outgoing>MA_f_qa2</bpmn:outgoing>
+      </bpmn:callActivity>
+      <bpmn:callActivity id="CA_auditor" name="Auditar lo escrito contra el crudo" calledElement="Proceso_auditor_auditar">
+        <bpmn:incoming>MA_f_auditor</bpmn:incoming>
+        <bpmn:outgoing>MA_f_auditor2</bpmn:outgoing>
+      </bpmn:callActivity>
+      <bpmn:callActivity id="CA_escribano" name="Asentar el roadmap" calledElement="Proceso_escribano_asentar">
+        <bpmn:incoming>MA_f_escribano</bpmn:incoming>
+        <bpmn:outgoing>MA_f_escribano2</bpmn:outgoing>
+      </bpmn:callActivity>
+      <bpmn:exclusiveGateway id="MA_une">
+        <bpmn:incoming>MA_f_desarrollador2</bpmn:incoming>
+        <bpmn:incoming>MA_f_qa2</bpmn:incoming>
+        <bpmn:incoming>MA_f_auditor2</bpmn:incoming>
+        <bpmn:incoming>MA_f_escribano2</bpmn:incoming>
+        <bpmn:outgoing>MA_f3</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="MA_fin" name="Trabajo devuelto">
+        <bpmn:incoming>MA_f3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="MA_f1" sourceRef="MA_inicio" targetRef="MA_encargo" />
+      <bpmn:sequenceFlow id="MA_f2" sourceRef="MA_encargo" targetRef="MA_gw" />
+      <bpmn:sequenceFlow id="MA_f_desarrollador" name="código" sourceRef="MA_gw" targetRef="CA_desarrollador" />
+      <bpmn:sequenceFlow id="MA_f_qa" name="medición" sourceRef="MA_gw" targetRef="CA_qa" />
+      <bpmn:sequenceFlow id="MA_f_auditor" name="auditoría" sourceRef="MA_gw" targetRef="CA_auditor" />
+      <bpmn:sequenceFlow id="MA_f_escribano" name="escritura" sourceRef="MA_gw" targetRef="CA_escribano" />
+      <bpmn:sequenceFlow id="MA_f_desarrollador2" sourceRef="CA_desarrollador" targetRef="MA_une" />
+      <bpmn:sequenceFlow id="MA_f_qa2" sourceRef="CA_qa" targetRef="MA_une" />
+      <bpmn:sequenceFlow id="MA_f_auditor2" sourceRef="CA_auditor" targetRef="MA_une" />
+      <bpmn:sequenceFlow id="MA_f_escribano2" sourceRef="CA_escribano" targetRef="MA_une" />
+      <bpmn:sequenceFlow id="MA_f3" sourceRef="MA_une" targetRef="MA_fin" />
+      <bpmn:textAnnotation id="MA_nota_encargo">
+        <bpmn:text>Lo que no va en el encargo no existe para quien lo recibe: no comparte esta conversación.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="MA_asoc_encargo" sourceRef="MA_encargo" targetRef="MA_nota_encargo" />
+      <bpmn:textAnnotation id="MA_nota_llamadas">
+        <bpmn:text>Actividades de llamada: el camino de cada una vive en su propio archivo `agente-*.bpmn`, y el molino llama a las mismas.</bpmn:text>
+      </bpmn:textAnnotation>
+      <bpmn:association id="MA_asoc_llamadas" sourceRef="MA_gw" targetRef="MA_nota_llamadas" />
+    </bpmn:subProcess>
+    <bpmn:task id="O_verificar" name="Medir lo que volvió">
+      <bpmn:incoming>O_f8</bpmn:incoming>
+      <bpmn:outgoing>O_f9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="O_gw_medicion" name="¿La medición confirma el reporte?">
+      <bpmn:incoming>O_f9</bpmn:incoming>
+      <bpmn:outgoing>O_f10</bpmn:outgoing>
+      <bpmn:outgoing>O_f_devolver</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="O_devolver" name="Devolver el encargo con lo que falló">
+      <bpmn:incoming>O_f_devolver</bpmn:incoming>
+      <bpmn:outgoing>O_f_devolver2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="O_tejer" name="Tejer la síntesis">
+      <bpmn:incoming>O_f10</bpmn:incoming>
+      <bpmn:incoming>O_f_propio2</bpmn:incoming>
+      <bpmn:outgoing>O_f11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="O_gw_hoja" name="¿Queda algo de la hoja?">
+      <bpmn:incoming>O_f11</bpmn:incoming>
+      <bpmn:incoming>O_f_hecho2</bpmn:incoming>
+      <bpmn:incoming>O_f_marcar2</bpmn:incoming>
+      <bpmn:outgoing>O_f_sigue</bpmn:outgoing>
+      <bpmn:outgoing>O_f12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="O_aparcado" name="Revisar lo aparcado">
+      <bpmn:incoming>O_f12</bpmn:incoming>
+      <bpmn:outgoing>O_f13</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="O_gw_cierre">
+      <bpmn:incoming>O_f13</bpmn:incoming>
+      <bpmn:outgoing>O_f_limpio</bpmn:outgoing>
+      <bpmn:outgoing>O_f_pendiente</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="O_fin" name="Sesión cerrada con el objetivo cumplido">
+      <bpmn:incoming>O_f_limpio</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="O_fin_pendiente" name="Sesión cerrada con lo aparcado pendiente">
+      <bpmn:incoming>O_f_pendiente</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="O_f1" sourceRef="O_inicio" targetRef="SP_abrir" />
+    <bpmn:sequenceFlow id="O_f2" sourceRef="SP_abrir" targetRef="O_recibir" />
+    <bpmn:sequenceFlow id="O_f3" sourceRef="O_recibir" targetRef="O_gw_hecho" />
+    <bpmn:sequenceFlow id="O_f_hecho" name="sí" sourceRef="O_gw_hecho" targetRef="O_hecho" />
+    <bpmn:sequenceFlow id="O_f_hecho2" sourceRef="O_hecho" targetRef="O_gw_hoja" />
+    <bpmn:sequenceFlow id="O_f4" name="no" sourceRef="O_gw_hecho" targetRef="SP_decidir" />
+    <bpmn:sequenceFlow id="O_f_desvio" sourceRef="O_desvio" targetRef="O_aparcar" />
+    <bpmn:sequenceFlow id="O_f_desvio2" sourceRef="O_aparcar" targetRef="O_fin_aparcado" />
+    <bpmn:sequenceFlow id="O_f5" sourceRef="SP_decidir" targetRef="O_gw_decision" />
+    <bpmn:sequenceFlow id="O_f6" name="cerrado con su sí" sourceRef="O_gw_decision" targetRef="O_gw_asiento" />
+    <bpmn:sequenceFlow id="O_f_sincerrar" name="sin cerrar" sourceRef="O_gw_decision" targetRef="O_marcar" />
+    <bpmn:sequenceFlow id="O_f_marcar2" sourceRef="O_marcar" targetRef="O_gw_hoja" />
+    <bpmn:sequenceFlow id="O_f7" name="sí" sourceRef="O_gw_asiento" targetRef="SP_mandar" />
+    <bpmn:sequenceFlow id="O_f_propio" name="no" sourceRef="O_gw_asiento" targetRef="O_propio" />
+    <bpmn:sequenceFlow id="O_f_propio2" sourceRef="O_propio" targetRef="O_tejer" />
+    <bpmn:sequenceFlow id="O_f8" sourceRef="SP_mandar" targetRef="O_verificar" />
+    <bpmn:sequenceFlow id="O_f9" sourceRef="O_verificar" targetRef="O_gw_medicion" />
+    <bpmn:sequenceFlow id="O_f10" name="sí" sourceRef="O_gw_medicion" targetRef="O_tejer" />
+    <bpmn:sequenceFlow id="O_f_devolver" name="no" sourceRef="O_gw_medicion" targetRef="O_devolver" />
+    <bpmn:sequenceFlow id="O_f_devolver2" sourceRef="O_devolver" targetRef="SP_mandar" />
+    <bpmn:sequenceFlow id="O_f11" sourceRef="O_tejer" targetRef="O_gw_hoja" />
+    <bpmn:sequenceFlow id="O_f_sigue" name="sí" sourceRef="O_gw_hoja" targetRef="O_recibir" />
+    <bpmn:sequenceFlow id="O_f12" name="no" sourceRef="O_gw_hoja" targetRef="O_aparcado" />
+    <bpmn:sequenceFlow id="O_f13" sourceRef="O_aparcado" targetRef="O_gw_cierre" />
+    <bpmn:sequenceFlow id="O_f_limpio" name="todo atendido" sourceRef="O_gw_cierre" targetRef="O_fin" />
+    <bpmn:sequenceFlow id="O_f_pendiente" name="queda aparcado" sourceRef="O_gw_cierre" targetRef="O_fin_pendiente" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="O_diagrama">
+    <bpmndi:BPMNPlane id="O_plano" bpmnElement="Colaboracion_orquestador">
+      <bpmndi:BPMNShape id="S_Pool" bpmnElement="Pool_orquestador" isHorizontal="true">
+        <dc:Bounds x="155" y="0" width="1950" height="530" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_inicio" bpmnElement="O_inicio">
+        <dc:Bounds x="200" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="180" y="225" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_SP_abrir" bpmnElement="SP_abrir" isExpanded="false">
+        <dc:Bounds x="280" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_recibir" bpmnElement="O_recibir">
+        <dc:Bounds x="430" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_hecho" bpmnElement="O_gw_hecho" isMarkerVisible="true">
+        <dc:Bounds x="580" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="570" y="135" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_hecho" bpmnElement="O_hecho">
+        <dc:Bounds x="555" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_SP_decidir" bpmnElement="SP_decidir" isExpanded="false">
+        <dc:Bounds x="690" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_desvio" bpmnElement="O_desvio">
+        <dc:Bounds x="722" y="142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="640" y="105" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_aparcar" bpmnElement="O_aparcar">
+        <dc:Bounds x="800" y="30" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_fin_aparcado" bpmnElement="O_fin_aparcado">
+        <dc:Bounds x="950" y="52" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="925" y="95" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_decision" bpmnElement="O_gw_decision" isMarkerVisible="true">
+        <dc:Bounds x="840" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_marcar" bpmnElement="O_marcar">
+        <dc:Bounds x="815" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_asiento" bpmnElement="O_gw_asiento" isMarkerVisible="true">
+        <dc:Bounds x="990" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="975" y="130" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_propio" bpmnElement="O_propio">
+        <dc:Bounds x="965" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_SP_mandar" bpmnElement="SP_mandar" isExpanded="false">
+        <dc:Bounds x="1090" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_verificar" bpmnElement="O_verificar">
+        <dc:Bounds x="1240" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_medicion" bpmnElement="O_gw_medicion" isMarkerVisible="true">
+        <dc:Bounds x="1390" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1375" y="130" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_devolver" bpmnElement="O_devolver">
+        <dc:Bounds x="1365" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_tejer" bpmnElement="O_tejer">
+        <dc:Bounds x="1500" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_hoja" bpmnElement="O_gw_hoja" isMarkerVisible="true">
+        <dc:Bounds x="1650" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1635" y="130" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_aparcado" bpmnElement="O_aparcado">
+        <dc:Bounds x="1750" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_gw_cierre" bpmnElement="O_gw_cierre" isMarkerVisible="true">
+        <dc:Bounds x="1900" y="175" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_fin" bpmnElement="O_fin">
+        <dc:Bounds x="2012" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1987" y="225" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_O_fin_pendiente" bpmnElement="O_fin_pendiente">
+        <dc:Bounds x="1907" y="330" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1882" y="373" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_asiento" bpmnElement="Nota_asiento">
+        <dc:Bounds x="930" y="560" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_verificar" bpmnElement="Nota_verificar">
+        <dc:Bounds x="1210" y="560" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Nota_tejer" bpmnElement="Nota_tejer">
+        <dc:Bounds x="1490" y="560" width="190" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_O_f1" bpmnElement="O_f1">
+        <di:waypoint x="236" y="200" />
+        <di:waypoint x="280" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f2" bpmnElement="O_f2">
+        <di:waypoint x="380" y="200" />
+        <di:waypoint x="430" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f3" bpmnElement="O_f3">
+        <di:waypoint x="530" y="200" />
+        <di:waypoint x="580" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_hecho" bpmnElement="O_f_hecho">
+        <di:waypoint x="605" y="225" />
+        <di:waypoint x="605" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615" y="260" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_hecho2" bpmnElement="O_f_hecho2">
+        <di:waypoint x="655" y="420" />
+        <di:waypoint x="1675" y="420" />
+        <di:waypoint x="1675" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f4" bpmnElement="O_f4">
+        <di:waypoint x="630" y="200" />
+        <di:waypoint x="690" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="178" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_desvio" bpmnElement="O_f_desvio">
+        <di:waypoint x="740" y="142" />
+        <di:waypoint x="740" y="70" />
+        <di:waypoint x="800" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_desvio2" bpmnElement="O_f_desvio2">
+        <di:waypoint x="900" y="70" />
+        <di:waypoint x="950" y="70" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f5" bpmnElement="O_f5">
+        <di:waypoint x="790" y="200" />
+        <di:waypoint x="840" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f6" bpmnElement="O_f6">
+        <di:waypoint x="890" y="200" />
+        <di:waypoint x="990" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="900" y="178" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_sincerrar" bpmnElement="O_f_sincerrar">
+        <di:waypoint x="865" y="225" />
+        <di:waypoint x="865" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="875" y="255" width="52" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_marcar2" bpmnElement="O_f_marcar2">
+        <di:waypoint x="865" y="400" />
+        <di:waypoint x="865" y="500" />
+        <di:waypoint x="1675" y="500" />
+        <di:waypoint x="1675" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f7" bpmnElement="O_f7">
+        <di:waypoint x="1040" y="200" />
+        <di:waypoint x="1090" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1056" y="178" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_propio" bpmnElement="O_f_propio">
+        <di:waypoint x="1015" y="225" />
+        <di:waypoint x="1015" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1025" y="260" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_propio2" bpmnElement="O_f_propio2">
+        <di:waypoint x="1015" y="400" />
+        <di:waypoint x="1015" y="460" />
+        <di:waypoint x="1550" y="460" />
+        <di:waypoint x="1550" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f8" bpmnElement="O_f8">
+        <di:waypoint x="1190" y="200" />
+        <di:waypoint x="1240" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f9" bpmnElement="O_f9">
+        <di:waypoint x="1340" y="200" />
+        <di:waypoint x="1390" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f10" bpmnElement="O_f10">
+        <di:waypoint x="1440" y="200" />
+        <di:waypoint x="1500" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1461" y="178" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_devolver" bpmnElement="O_f_devolver">
+        <di:waypoint x="1415" y="225" />
+        <di:waypoint x="1415" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1425" y="260" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_devolver2" bpmnElement="O_f_devolver2">
+        <di:waypoint x="1415" y="400" />
+        <di:waypoint x="1415" y="440" />
+        <di:waypoint x="1140" y="440" />
+        <di:waypoint x="1140" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f11" bpmnElement="O_f11">
+        <di:waypoint x="1600" y="200" />
+        <di:waypoint x="1650" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_sigue" bpmnElement="O_f_sigue">
+        <di:waypoint x="1675" y="175" />
+        <di:waypoint x="1675" y="130" />
+        <di:waypoint x="480" y="130" />
+        <di:waypoint x="480" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1685" y="145" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f12" bpmnElement="O_f12">
+        <di:waypoint x="1700" y="200" />
+        <di:waypoint x="1750" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1716" y="178" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f13" bpmnElement="O_f13">
+        <di:waypoint x="1850" y="200" />
+        <di:waypoint x="1900" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_limpio" bpmnElement="O_f_limpio">
+        <di:waypoint x="1950" y="200" />
+        <di:waypoint x="2012" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1949" y="178" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_O_f_pendiente" bpmnElement="O_f_pendiente">
+        <di:waypoint x="1925" y="225" />
+        <di:waypoint x="1925" y="330" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1935" y="265" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_asiento" bpmnElement="Asoc_asiento">
+        <di:waypoint x="1015" y="225" />
+        <di:waypoint x="1030" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_verificar" bpmnElement="Asoc_verificar">
+        <di:waypoint x="1290" y="240" />
+        <di:waypoint x="1310" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Asoc_tejer" bpmnElement="Asoc_tejer">
+        <di:waypoint x="1550" y="240" />
+        <di:waypoint x="1585" y="560" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="O_diagrama_abrir">
+    <bpmndi:BPMNPlane id="O_plano_abrir" bpmnElement="SP_abrir">
+      <bpmndi:BPMNShape id="S_AB_inicio" bpmnElement="AB_inicio">
+        <dc:Bounds x="160" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="145" y="265" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_gw" bpmnElement="AB_gw" isMarkerVisible="true">
+        <dc:Bounds x="250" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="235" y="275" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_confirmar" bpmnElement="AB_confirmar">
+        <dc:Bounds x="360" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_escoger" bpmnElement="AB_escoger">
+        <dc:Bounds x="360" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_escribir" bpmnElement="AB_escribir">
+        <dc:Bounds x="540" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_fin" bpmnElement="AB_fin">
+        <dc:Bounds x="710" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="690" y="265" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_AB_nota_hoja" bpmnElement="AB_nota_hoja">
+        <dc:Bounds x="530" y="440" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_AB_f1" bpmnElement="AB_f1">
+        <di:waypoint x="196" y="240" />
+        <di:waypoint x="250" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_f2" bpmnElement="AB_f2">
+        <di:waypoint x="275" y="215" />
+        <di:waypoint x="275" y="120" />
+        <di:waypoint x="360" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="285" y="160" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_f3" bpmnElement="AB_f3">
+        <di:waypoint x="275" y="265" />
+        <di:waypoint x="275" y="360" />
+        <di:waypoint x="360" y="360" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="285" y="300" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_f4" bpmnElement="AB_f4">
+        <di:waypoint x="460" y="120" />
+        <di:waypoint x="590" y="120" />
+        <di:waypoint x="590" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_f5" bpmnElement="AB_f5">
+        <di:waypoint x="460" y="360" />
+        <di:waypoint x="590" y="360" />
+        <di:waypoint x="590" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_f6" bpmnElement="AB_f6">
+        <di:waypoint x="640" y="240" />
+        <di:waypoint x="710" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_AB_asoc_hoja" bpmnElement="AB_asoc_hoja">
+        <di:waypoint x="600" y="280" />
+        <di:waypoint x="625" y="440" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="O_diagrama_decidir">
+    <bpmndi:BPMNPlane id="O_plano_decidir" bpmnElement="SP_decidir">
+      <bpmndi:BPMNShape id="S_DE_inicio" bpmnElement="DE_inicio">
+        <dc:Bounds x="160" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="265" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_nombrar" bpmnElement="DE_nombrar">
+        <dc:Bounds x="250" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_preguntar" bpmnElement="DE_preguntar">
+        <dc:Bounds x="400" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_gw_dime" bpmnElement="DE_gw_dime" isMarkerVisible="true">
+        <dc:Bounds x="550" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="535" y="270" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_decir" bpmnElement="DE_decir">
+        <dc:Bounds x="700" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_posicion" bpmnElement="DE_posicion">
+        <dc:Bounds x="660" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_gw_si" bpmnElement="DE_gw_si" isMarkerVisible="true">
+        <dc:Bounds x="820" y="215" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="805" y="165" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_ajustar" bpmnElement="DE_ajustar">
+        <dc:Bounds x="880" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_gw_vivo" bpmnElement="DE_gw_vivo" isMarkerVisible="true">
+        <dc:Bounds x="1030" y="355" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1015" y="410" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_fin_cerrado" bpmnElement="DE_fin_cerrado">
+        <dc:Bounds x="1152" y="222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1127" y="265" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_fin_abierto" bpmnElement="DE_fin_abierto">
+        <dc:Bounds x="1152" y="357" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1132" y="400" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_nota_preguntar" bpmnElement="DE_nota_preguntar">
+        <dc:Bounds x="380" y="500" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_nota_si" bpmnElement="DE_nota_si">
+        <dc:Bounds x="790" y="500" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_DE_nota_abierto" bpmnElement="DE_nota_abierto">
+        <dc:Bounds x="1240" y="340" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_DE_f1" bpmnElement="DE_f1">
+        <di:waypoint x="196" y="240" />
+        <di:waypoint x="250" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f2" bpmnElement="DE_f2">
+        <di:waypoint x="350" y="240" />
+        <di:waypoint x="400" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f3" bpmnElement="DE_f3">
+        <di:waypoint x="500" y="240" />
+        <di:waypoint x="550" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f_dime" bpmnElement="DE_f_dime">
+        <di:waypoint x="575" y="215" />
+        <di:waypoint x="575" y="100" />
+        <di:waypoint x="700" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="585" y="150" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f_dime2" bpmnElement="DE_f_dime2">
+        <di:waypoint x="800" y="100" />
+        <di:waypoint x="1170" y="100" />
+        <di:waypoint x="1170" y="222" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f4" bpmnElement="DE_f4">
+        <di:waypoint x="600" y="240" />
+        <di:waypoint x="660" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="621" y="218" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f5" bpmnElement="DE_f5">
+        <di:waypoint x="760" y="240" />
+        <di:waypoint x="820" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f6" bpmnElement="DE_f6">
+        <di:waypoint x="870" y="240" />
+        <di:waypoint x="1152" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1001" y="218" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f_rebote" bpmnElement="DE_f_rebote">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="845" y="380" />
+        <di:waypoint x="880" y="380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="855" y="310" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f7" bpmnElement="DE_f7">
+        <di:waypoint x="980" y="380" />
+        <di:waypoint x="1030" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f_otra" bpmnElement="DE_f_otra">
+        <di:waypoint x="1055" y="355" />
+        <di:waypoint x="1055" y="310" />
+        <di:waypoint x="710" y="310" />
+        <di:waypoint x="710" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1065" y="325" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_f8" bpmnElement="DE_f8">
+        <di:waypoint x="1080" y="380" />
+        <di:waypoint x="1152" y="375" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1105" y="353" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_asoc_preguntar" bpmnElement="DE_asoc_preguntar">
+        <di:waypoint x="450" y="280" />
+        <di:waypoint x="470" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_asoc_si" bpmnElement="DE_asoc_si">
+        <di:waypoint x="845" y="265" />
+        <di:waypoint x="880" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_DE_asoc_abierto" bpmnElement="DE_asoc_abierto">
+        <di:waypoint x="1188" y="372" />
+        <di:waypoint x="1240" y="368" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="O_diagrama_mandar">
+    <bpmndi:BPMNPlane id="O_plano_mandar" bpmnElement="SP_mandar">
+      <bpmndi:BPMNShape id="S_MA_inicio" bpmnElement="MA_inicio">
+        <dc:Bounds x="160" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="325" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_encargo" bpmnElement="MA_encargo">
+        <dc:Bounds x="250" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_gw" bpmnElement="MA_gw" isMarkerVisible="true">
+        <dc:Bounds x="410" y="275" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="300" y="380" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_CA_desarrollador" bpmnElement="CA_desarrollador">
+        <dc:Bounds x="540" y="60" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_CA_qa" bpmnElement="CA_qa">
+        <dc:Bounds x="540" y="180" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_CA_auditor" bpmnElement="CA_auditor">
+        <dc:Bounds x="540" y="300" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_CA_escribano" bpmnElement="CA_escribano">
+        <dc:Bounds x="540" y="420" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_une" bpmnElement="MA_une" isMarkerVisible="true">
+        <dc:Bounds x="740" y="275" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_fin" bpmnElement="MA_fin">
+        <dc:Bounds x="852" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="832" y="325" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_nota_encargo" bpmnElement="MA_nota_encargo">
+        <dc:Bounds x="210" y="570" width="200" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_MA_nota_llamadas" bpmnElement="MA_nota_llamadas">
+        <dc:Bounds x="480" y="570" width="210" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_MA_f1" bpmnElement="MA_f1">
+        <di:waypoint x="196" y="300" />
+        <di:waypoint x="250" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f2" bpmnElement="MA_f2">
+        <di:waypoint x="350" y="300" />
+        <di:waypoint x="410" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_desarrollador" bpmnElement="MA_f_desarrollador">
+        <di:waypoint x="435" y="275" />
+        <di:waypoint x="435" y="100" />
+        <di:waypoint x="540" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="160" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_qa" bpmnElement="MA_f_qa">
+        <di:waypoint x="435" y="275" />
+        <di:waypoint x="435" y="220" />
+        <di:waypoint x="540" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="228" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_auditor" bpmnElement="MA_f_auditor">
+        <di:waypoint x="435" y="325" />
+        <di:waypoint x="435" y="340" />
+        <di:waypoint x="540" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="470" y="318" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_escribano" bpmnElement="MA_f_escribano">
+        <di:waypoint x="435" y="325" />
+        <di:waypoint x="435" y="460" />
+        <di:waypoint x="540" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="445" y="400" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_desarrollador2" bpmnElement="MA_f_desarrollador2">
+        <di:waypoint x="660" y="100" />
+        <di:waypoint x="765" y="100" />
+        <di:waypoint x="765" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_qa2" bpmnElement="MA_f_qa2">
+        <di:waypoint x="660" y="220" />
+        <di:waypoint x="765" y="220" />
+        <di:waypoint x="765" y="275" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_auditor2" bpmnElement="MA_f_auditor2">
+        <di:waypoint x="660" y="340" />
+        <di:waypoint x="765" y="340" />
+        <di:waypoint x="765" y="325" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f_escribano2" bpmnElement="MA_f_escribano2">
+        <di:waypoint x="660" y="460" />
+        <di:waypoint x="765" y="460" />
+        <di:waypoint x="765" y="325" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_f3" bpmnElement="MA_f3">
+        <di:waypoint x="790" y="300" />
+        <di:waypoint x="852" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_asoc_encargo" bpmnElement="MA_asoc_encargo">
+        <di:waypoint x="300" y="340" />
+        <di:waypoint x="305" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_MA_asoc_llamadas" bpmnElement="MA_asoc_llamadas">
+        <di:waypoint x="435" y="325" />
+        <di:waypoint x="570" y="570" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
