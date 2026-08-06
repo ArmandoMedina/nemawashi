@@ -1,13 +1,14 @@
 ---
 name: marcar-lo-auditado
-description: Carta del escribano para después de la auditoría — llevar el dictamen a los archivos que ya están escritos, marcando su estado y agregando lo que el auditor encontró, sin borrar ni reescribir nada. Úsala sólo con un dictamen en la mano.
+description: Carta del escribano para después de la auditoría — llevar el dictamen a los archivos que ya están escritos, marcando su estado, cerrando el enlace hacia una pieza de otra corrida cuando falta, y agregando lo que el auditor encontró, sin borrar ni reescribir nada más. Úsala sólo con un dictamen o con enlaces por cerrar en la mano.
 ---
 
 <carta nombre="marcar-lo-auditado" agente="escribano" momento="despues de auditar">
 
 <objetivo>
-Recibes **el dictamen del auditor** y los archivos que ya están escritos en disco. Llevas lo que el
-dictamen dice a esos archivos.
+Recibes **el dictamen del auditor**, a veces también **los enlaces por cerrar** que el propio
+molino calculó, y los archivos que ya están escritos en disco. Llevas lo que traigas a esos
+archivos: el dictamen se agrega como marca; un enlace por cerrar se agrega como cita de vuelta.
 
 **Ésta es la única carta de este repositorio que toca un archivo que ya existía.** Todas las demás
 crean archivos nuevos; ésta los abre y los cambia. Por eso su disciplina es más estrecha que la de

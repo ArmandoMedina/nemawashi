@@ -637,6 +637,76 @@ function conElDominioEnlazado(modulos, dominios) {
   })
 }
 
+// El mismo par campo/vuelvePor que ya vive en `src/nucleo/el-enlace-va-en-los-dos-sentidos.ts`
+// (`TABLA_DE_ENLACES`, atada a `product/conocimiento/README.md:81-86`), copiado aqui a mano: el
+// molino corre sin `import` posible -la cabecera de este archivo y
+// `src/contratos/la-hora-no-se-inventa.test.ts` ya lo dejan medido-, el mismo trato que ya tiene
+// `FORMA_DE_HORA_CON_HUSO` mas abajo con `FECHA_CON_HUSO`. Solo trae `campo` y `vuelvePor`: aqui
+// no se valida el grafo entero -eso ya lo hace ese contrato, contra lo que queda en disco-, solo
+// se ubica que campo del archivo viejo hay que completar.
+const CAMPO_QUE_DEVUELVE = [
+  { tipo: 'dominio', campo: 'modulos', vuelvePor: 'dominio' },
+  { tipo: 'modulo', campo: 'dominio', vuelvePor: 'modulos' },
+  { tipo: 'modulo', campo: 'capacidades', vuelvePor: 'modulo' },
+  { tipo: 'capacidad', campo: 'modulo', vuelvePor: 'capacidades' },
+  { tipo: 'capacidad', campo: 'reglas', vuelvePor: 'capacidades' },
+  { tipo: 'regla', campo: 'capacidades', vuelvePor: 'reglas' }
+]
+
+/** Un campo de enlace trae un id suelto o una lista; aqui siempre sale como lista. */
+function idsCitados(valor) {
+  if (Array.isArray(valor)) return valor.filter((id) => !!id)
+  return valor ? [valor] : []
+}
+
+// Una cita hacia un id que no es de esta corrida es una cita hacia una pieza que ya vivia en
+// disco antes de que esta corrida empezara. El molino ya invierte el enlace DENTRO de una
+// corrida (`conLasCapacidadesEnlazadas` y sus dos vecinos, arriba); hacia afuera no hay quien lo
+// haga, porque el escribano de «Registrar» solo puede crear archivos, nunca abrir uno que ya
+// existia. Por eso esas citas se juntan aqui, para que «Marcar» -la unica fase con permiso de
+// abrir un archivo viejo- las pueda cerrar.
+//
+// `idsPropios` tiene que ser los ids de lo que esta corrida REALMENTE escribio -los de
+// `escritos.archivos`-, no todo lo que aparece en `registro`. Una pieza vieja puede "volver" a
+// `registro` -con su id real, no uno de trabajo- solo para declarar que ahora tambien contiene a
+// una pieza nueva (`bloqueComunDeConstruir`: "esa pieza vuelve con su id de carpeta"); esa pieza
+// vieja SI vive en `registro`, pero nadie la escribe de nuevo, y contarla como propia dejaria sin
+// cazar el enlace que ella misma provoca.
+function citasHaciaOtraCorrida(registro, idsPropios) {
+  const propios = new Set(idsPropios)
+  const citas = []
+  for (const fila of CAMPO_QUE_DEVUELVE) {
+    const clave = TIPOS_DE_PIEZA.find((t) => t.tipo === fila.tipo).clave
+    for (const pieza of registro[clave] ?? []) {
+      for (const citado of idsCitados(pieza[fila.campo])) {
+        if (propios.has(citado)) continue
+        citas.push({ idDeTrabajo: pieza.id, campoQueCito: fila.campo, campoQueLeFalta: fila.vuelvePor, idViejo: citado })
+      }
+    }
+  }
+  return citas
+}
+
+// Traduce el `idDeTrabajo` de quien cita a su id definitivo -el que quedo en el archivo, el unico
+// que le sirve a quien marca para nombrar quien esta citando. Una cita cuya pieza no aparece en lo
+// escrito no se puede cerrar -no se pudo escribir, `escritos.noEscritos` ya lo dice por su lado- y
+// se descarta en silencio aqui. Tambien deduplica: dos citas iguales -mismo par de ids, mismo
+// campo- solo se piden una vez.
+function enlacesPorCerrar(citas, archivosEscritos) {
+  const vistos = new Set()
+  const enlaces = []
+  for (const cita of citas) {
+    const escrito = archivosEscritos.find((a) => a.idDeTrabajo === cita.idDeTrabajo)
+    if (!escrito) continue
+    const enlace = { idNuevo: escrito.id, campoQueCito: cita.campoQueCito, idViejo: cita.idViejo, campoQueLeFalta: cita.campoQueLeFalta }
+    const clave = `${enlace.idNuevo} ${enlace.campoQueCito} ${enlace.idViejo}`
+    if (vistos.has(clave)) continue
+    vistos.add(clave)
+    enlaces.push(enlace)
+  }
+  return enlaces
+}
+
 // Cada senal viene con su razon, y la razon viaja pegada a la pieza hasta el escribano. Medido el
 // 2026-08-04: tres reglas salieron con `estado: con-huecos` y `que-queda-abierto` diciendo «nada»,
 // que su propia plantilla prohibe. Pasaba porque al escribano le llegaba la marca sin el motivo, y
@@ -1366,28 +1436,62 @@ function promptParaAuditar(paso, rutaTranscript, escritos, respuestas, rutaRespu
   ].join('\n')
 }
 
-function promptParaMarcar(paso, dictamen, hora) {
-  return [
+function promptParaMarcar(paso, dictamen, hora, enlacesHaciaAtras) {
+  const bloques = [
     'Carga tu carta `marcar-lo-auditado` antes de abrir nada.',
     '',
-    `El paso "${paso}" ya se escribio en \`product/conocimiento/\` y ya se audito contra el crudo.`,
-    'Abajo va el dictamen. **Llevalo a los archivos que nombra, y solo a esos.**',
-    '',
-    'Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el',
-    'auditor haya probado que lo que dice nadie lo dijo, y quien lo abra dentro de seis meses se lo',
-    'cree. Que la medicion cuente quiere decir que llegue al archivo, no al reporte.',
+    `El paso "${paso}" ya se escribio en \`product/conocimiento/\`.`,
     '',
     hora
       ? `La hora para el campo \`marcado\` es \`${hora}\`. No la deduzcas.`
       : 'No llego la hora: no marques nada y reportalo. Una hora inventada se ve igual de bien que una real.',
     '',
-    '**No borras, no reescribes el cuerpo y no quitas ninguna marca.** El `estado` solo va de',
-    '`completa` a `con-huecos`, y lo del auditor se AGREGA al final de `<que-queda-abierto>`,',
-    'copiado con sus palabras.',
-    '',
-    '--- El dictamen ---',
-    JSON.stringify(dictamen, null, 2)
-  ].join('\n')
+    '**No borras, no reescribes el cuerpo y no quitas ninguna marca.**'
+  ]
+
+  if (dictamen) {
+    bloques.push(
+      '',
+      `El paso ya se audito contra el crudo. Abajo va el dictamen. **Llevalo a los archivos que`,
+      'nombra, y solo a esos.**',
+      '',
+      'Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el',
+      'auditor haya probado que lo que dice nadie lo dijo, y quien lo abra dentro de seis meses se lo',
+      'cree. Que la medicion cuente quiere decir que llegue al archivo, no al reporte.',
+      '',
+      'El `estado` solo va de `completa` a `con-huecos`, y lo del auditor se AGREGA al final de',
+      '`<que-queda-abierto>`, copiado con sus palabras.',
+      '',
+      '--- El dictamen ---',
+      JSON.stringify(dictamen, null, 2)
+    )
+  }
+
+  if (enlacesHaciaAtras && enlacesHaciaAtras.length > 0) {
+    bloques.push(
+      '',
+      `${enlacesHaciaAtras.length} pieza(s) de esta corrida citan una pieza que ya vivia en disco,`,
+      'y esa pieza vieja no devuelve la cita. El molino solo invierte el enlace entre piezas de la',
+      'misma corrida -aqui la pieza vieja ya estaba escrita antes de que esta empezara, y nadie mas',
+      'tiene permiso de abrirla.',
+      '',
+      'Por cada renglon: abre el archivo viejo -`idViejo` te dice la carpeta por su prefijo',
+      '(`DOM-`, `MOD-`, `CAP-`, `REG-`) y el numero de folio es el mismo con que empieza el nombre',
+      'del archivo dentro de esa carpeta, ej. `CAP-0013` vive en `capacidades/0013-*.md`-. Revisa su',
+      'campo `campoQueLeFalta`: si ya trae `idNuevo`, no hagas nada. Si no lo trae, **agrega',
+      '`idNuevo` a lo que ese campo ya tenia** -sin quitar ni reordenar lo que habia; si el campo',
+      'estaba vacio o en `[]`, queda con ese solo id.',
+      '',
+      '**Esto no es una falla que marcar: no toques `estado` ni `<que-queda-abierto>` por esto**',
+      '-el enlace queda cerrado, no senalado. Si no encuentras el archivo, repórtalo igual que uno',
+      'del dictamen que no exista.',
+      '',
+      '--- Los enlaces que faltan cerrar, hacia piezas de otra corrida ---',
+      JSON.stringify(enlacesHaciaAtras, null, 2)
+    )
+  }
+
+  return bloques.join('\n')
 }
 
 function promptParaArmarLoQueFalta(paso, escritos, senalesSinPieza) {
@@ -1997,6 +2101,14 @@ if (!escritos) {
 archivosEscritosParaElRenglon = escritos.archivos
 noEscritasParaElRenglon = escritos.noEscritos.length
 
+// Que pieza de esta corrida cita una pieza que ya vivia en disco, y esa vieja no devuelve la
+// cita: se calcula aqui, con datos que el molino ya tiene -`registro` trae las citas con sus ids
+// de trabajo, `escritos.archivos` los traduce a los ids definitivos-, sin volver a leer ningun
+// archivo. Se calcula antes de auditar porque no depende del dictamen: es un hecho de la propia
+// corrida, no algo que el auditor tenga que encontrar.
+const idsEscritosEstaCorrida = escritos.archivos.map((a) => a.idDeTrabajo)
+const enlacesHaciaAtras = enlacesPorCerrar(citasHaciaOtraCorrida(registro, idsEscritosEstaCorrida), escritos.archivos)
+
 // --- Auditar ---------------------------------------------------------------
 
 phase('Auditar')
@@ -2018,15 +2130,21 @@ dictamenParaElRenglon = dictamen
 // volvio a cometer con el dictamen ya contado para el estado de salida, pero sin nadie que pudiera
 // tocar los archivos.
 //
-// Solo corre si hay algo que marcar. Un dictamen limpio no manda a nadie a abrir treinta archivos.
+// Corre por dos razones, independientes entre si: el dictamen encontro algo, o esta misma
+// corrida dejo un enlace de un solo lado hacia una pieza vieja. Ninguna de las dos necesita a la
+// otra -medido en `product/conocimiento/` real: piezas de un paso citaban a piezas de un paso
+// anterior, el dictamen de esa corrida salia limpio, y el enlace se quedaba de un solo lado
+// porque esta fase solo corria con el dictamen. Sin ninguna de las dos razones, un dictamen
+// limpio y sin enlaces por cerrar no manda a nadie a abrir treinta archivos.
 
 const fallasQueMarcar = dictamen ? dictamen.inventado.concat(dictamen.perdido, dictamen.malMarcado) : []
+const hayFallasDelDictamen = !!dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)
 let marcado = null
 
-if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
+if (hayFallasDelDictamen || enlacesHaciaAtras.length > 0) {
   phase('Marcar')
 
-  marcado = await agent(promptParaMarcar(paso, dictamen, hora), {
+  marcado = await agent(promptParaMarcar(paso, dictamen, hora, enlacesHaciaAtras), {
     label: `marcar:${paso}`,
     phase: 'Marcar',
     agentType: 'escribano',
@@ -2034,7 +2152,11 @@ if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
   })
 
   if (!marcado) {
-    log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+    if (hayFallasDelDictamen) {
+      log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+    } else {
+      log(`${enlacesHaciaAtras.length} enlace(s) hacia una pieza de otra corrida seguian sin cerrar y nadie los marco. Quedan de un solo lado.`)
+    }
     noContestaron.push('marcar')
   }
 }
