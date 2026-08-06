@@ -105,7 +105,7 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
 
     if (opts.phase === 'Sacar') {
       if (label.startsWith('sacar-respuestas')) return { respuestas: 'una respuesta', archivoLeido: 'respuestas.md' }
-      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl', horaDeAlta: '2026-08-05T09:00:00-06:00' }
     }
     if (opts.phase === 'Inventariar') return { piezas: [] }
     if (opts.phase === 'Levantar el examen') return examen
@@ -349,10 +349,10 @@ describe('todo return de la corrida pasa por cerrar', () => {
 
     const returns = returnsDeLaCorrida(archivo)
 
-    // Si esto deja de encontrar los catorce, la prueba dejo de medir lo que dice medir -por
+    // Si esto deja de encontrar los quince, la prueba dejo de medir lo que dice medir -por
     // ejemplo porque alguien envolvio la corrida en una funcion y todos sus return pasaron a
     // vivir "dentro de una funcion" segun este mismo criterio.
-    expect(returns.length).toBe(14)
+    expect(returns.length).toBe(15)
 
     const sinCerrar = returns
       .filter((r) => !esReturnDeCerrar(r))

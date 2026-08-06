@@ -42,6 +42,9 @@ function cargarMolino(): (...args: unknown[]) => Promise<unknown> {
 
 const PLATICA_SACADA = 'EXPERTO: algo se dijo\n\nAGENTE: algo se contesto'
 
+/** La hora que el agente de «Sacar» dice haber medido con `date -Iseconds`. */
+const HORA_VALIDA = '2026-08-05T09:00:00-06:00'
+
 const PIEZA = {
   id: 'REG-1',
   renglon: 'una regla dicha',
@@ -61,7 +64,7 @@ const ESCRITOS = {
 }
 const SIN_FALLAS = { inventado: [], perdido: [], malMarcado: [], sirve: true, porque: 'sin fallas', transcriptLeido: 'sesion.jsonl' }
 
-type Sacado = { platica: string; transcriptLeido: string; noSePudo?: string } | null
+type Sacado = { platica: string; transcriptLeido: string; horaDeAlta?: string; noSePudo?: string } | null
 type RespuestasSacadas = { respuestas: string; archivoLeido: string; noSePudo?: string } | null
 
 function correrMolino(
@@ -69,7 +72,7 @@ function correrMolino(
   opciones: { sacado?: Sacado; respuestasSacadas?: RespuestasSacadas } = {}
 ): Promise<Corrida> {
   const {
-    sacado = { platica: PLATICA_SACADA, transcriptLeido: 'sesion.jsonl' },
+    sacado = { platica: PLATICA_SACADA, transcriptLeido: 'sesion.jsonl', horaDeAlta: HORA_VALIDA },
     respuestasSacadas = { respuestas: 'una respuesta cualquiera', archivoLeido: 'respuestas.md' }
   } = opciones
 
@@ -85,7 +88,10 @@ function correrMolino(
     // sacador y contestaria con lo que no le toca.
     if (opts.phase === 'Sacar') {
       if (label.startsWith('sacar-respuestas')) return respuestasSacadas
-      return sacado
+      // Se completa `horaDeAlta` si el override de la prueba no la trae: casi ninguna prueba de
+      // este archivo mide el freno de la hora -eso vive en `la-hora-no-se-inventa.test.ts`-, asi
+      // que sin este relleno cualquier override de `sacado` tumbaria la corrida antes de tiempo.
+      return sacado ? { horaDeAlta: HORA_VALIDA, ...sacado } : sacado
     }
     if (opts.phase === 'Levantar el examen') return { preguntas: ['algo que contestar?'] }
     if (opts.phase === 'Construir') return REGISTRO

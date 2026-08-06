@@ -21,8 +21,6 @@ export const meta = {
 //   args.paso           - como se llamo el tramo de sesion. Va al campo `paso` de cada pieza.
 //   args.transcript     - opcional. La ruta del `.jsonl`. Si no llega, «Sacar» resuelve la de
 //                         esta misma sesion; el molino no la adivina -no tiene `fs` ni `process`.
-//   args.hora           - la hora real del alta, ISO 8601 con huso. Se estampa pieza por pieza.
-//                         El molino no la calcula: no tiene reloj.
 //   args.rutaRespuestas - opcional. La ruta del `.md` con lo que el experto contesto a las dudas
 //                         de una corrida anterior. Que el lector la abra y traiga algo dentro es
 //                         lo que marca la segunda corrida -nunca la ruta por si sola.
@@ -34,6 +32,14 @@ export const meta = {
 // caracteres a mano rompe la reanudacion del workflow -un salto de linea de diferencia entre lo
 // tecleado y el archivo cambia el prompt, tira el cache de `resumeFromRunId` y obliga a rehacer
 // cuarenta minutos de agentes. Paso dos veces en la misma sesion.
+//
+// Tampoco recibe ya `args.hora`. Antes la hora del alta entraba por ahi, y el 2026-08-05 una
+// corrida real molio 34 piezas sin que nadie la pasara: ninguna salio con `alta`, y el escribano
+// se nego a escribirlas -su carta le prohibe un archivo al que le falte un campo obligatorio-.
+// La falla se descubrio hasta el final, con la corrida entera ya gastada. Ahora la mide el mismo
+// agente que ya corre en «Sacar», corriendo `date -Iseconds`, y la corrida para en seco -antes
+// de «Inventariar» y antes de «Levantar el examen»- si esa hora no llega o no tiene la forma
+// correcta.
 
 // --- Los esquemas ----------------------------------------------------------
 
@@ -43,7 +49,7 @@ export const meta = {
 // quien audita al final usa esta ruta, no una que adivine por su cuenta.
 const SACADO = {
   type: 'object',
-  required: ['platica', 'transcriptLeido'],
+  required: ['platica', 'transcriptLeido', 'horaDeAlta'],
   properties: {
     platica: {
       type: 'string',
@@ -55,9 +61,16 @@ const SACADO = {
       type: 'string',
       description: 'La ruta del `.jsonl` que se leyo. Vacia si no se pudo determinar ni leer.'
     },
+    horaDeAlta: {
+      type: 'string',
+      description:
+        'La hora de este instante, ISO 8601 CON HUSO explicito (`+hh:mm`, `-hh:mm` o `Z`), sacada ' +
+        'corriendo `date -Iseconds` con Bash. Vacia si no se pudo -NUNCA deducida, redondeada ni ' +
+        'copiada de un ejemplo: el codigo la vuelve a medir y una que no cuadre para la corrida en seco.'
+    },
     noSePudo: {
       type: 'string',
-      description: 'Por que no se pudo leer el archivo o correr el sacador. Vacio si si se pudo.'
+      description: 'Por que no se pudo leer el archivo, correr el sacador o medir la hora. Vacio si todo se pudo.'
     }
   }
 }
@@ -562,6 +575,17 @@ function comoDatos(entrada) {
   return entrada ?? {}
 }
 
+// La forma que exige el alta: ISO 8601 con hora y huso EXPLICITO -`+hh:mm`, `-hh:mm` o `Z`-. Una
+// hora sin huso no basta -dos maquinas en dos zonas la leerian distinto-, y es justo la trampa
+// facil: se ve como una hora valida y no lo es. El mismo patron ya decidido en
+// `src/nucleo/el-item-va-flaco.ts` (`FECHA_CON_HUSO`). Funcion pura: no le cree al agente que la
+// midio, la mide otra vez aqui en codigo.
+const FORMA_DE_HORA_CON_HUSO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/
+
+function esHoraConHuso(hora) {
+  return typeof hora === 'string' && FORMA_DE_HORA_CON_HUSO.test(hora.trim())
+}
+
 // El paso y la hora se estampan aqui y no los pone el agente. Un campo que el agente pudiera
 // llenar es un campo que el agente puede perder, y una hora inventada se ve igual de bien que
 // una real. `confirmado` se deriva: solo existe si la firmeza lo pide, y lleva la misma hora,
@@ -894,7 +918,13 @@ function promptParaSacar(rutaPedida) {
     '',
     'Regresa la salida de ese comando tal cual en `platica`, y la ruta del `.jsonl` que usaste',
     'en `transcriptLeido`. Si no pudiste leer el archivo o correr el comando, `platica` y',
-    '`transcriptLeido` van vacios y `noSePudo` dice por que -no inventes contenido ni ruta.'
+    '`transcriptLeido` van vacios y `noSePudo` dice por que -no inventes contenido ni ruta.',
+    '',
+    'Ademas, con Bash, corre `date -Iseconds` y regresa esa salida tal cual en `horaDeAlta`: es',
+    'la hora real de este instante, ISO 8601 con huso. **No la deduzcas, no la redondees y no la',
+    'copies de un ejemplo de este prompt -ni de este ni de ningun otro.** Es la hora en la que se',
+    'da de alta cada pieza que salga de esta corrida, y una hora inventada se ve igual de bien',
+    'que una real. Si el comando no corrio, `horaDeAlta` va vacia y `noSePudo` dice por que.'
   ].join('\n')
 }
 
@@ -1430,13 +1460,26 @@ const entrada = comoDatos(args)
 const paso = entrada.paso ?? 'sin nombre'
 const rutaTranscriptPedida = typeof entrada.transcript === 'string' && entrada.transcript.trim() ? entrada.transcript : undefined
 const rutaRespuestasPedida = typeof entrada.rutaRespuestas === 'string' && entrada.rutaRespuestas.trim() ? entrada.rutaRespuestas : undefined
-const hora = typeof entrada.hora === 'string' && entrada.hora.trim() ? entrada.hora : undefined
 const corridaNumero = rutaRespuestasPedida ? 2 : 1
+
+// `args.hora` ya no se acepta: dos fuentes para el mismo dato es justo lo que dejo que la hora
+// llegara vacia el 2026-08-05 -a quien lanzo el molino se le olvido pasarla-. Ahora la unica
+// fuente es el agente de «Sacar», mas abajo. Si de todos modos llega, se ignora -no se usa ni de
+// respaldo- y se dice.
+if (typeof entrada.hora === 'string' && entrada.hora.trim()) {
+  log('Llego `args.hora`: ese argumento ya no se acepta y se ignora. La hora la mide el propio agente de "Sacar".')
+}
+
+// Declarada aqui, antes de `cerrar`, para que la pueda leer sin importar en cual de los `return`
+// se dispare -igual que `dondeParo` y sus vecinos mas abajo. Se llena solo si «Sacar» midio una
+// hora valida; si la corrida termina antes de eso, se queda `undefined` y `cerrar` la escribe como
+// `null`, que es exactamente lo que se sabe.
+let hora
 
 // --- Lo que arma el renglon de esta corrida ---------------------------------
 //
 // Declarados aqui, antes de cualquier `return`, para que `cerrar` los pueda leer sin importar
-// en cual de los catorce se dispare: un `let` declarado mas abajo en el script truena con
+// en cual de los quince se dispare: un `let` declarado mas abajo en el script truena con
 // «Cannot access before initialization» si algo lo lee antes de esa linea. Cada uno arranca en
 // su valor vacio y se actualiza en cuanto el dato real existe; si la corrida se corta antes de
 // esa actualizacion, el valor vacio es exactamente lo correcto -no se sabe mas que eso.
@@ -1468,7 +1511,7 @@ async function agentDeAnotarSinTronar(prompt, opts) {
 }
 
 // Jidoka: anotar es medicion, no es la linea de produccion. Si la hora o el escribano no
-// contestan -o truenan-, se dice y la corrida devuelve lo suyo igual. Cada uno de los catorce
+// contestan -o truenan-, se dice y la corrida devuelve lo suyo igual. Cada uno de los quince
 // `return` de aqui abajo pasa por esta funcion antes de salir.
 async function cerrar(salida) {
   const medidaDeLaHora = await agentDeAnotarSinTronar(promptParaLaHoraDeCierre(hora), {
@@ -1560,6 +1603,21 @@ if (!platica.trim()) {
   noContestaron.push('sacar')
   return await cerrar({ estado: 'sin-material', paso, motivo: sacado.noSePudo || 'la platica llego vacia o no llego' })
 }
+
+// La hora del alta se mide aqui, dentro de la misma llamada que saco la platica -no se le cree
+// al agente sobre su forma: se valida con codigo, con la misma funcion pura que ya se usa en
+// `src/nucleo/el-item-va-flaco.ts`. Si no llego o no tiene huso explicito, la corrida para en
+// seco -antes de «Inventariar» y antes de «Levantar el examen», que es lo caro-. Medido el
+// 2026-08-05: sin este freno, una corrida entera muele piezas que el escribano despues rechaza
+// completas, porque le falta un campo obligatorio.
+if (!esHoraConHuso(sacado.horaDeAlta)) {
+  log(`No llego la hora del alta con forma valida (ISO 8601 con huso): "${sacado.horaDeAlta ?? ''}". ${sacado.noSePudo || ''}`.trim())
+  dondeParo = 'la-hora'
+  noContestaron.push('sacar-hora')
+  return await cerrar({ estado: 'sin-hora', paso })
+}
+
+hora = sacado.horaDeAlta
 
 // Las respuestas de una corrida anterior se leen aparte, ya que se sabe que hay platica: es la
 // misma llamada de «Sacar», secuencial y con label propio, no otra fase -meta.phases no cambia.

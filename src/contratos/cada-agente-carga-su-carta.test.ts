@@ -34,7 +34,10 @@ function cargarMolino(): (...args: unknown[]) => Promise<unknown> {
 }
 
 const PLATICA_TEXTO = 'EXPERTO: a un taller que apenas abre no se le fia\n\nAGENTE: entendido'
-const ENTRADA = { paso: 'paso de prueba', transcript: 'sesion.jsonl', hora: '2026-08-04T11:00:00-06:00' }
+const ENTRADA = { paso: 'paso de prueba', transcript: 'sesion.jsonl' }
+
+/** La hora que el agente de «Sacar» dice haber medido con `date -Iseconds`. */
+const HORA_MEDIDA = '2026-08-04T11:00:00-06:00'
 
 const PREGUNTA = 'A un taller que apenas abre se le puede dar credito?'
 const EXAMEN = { preguntas: [PREGUNTA] }
@@ -127,6 +130,7 @@ type OpcionesCorrida = {
   escritos?: Record<string, unknown> | null
   dictamen?: Record<string, unknown> | null
   respuestasSacadas?: Record<string, unknown> | null
+  horaDeAlta?: string
 }
 
 /**
@@ -145,7 +149,8 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     correccion = null,
     escritos = ESCRITOS_LIMPIOS,
     dictamen = SIN_FALLAS,
-    respuestasSacadas = { respuestas: 'desde los tres meses', archivoLeido: 'respuestas.md' }
+    respuestasSacadas = { respuestas: 'desde los tres meses', archivoLeido: 'respuestas.md' },
+    horaDeAlta = HORA_MEDIDA
   } = opciones
 
   const llamadas: Llamada[] = []
@@ -161,7 +166,7 @@ function correrMolino(entrada: Record<string, unknown>, opciones: OpcionesCorrid
     // `sacar-respuestas:` comparte prefijo con `sacar:` -se prueba primero, el mas especifico.
     if (opts.phase === 'Sacar') {
       if (label.startsWith('sacar-respuestas')) return respuestasSacadas
-      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl' }
+      return { platica: PLATICA_TEXTO, transcriptLeido: 'sesion.jsonl', horaDeAlta }
     }
     if (opts.phase === 'Inventariar') return inventario
     if (opts.phase === 'Marcar') return marcado
@@ -416,12 +421,12 @@ describe('la hora y el paso se estampan, nunca los pone el agente', () => {
     expect(registrar.prompt).toContain('"paso": "paso de prueba"')
   })
 
-  it('sin hora, ninguna pieza trae `alta` inventada y al escribano se le dice', async () => {
-    const { llamadas } = await correrMolino({ paso: 'paso de prueba', transcript: 'sesion.jsonl' })
-    const registrar = llamadaDe(llamadas, 'Registrar')
+  it('si «Sacar» no midio la hora, la corrida para antes de «Construir»: nadie inventa `alta`', async () => {
+    const { llamadas, salida } = await correrMolino(ENTRADA, { horaDeAlta: '' })
 
-    expect(registrar.prompt).not.toContain('"alta"')
-    expect(registrar.prompt).toContain('No llego la hora del alta')
+    expect(llamadas.find((l) => l.opts.phase === 'Construir')).toBeUndefined()
+    expect(llamadas.find((l) => l.opts.phase === 'Registrar')).toBeUndefined()
+    expect(salida.estado).toBe('sin-hora')
   })
 
   it('`confirmado` sale de la firmeza, no del agente: solo lo trae la pieza confirmada', async () => {
