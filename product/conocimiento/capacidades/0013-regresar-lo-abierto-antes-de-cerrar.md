@@ -2,7 +2,7 @@
 id: CAP-0013
 capacidad: Regresarle al experto lo que quedó abierto antes de que se levante, y cerrar lo que pueda contestar.
 modulo: MOD-0001
-reglas: [REG-0013, REG-0033, REG-0034]
+reglas: [REG-0013, REG-0033, REG-0034, REG-0103]
 firmeza: dicho
 origen: escuchado
 estado: completa

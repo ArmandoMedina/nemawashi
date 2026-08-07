@@ -1,7 +1,7 @@
 ---
 id: REG-0044
 regla: Lo construido lo revisan agentes auditores desde distintos ángulos antes de darlo por bueno.
-capacidades: [CAP-0021, CAP-0023]
+capacidades: [CAP-0021, CAP-0023, CAP-0048, CAP-0049]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos

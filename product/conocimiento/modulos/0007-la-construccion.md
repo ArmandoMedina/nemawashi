@@ -2,7 +2,7 @@
 id: MOD-0007
 modulo: La construcción: diseñar lo que va por detrás, revisar arquitectura y pruebas, y auditarlo antes de darlo por bueno.
 dominio: DOM-0002
-capacidades: [CAP-0021, CAP-0023]
+capacidades: [CAP-0021, CAP-0023, CAP-0043, CAP-0044, CAP-0045, CAP-0046, CAP-0047, CAP-0048, CAP-0049]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos

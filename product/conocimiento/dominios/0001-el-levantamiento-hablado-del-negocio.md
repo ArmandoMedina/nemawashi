@@ -1,7 +1,7 @@
 ---
 id: DOM-0001
 dominio: El levantamiento hablado del negocio: el programa con que se hace y lo que queda escrito para quien no estuvo.
-modulos: [MOD-0004, MOD-0002]
+modulos: [MOD-0004, MOD-0002, MOD-0015]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

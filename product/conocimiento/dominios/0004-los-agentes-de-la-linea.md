@@ -1,7 +1,7 @@
 ---
 id: DOM-0004
 dominio: Los agentes con que corre la linea: como queda armado cada puesto y que recuerda la maquina.
-modulos: [MOD-0009, MOD-0010]
+modulos: [MOD-0009, MOD-0010, MOD-0011, MOD-0016]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

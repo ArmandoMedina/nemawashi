@@ -1,0 +1,32 @@
+---
+id: REG-0088
+regla: Lo que hoy sólo se lee en texto se quiere ver dibujado: los flujos, la plomería y la salud del código.
+capacidades: [CAP-0053]
+firmeza: dicho
+origen: escuchado
+estado: con-huecos
+paso: Sesión 3 con el experto
+alta: 2026-08-06T19:46:14-06:00
+confirmado:
+marcado: 2026-08-06T19:46:14-06:00
+---
+
+<regla>
+
+<en-sus-palabras>
+Todo lo que hoy vive abstracto en código o en texto se quiere traer a algo visible: una pantalla para armar los flujos arrastrando agentes con su carta y conectándolos con flechas, donde la flecha sea la liga entre pasos; los diagramas de proceso, editables desde ahí; el mapa de la plomería de atrás; la lista de lo que falta; y un tablero que avise cuando hay código duplicado en varios lugares o cuando la salud del código se está cayendo. Todas son la misma cosa: hacer visible lo invisible, porque no se mejora lo que no se puede ver. De entrada se trae a algo visible y después se ve lo de poder ajustarlo desde ahí; una cosa a la vez. Es el techo más ambicioso, lo de muy a largo plazo.
+</en-sus-palabras>
+
+<de-donde-salio>
+Él las soltó en bloque, avisando que las decía para que quedaran escritas, y las nombró de una en una: la pantalla para armar flujos, los diagramas, la plomería, la lista de lo que falta y los tableros de salud del código.
+</de-donde-salio>
+
+<que-queda-abierto>
+nada
+
+- No se entiende solo (palabra-sin-definir): «Lo que hoy sólo se lee en texto se quiere ver dibujado: los flujos, la plomería y la salud del código.»
+
+Auditoría del 2026-08-06: no le alcanza a quien no estuvo. Renglón «los flujos, la plomería y la salud del código». «La plomería» no está definida en ningún archivo de product/conocimiento/. Los dos archivos lo declaran: «No se entiende solo (palabra-sin-definir)».
+</que-queda-abierto>
+
+</regla>

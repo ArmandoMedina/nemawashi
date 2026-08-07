@@ -1,7 +1,7 @@
 ---
 id: REG-0033
 regla: Al experto se le pregunta una sola vez: en la segunda pasada lo que salga se anota y la línea sigue.
-capacidades: [CAP-0023, CAP-0013]
+capacidades: [CAP-0023, CAP-0013, CAP-0056]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos

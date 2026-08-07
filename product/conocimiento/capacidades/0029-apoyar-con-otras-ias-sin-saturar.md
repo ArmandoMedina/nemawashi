@@ -2,7 +2,7 @@
 id: CAP-0029
 capacidad: Apoyar con otras IAs a quien conduce la plática sin volverlo el que junta los informes.
 modulo: MOD-0010
-reglas: [REG-0037, REG-0035]
+reglas: [REG-0037, REG-0035, REG-0110, REG-0112]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos
