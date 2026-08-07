@@ -4,165 +4,132 @@ estado: propuesta
 ---
 # El molino, dibujado — `levanta-el-conocimiento`
 
-> **El dibujo va por delante del código, a propósito.** Parte de lo que muestra ya corre; el bucle
-> por tramos todavía no. Cada caja dice de qué lado está, y la tabla del final lo resume.
->
-> **Si el dibujo y el `.js` difieren en lo que ya corre, manda el `.js`.** Cuando difirieron, el
-> equivocado fue el código: el diagrama ya tenía la caja *Marcar* después de *Auditar*, y al
-> implementar se fundió dentro del escribano. Recuperarlo costó una corrida entera y un dictamen
-> «no sirve».
+> **La fuente de verdad es el código.** Este dibujo se hizo leyendo
+> `.claude/workflows/levanta-el-conocimiento.js`, y lo que no corre ahí no se dibuja. Si los dos
+> difieren, manda el `.js` — y la diferencia se arregla aquí.
 
-## Cómo se abre
+**El método de dibujar —cómo se abre, con qué reglas, cuánto texto lleva y cómo se comprueba— está
+en [`README.md`](README.md) y no se repite aquí.**
 
-El archivo es `levanta-el-conocimiento.bpmn`: XML del estándar BPMN 2.0. **No se lee en frío como
-texto** — se arrastra a un editor de BPMN en el navegador y se mira.
+## Qué se ve
 
-Trae **seis planos**: el de arriba y cinco subprocesos con contenido. Las cajas con el signo `+` se
-abren con doble clic o con el botón azul de su esquina.
+Cinco planos: el molino entero, y cuatro subprocesos — *Sacar lo que dijo el experto*, *Construir el
+registro*, *Medir y corregir* y *Anotar la corrida*.
 
-## Con qué reglas está escrito
+Dos carriles, que son dos puestos. **Ninguna caja explica el oficio de su puesto:** eso lo dice su
+carta.
 
-Con las de **BPMN Method and Style**, de Bruce Silver. Las que gobiernan aquí:
+| Caja | Quién la hace | Con qué carta |
+|---|---|---|
+| Sacar la plática · Leer las respuestas · Inventariar · Anotar la hora de cierre | auditor | ninguna: son mecánicas |
+| Levantar el examen | auditor | [`levantar-el-examen`](../../.claude/skills/levantar-el-examen/SKILL.md) |
+| Las cuatro de *Construir* y *Corregir* | auditor | [`construir-el-registro`](../../.claude/skills/construir-el-registro/SKILL.md) |
+| Leer el registro en frío | auditor | [`leer-en-frio`](../../.claude/skills/leer-en-frio/SKILL.md) |
+| Cotejar lo dicho | auditor | [`cotejar`](../../.claude/skills/cotejar/SKILL.md) |
+| Contestar el examen | auditor | [`contestar-el-examen`](../../.claude/skills/contestar-el-examen/SKILL.md) |
+| Registrar los archivos | escribano | [`registrar-el-conocimiento`](../../.claude/skills/registrar-el-conocimiento/SKILL.md) |
+| Auditar lo escrito | auditor | [`auditar`](../../.claude/skills/auditar/SKILL.md) |
+| Marcar lo que el auditor encontró | escribano | [`marcar-lo-auditado`](../../.claude/skills/marcar-lo-auditado/SKILL.md) |
+| Armar lo que falta preguntar | auditor | [`armar-lo-que-falta`](../../.claude/skills/armar-lo-que-falta/SKILL.md) |
+| Anotar la corrida | escribano | ninguna: es mecánica |
 
-- Cada actividad se nombra **verbo + objeto** — *Sacar la plática*, no *Extracción*.
-- Cada evento de fin lleva **el estado en que quedó el proceso**, no la palabra «fin».
-- Cuando un subproceso termina en varios estados, **el rombo que le sigue no vuelve a preguntar**:
-  sus salidas llevan los nombres de esos estados y sólo enrutan.
-- Los rombos paralelos no se etiquetan, ni ellos ni sus salidas.
-- **Los objetos de datos sólo se dibujan donde contestan algo que el flujo no contesta.** Lo que
-  persiste fuera del proceso es un almacén, no un objeto.
-- Ningún nivel pasa de diez actividades, para que quepa en una hoja.
-
-**Dos desviaciones a sabiendas**, para que nadie las «arregle»:
-
-1. Los rombos que siguen a una **tarea** llevan la pregunta y las salidas dicen `sí`/`no`. El método
-   permite las dos formas; se escogió una sola para todo el dibujo.
-2. Un evento de fin único conserva su nombre, aunque la regla pida quitárselo. Un fin sin nombre se
-   lee peor, y el diagrama se hizo para leerse.
-
-## Tres palabras que no son sinónimos
-
-Se separan aquí porque confundirlas rompe el dibujo entero:
+## Dos palabras que no son sinónimos
 
 | Palabra | Qué es | Cuántas hay |
 |---|---|---|
-| **Tramo** | Una pasada del bucle dentro de *Construir el registro*: un pedazo de plática | Las que devuelva *Partir la plática en tramos* |
-| **Vuelta** | Un ciclo de *Corregir lo marcado* sobre lo que las mediciones señalaron | Dos como máximo, y el tope lo pone el código |
+| **Vuelta** | Un ciclo de *Corregir sólo lo marcado* sobre lo que las mediciones señalaron | Dos como máximo, y el tope lo pone el código |
 | **Corrida** | El molino entero de punta a punta | Dos: la primera deja dudas, la segunda llega con las respuestas |
 
 ## Lo que el diagrama fija
 
 | Qué | Por qué |
 |---|---|
-| **Las preguntas se levantan antes de construir** | Un examen escrito después de ver el resultado siempre lo aprueba |
-| **A las preguntas se les quitan los nombres propios** | La pregunta sirve para cualquier caso, y ningún nombre real entra a un archivo |
-| **Sólo lo que el experto dijo se coteja contra la plática** | Una capacidad que propone el agente nadie la dijo: se mide contestando el examen, no buscando la frase |
-| **Al lector en frío no le llega ninguna flecha de datos** | Su ceguera es el instrumento. El que estuvo en la sesión tapa el hueco al leer sin darse cuenta |
+| **La hora del alta se mide al sacar, y si no trae huso la corrida para en seco** | Sin ella el escribano rechaza entero lo que se muela, y eso se sabría al final, con la corrida ya gastada |
+| **Las respuestas del experto entran por ruta y las lee un agente** | Tecleadas dentro de la llamada rompen la reanudación, y una versión recortada se cuela sin que nadie lo note |
+| **Que el lector traiga algo dentro es lo que marca la segunda corrida** | Una ruta por sí sola no basta para cerrar `listo` sin que el experto haya contestado nada |
+| **Las preguntas se levantan antes de construir** | El examen no toca disco: el orden de las llamadas es la única garantía de que no se escribió con el resultado enfrente |
+| **Las cuatro llamadas de construir van en cadena** | Cada una cita lo que armó la anterior. Y partirlas fue medición, no diseño: juntas el clasificador las rechazaba |
+| **Al lector en frío no le llega ninguna flecha de datos** | Su ceguera es el instrumento |
 | **Las tres mediciones corren en paralelo** | Son independientes; en fila tardan la suma en vez de la más lenta |
-| **Se escribe siempre, aunque la medición falle** | Una corrida larga que se traba nunca cierra. Lo que no se vale es escribir sin marca: el defecto silencioso es lo único que jidoka prohíbe |
-| **La marca vive en el archivo, en un campo que se busca** | Un reporte muere al cerrar la terminal; el archivo viaja a la sesión siguiente y la abre |
-| **El experto contesta una sola corrida** | Sin tope, cada revisión encuentra algo más y no se escribe nunca. Un freno que no se levanta no es freno, es candado |
-| **El paso puede cerrar «con huecos»** | Escrito no es lo mismo que listo |
-| **Corregir no vuelve a construir** | Corrige sólo las piezas marcadas y se funde con el registro que ya estaba. Reemplazarlo entero costó una corrida |
-| **Una capacidad que repite su única regla no es una capacidad** | Es la regla conjugada, y quedan dos archivos para un hecho. El día que el número cambie, uno de los dos se queda con el viejo |
+| **Corregir no vuelve a construir** | Corrige sólo las piezas marcadas y se funde con el registro que ya estaba |
+| **Las dudas cortan antes que el registro vacío** | Con dudas y cero piezas, la corrida se va por las dudas: es lo que el experto puede contestar |
+| **La segunda vuelta va sólo por lo que el cotejador siga marcando** | Lo que no se entiende solo y lo que el examen no contesta se cierran con el experto después; una frase que nadie dijo, no: mientras siga escrita se lee como respaldada |
+| **Si ninguna llamada de corregir contestó, no se vuelve a medir** | Medir otra vez lo mismo gasta tres agentes para repetir el resultado |
+| **El experto contesta una sola corrida** | Un freno que no se levanta no es freno, es candado |
+| **Todo camino que llega al final pasa por *Anotar la corrida*, los paros incluidos** | Una corrida que no deja renglón no se puede comparar con la siguiente |
+| **Anotar no puede tumbar la corrida, y tampoco la garantiza** | Sus dos llamadas van envueltas: si truenan, se dice y se cierra igual — sin renglón. Anotar es medición, no la línea |
+| **Corregir es una llamada por tipo de pieza, y basta que una conteste para volver a medir** | Nadie comprueba que haya cambiado algo: lo que se mide es si el corrector contestó |
 
-## Lo que el bucle por tramos agrega
+## Los ocho estados con que cierra
 
-*Construir el registro* deja de ser una caja y pasa a ser cinco. La razón está medida: el esquema
-de salida que se le mandaba pesaba **7806 caracteres** y el clasificador lo rechazó, contra 954 del
-siguiente más grande del molino.
+El renglón de `docs/mediciones/corridas.jsonl` lleva uno de éstos. **Los siete paros se ven cada uno
+en su lugar** —dentro del subproceso donde ocurren, y con su propia salida en el tronco—; el tronco
+los junta en un solo final porque los siete acaban igual: anotados y sin registro.
 
-- **`Partir la plática en tramos`** corta respetando el hilo, no el peso. Si ya hay módulos
-  escritos, se corta por ellos —son temas que el experto ya validó—; lo demás por tema nuevo. El
-  peso queda de techo: un tema que no cabe se parte, **y se dice que se partió**. Cuando la plática
-  cabe en uno, es un tramo y nada cambia.
-- **El bucle es de multi-instancia secuencial**, no paralela. Los tramos corren en fila porque cada
-  uno ve el renglón de lo que los anteriores propusieron —con su firmeza y su fecha—, y eso es lo
-  que permite cazar una contradicción entre el principio y el final de una junta larga.
-- **`Proponer los módulos` y `Proponer los dominios` corren una sola vez**, al final, sobre todo lo
-  que los tramos juntaron. Agrupar es un acto y necesita el conjunto enfrente. **De abajo hacia
-  arriba**: un dominio puesto primero llegaría inventado, y los tres niveles de abajo colgarían de
-  esa invención sin que nadie pudiera desmentirla.
-- **Van en dos cajas por medición, no por diseño.** Juntas pesaban 3841 caracteres de esquema,
-  casi el doble del tope. Si el umbral del clasificador llega a medirse y da para tanto, vuelven a
-  ser una: es el mismo acto.
-- **Las cuatro llamadas ven el índice completo**, no sólo las piezas de su tipo. Lo que se filtra
-  es qué se le pide escribir, no qué se le deja ver — medido el 2026-08-04: quien sacaba reglas no
-  veía las capacidades ya escritas, y cuatro enunciados que ya vivían como capacidad estuvieron a
-  punto de volver a escribirse como regla.
-- **`Coser los enlaces en los dos sentidos`** refleja hacia abajo lo que el nivel de arriba declaró.
-  Un solo lugar donde se dice quién contiene a quién.
+| Estado | De dónde sale |
+|---|---|
+| `sin-material` | La plática llegó vacía, o el registro salió sin una sola pieza |
+| `sin-hora` | La hora del alta no llegó con huso |
+| `sin-respuestas` | Llegó ruta de respuestas y no se pudieron leer — o llegó el argumento viejo |
+| `sin-examen` | La plática no dio ninguna pregunta |
+| `sin-medicion` | Un agente no contestó: el sacador, quien levanta el examen, o alguna de las cuatro llamadas de construir. Cada una tiene su rombo `¿Contestó?` |
+| `dudas-devueltas` | Quedaron dudas y es la primera corrida |
+| `sin-registro` | El escribano no escribió |
+| `listo` · `con-huecos` | El cierre normal, según si algo quedó señalado |
 
-**Una contradicción no para la línea desde el tramo.** Se anota como duda y el tramo termina igual.
-Lo que para la línea es el rombo del final, con las dudas de todos los tramos juntas — porque el
-experto contesta una vez, no una por tramo.
+## Lo que el dibujo NO muestra, a propósito
 
-## Lo que los datos dibujados contestan
+- **El freno al argumento viejo.** Si llega `args.respuestas` con texto en vez de `rutaRespuestas`,
+  la corrida para antes de gastar un agente, y anota `sin-respuestas`. Es compatibilidad con una
+  llamada vieja, no un paso del método — **y es el único camino de paro que no está dibujado.**
+- **Qué decide el estado del cierre.** Sale de cuatro cosas juntas: lo que las mediciones señalaron,
+  lo que quedó con huecos, que el auditor diga que no sirve, y las fallas contra el crudo. Una pieza
+  señalada que el escribano no reportó como marcada **cuenta igual**: manda la medición, no el
+  reporte.
+- **Que las otras veinte llamadas van sin red.** Sólo las dos de *Anotar* están envueltas contra una
+  excepción; si truena cualquier otra, la corrida muere sin llegar a anotar.
+- **Cómo se saca la plática por dentro.** Eso lo hace `src/nucleo/sacar-turnos.ts`, y ahí se lee.
+- **Que cuando una medición, el auditor o quien arma lo que falta no contestan, la corrida sigue**,
+  con el hueco anotado en el renglón. Sólo los paros están dibujados.
+- **Que el inventario alimenta también las cuatro llamadas de construir**, no sólo su propia caja.
 
-Cinco objetos y un almacén, y cada uno responde una pregunta que el flujo de control no responde:
+- **Que el número de corrida del renglón sale de la ruta sola.** Lo que decide si es segunda
+  corrida —y con eso el comportamiento— es que el lector traiga texto; el número que se anota, no.
 
-| Qué | Dónde | Qué contesta |
-|---|---|---|
-| `Los tramos` | Construir | Quién fija las pasadas del bucle — va enganchado al `loopDataInputRef` |
-| `Lo propuesto hasta ahora` | Construir | Qué se acumula: entra y sale de la misma caja |
-| `El conocimiento ya escrito` | Construir | De dónde sale el inventario, y que persiste entre corridas |
-| `Lo que dijo el experto` | Medir | Que son **dos** cosas: la plática y lo que contestó a las dudas de antes |
-| `El examen` | Medir | Que lo recibe quien lo contesta, y nadie más |
+**Y dos desviaciones a sabiendas:**
+
+1. *Anotar la corrida* cae en el carril del escribano, pero dentro son dos puestos — el auditor mide
+   la hora de cierre y el escribano escribe el renglón. El carril de un subproceso no puede decir
+   dos cosas; se abre la caja y se ven las dos.
+2. El rombo del cierre va **después** de anotar, y el estado se decide **antes**: lo trae el camino
+   por donde salió la corrida. Por eso el rombo pregunta *con qué estado se anotó* y no *con cuál
+   cierra*: ahí no se decide nada, sólo se enruta al final que corresponde.
 
 ## Lo que el diagrama NO decide
 
-- **De qué tamaño es el techo del tramo.** El corte por tema está fijado; el número no.
-- **Si los esquemas partidos pasan el clasificador.** Lo medido es que 7806 truena y 954 pasa.
-  Entre esos dos números no hay ninguna medición.
-- **Cuánto cabe en `Lo propuesto hasta ahora`.** Es entrada de prompt, no esquema de salida, así que
-  no es el límite que se midió — pero tampoco hay medición de ese otro.
-- **Qué tipo lleva cada enlace** — contiene, usa, requiere, contradice. Sin tipo se recorre el grafo
-  pero no se razona sobre él.
-- **Quién produce la cuenta de vueltas.** El rombo que la consulta cuelga de otro rombo, no de una
-  actividad que la calcule. En el `.js` la cuenta la lleva el código, que es lo correcto — el dibujo
-  todavía no lo enseña.
+- **Qué es «pasar» una medición** — ni cero hallazgos, ni un umbral, ni quién dictamina.
+- **Qué tipo lleva cada enlace** — contiene, usa, requiere, contradice.
 - **Qué pasa con una pieza que ya existía y esta plática cambia.** El escribano no toca lo ya
   escrito, así que la reporta sin escribirla. Hoy nadie aplica ese cambio.
-
-## Qué corre y qué no
-
-| Parte del dibujo | Estado |
-|---|---|
-| El flujo troncal, las diez fases y los dos frenos | **Corre** |
-| `Corregir lo marcado` yendo a *Medir*, no de vuelta a *Construir* | **Corre** — el dibujo se alineó al código |
-| Los objetos de datos | **Documentan** lo que el código ya hace |
-| `Construir` partido en cuatro llamadas, una por nivel | **Corre** — el mayor esquema pasó de 7806 a 1994 |
-| El índice completo a las cuatro llamadas | **Corre** |
-| El bucle por tramos, y el corte por tema | **No corre todavía** |
-
-## Lo que la auditoría en frío dejó abierto
-
-Nueve cosas que este dibujo arrastra desde antes y siguen sin resolverse. No estorban para
-implementarlo, pero quien lo lea completo se va a topar con ellas:
-
-- **`pendientes`, `dudas`, `huecos` y `lo marcado`** aparecen en el mismo dibujo sin que nada diga
-  si son cuatro cosas o una.
-- **`¿Las tres pasaron?` nunca dice qué es pasar** — ni cero hallazgos, ni un umbral, ni quién
-  dictamina.
-- **Con dudas y sin ser la primera corrida se sale por el final llamado *Sin dudas***. El nombre del
-  final dice lo contrario de lo que pasó.
-- **`Gestionar las preguntas` produce «el examen»**, y tres cajas distintas producen preguntas sin
-  que sus nombres digan en qué se diferencian.
-- **`jidoka` se usa y no se define** en ningún renglón del archivo.
+- **Si `pendientes`, `dudas`, `huecos` y `lo señalado` son cuatro cosas o una.**
+- **Cuánto material cabe en una llamada de construir.** Lo medido es que 7806 caracteres de esquema
+  truenan y 954 pasan; entre esos dos números no hay medición.
 
 ---
 
-> **Procedencia.** Dibujado el **2026-08-04** al rehacer el molino desde cero, y corregido el mismo
-> día contra dos auditorías. Las preguntas de competencia como criterio de aceptación se toman de
-> la ingeniería de ontologías conversacional —marco OntoChat, ESWC 2024—, que las levanta antes de
-> construir y valida contestándolas una por una. El freno que para antes de escribir y la auditoría
-> contra el registro crudo ya vivían en el molino sin nombrarse: son jidoka y genchi genbutsu. El
-> marcador de multi-instancia secuencial y los objetos de datos son BPMN 2.0 estándar.
+> **Procedencia.** Rehecho el **2026-08-06** leyendo el `.js`, cuando el dibujo anterior y el código
+> ya no decían lo mismo. Lo que se quitó por no existir en el código: **el bucle por tramos** —
+> *Construir* son cuatro llamadas en cadena sobre la plática entera, no una pasada por tramo—, el
+> plano que dibujaba por dentro el sacador, y el plano que desglosaba la carta del examen. Lo que se
+> agregó por existir y no estar: la fase *Anotar*, el freno de la hora, la lectura de las
+> respuestas, el paro por registro vacío, y que *Marcar* sólo corre si hay fallas.
 >
-> **Sin fuente declarada:** el corte de dos vueltas, el reparto de las cajas entre auditor y
-> escribano, el corte de tramos por tema con el peso de techo, y las dos desviaciones de estilo de
-> arriba. Salieron de este proyecto y nadie los ha medido contra un método establecido.
+> Las preguntas de competencia como criterio de aceptación se toman de la ingeniería de ontologías
+> conversacional —marco OntoChat, ESWC 2024—, que las levanta antes de construir y valida
+> contestándolas una por una. El freno que para antes de escribir y la auditoría contra el registro
+> crudo son jidoka y genchi genbutsu.
 >
-> **Lo que este diagrama fija se sigue midiendo cada vez que se corre, no cuando se dibujó.** La
-> primera corrida real ocurrió el 2026-08-04 y salió con `estado: con-huecos`. La segunda murió
-> antes de construir nada, y de ahí salió el bucle por tramos.
+> **Sin fuente declarada:** el corte de dos vueltas y el reparto de las cajas entre los dos puestos.
+> Salieron de este proyecto y nadie los ha medido contra un método establecido.
+>
+> **Lo que este diagrama fija se sigue midiendo cada vez que se corre, no cuando se dibujó.**

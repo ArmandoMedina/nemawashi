@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definiciones_qa" targetNamespace="http://nemawashi/diagramas" exporter="escrito a mano" exporterVersion="1.0">
+  <bpmn:process id="Proceso_qa" name="Cerrar por medición" isExecutable="false">
+    <bpmn:startEvent id="Q_inicio" name="Algo declarado listo">
+      <bpmn:outgoing>Q_f1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Q_clasificar" name="Clasificar el caso en las cinco capas">
+      <bpmn:incoming>Q_f1</bpmn:incoming>
+      <bpmn:outgoing>Q_f2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Q_gw_exacto" name="¿La respuesta correcta es un valor exacto?">
+      <bpmn:incoming>Q_f2</bpmn:incoming>
+      <bpmn:outgoing>Q_f3</bpmn:outgoing>
+      <bpmn:outgoing>Q_f_mano</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Q_mano" name="Dejar la corrida para que una persona la juzgue">
+      <bpmn:incoming>Q_f_mano</bpmn:incoming>
+      <bpmn:outgoing>Q_f_mano2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Q_fin_mano" name="Veredicto en manos de una persona">
+      <bpmn:incoming>Q_f_mano2</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="Q_casos" name="Diseñar los casos por partición y borde">
+      <bpmn:incoming>Q_f3</bpmn:incoming>
+      <bpmn:outgoing>Q_f4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Q_escribir" name="Escribir la prueba en la capa más baja que vea el error">
+      <bpmn:incoming>Q_f4</bpmn:incoming>
+      <bpmn:incoming>Q_f_rehacer</bpmn:incoming>
+      <bpmn:outgoing>Q_f5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Q_romper" name="Romper la prueba a propósito">
+      <bpmn:incoming>Q_f5</bpmn:incoming>
+      <bpmn:outgoing>Q_f6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Q_gw_roja" name="¿Se puso roja?">
+      <bpmn:incoming>Q_f6</bpmn:incoming>
+      <bpmn:outgoing>Q_f7</bpmn:outgoing>
+      <bpmn:outgoing>Q_f_rehacer</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Q_correr" name="Correr la suite y guardar su salida">
+      <bpmn:incoming>Q_f7</bpmn:incoming>
+      <bpmn:outgoing>Q_f8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Q_gw_paso" name="¿Pasó entera?">
+      <bpmn:incoming>Q_f8</bpmn:incoming>
+      <bpmn:outgoing>Q_f9</bpmn:outgoing>
+      <bpmn:outgoing>Q_f_rojo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Q_fin" name="Cerrado por medición">
+      <bpmn:incoming>Q_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Q_fin_rojo" name="Devuelto con el rojo y su prueba">
+      <bpmn:incoming>Q_f_rojo</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Q_f1" sourceRef="Q_inicio" targetRef="Q_clasificar" />
+    <bpmn:sequenceFlow id="Q_f2" sourceRef="Q_clasificar" targetRef="Q_gw_exacto" />
+    <bpmn:sequenceFlow id="Q_f3" name="sí" sourceRef="Q_gw_exacto" targetRef="Q_casos" />
+    <bpmn:sequenceFlow id="Q_f_mano" name="no" sourceRef="Q_gw_exacto" targetRef="Q_mano" />
+    <bpmn:sequenceFlow id="Q_f_mano2" sourceRef="Q_mano" targetRef="Q_fin_mano" />
+    <bpmn:sequenceFlow id="Q_f4" sourceRef="Q_casos" targetRef="Q_escribir" />
+    <bpmn:sequenceFlow id="Q_f5" sourceRef="Q_escribir" targetRef="Q_romper" />
+    <bpmn:sequenceFlow id="Q_f6" sourceRef="Q_romper" targetRef="Q_gw_roja" />
+    <bpmn:sequenceFlow id="Q_f7" name="sí" sourceRef="Q_gw_roja" targetRef="Q_correr" />
+    <bpmn:sequenceFlow id="Q_f_rehacer" name="no" sourceRef="Q_gw_roja" targetRef="Q_escribir" />
+    <bpmn:sequenceFlow id="Q_f8" sourceRef="Q_correr" targetRef="Q_gw_paso" />
+    <bpmn:sequenceFlow id="Q_f9" name="sí" sourceRef="Q_gw_paso" targetRef="Q_fin" />
+    <bpmn:sequenceFlow id="Q_f_rojo" name="no" sourceRef="Q_gw_paso" targetRef="Q_fin_rojo" />
+    <bpmn:textAnnotation id="Q_nota_clasificar">
+      <bpmn:text>Se clasifica antes de escribir, y en la capa más baja que pueda ver el error.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Q_asoc_clasificar" sourceRef="Q_clasificar" targetRef="Q_nota_clasificar" />
+    <bpmn:textAnnotation id="Q_nota_romper">
+      <bpmn:text>Una prueba que pasa sin medir nada se lee igual que una buena. Romperla a propósito es la única forma de saberlo.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Q_asoc_romper" sourceRef="Q_romper" targetRef="Q_nota_romper" />
+    <bpmn:textAnnotation id="Q_nota_correr">
+      <bpmn:text>No se aprueba lo que no se corrió: sin comando, salida y código de salida no hay veredicto.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Q_asoc_correr" sourceRef="Q_correr" targetRef="Q_nota_correr" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Q_diagrama">
+    <bpmndi:BPMNPlane id="Q_plano" bpmnElement="Proceso_qa">
+      <bpmndi:BPMNShape id="S_Q_inicio" bpmnElement="Q_inicio">
+        <dc:Bounds x="160" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="140" y="165" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_clasificar" bpmnElement="Q_clasificar">
+        <dc:Bounds x="250" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_gw_exacto" bpmnElement="Q_gw_exacto" isMarkerVisible="true">
+        <dc:Bounds x="400" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="380" y="60" width="92" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_mano" bpmnElement="Q_mano">
+        <dc:Bounds x="490" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_fin_mano" bpmnElement="Q_fin_mano">
+        <dc:Bounds x="660" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="315" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_casos" bpmnElement="Q_casos">
+        <dc:Bounds x="500" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_escribir" bpmnElement="Q_escribir">
+        <dc:Bounds x="650" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_romper" bpmnElement="Q_romper">
+        <dc:Bounds x="800" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_gw_roja" bpmnElement="Q_gw_roja" isMarkerVisible="true">
+        <dc:Bounds x="950" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="940" y="72" width="70" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_correr" bpmnElement="Q_correr">
+        <dc:Bounds x="1050" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_gw_paso" bpmnElement="Q_gw_paso" isMarkerVisible="true">
+        <dc:Bounds x="1200" y="115" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1195" y="72" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_fin" bpmnElement="Q_fin">
+        <dc:Bounds x="1312" y="122" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1287" y="165" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_fin_rojo" bpmnElement="Q_fin_rojo">
+        <dc:Bounds x="1207" y="252" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1182" y="295" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_nota_clasificar" bpmnElement="Q_nota_clasificar">
+        <dc:Bounds x="240" y="420" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_nota_romper" bpmnElement="Q_nota_romper">
+        <dc:Bounds x="720" y="420" width="200" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="S_Q_nota_correr" bpmnElement="Q_nota_correr">
+        <dc:Bounds x="980" y="420" width="190" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="E_Q_f1" bpmnElement="Q_f1">
+        <di:waypoint x="196" y="140" />
+        <di:waypoint x="250" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f2" bpmnElement="Q_f2">
+        <di:waypoint x="350" y="140" />
+        <di:waypoint x="400" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f3" bpmnElement="Q_f3">
+        <di:waypoint x="450" y="140" />
+        <di:waypoint x="500" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="466" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f_mano" bpmnElement="Q_f_mano">
+        <di:waypoint x="425" y="165" />
+        <di:waypoint x="425" y="290" />
+        <di:waypoint x="490" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="435" y="215" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f_mano2" bpmnElement="Q_f_mano2">
+        <di:waypoint x="590" y="290" />
+        <di:waypoint x="660" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f4" bpmnElement="Q_f4">
+        <di:waypoint x="600" y="140" />
+        <di:waypoint x="650" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f5" bpmnElement="Q_f5">
+        <di:waypoint x="750" y="140" />
+        <di:waypoint x="800" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f6" bpmnElement="Q_f6">
+        <di:waypoint x="900" y="140" />
+        <di:waypoint x="950" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f7" bpmnElement="Q_f7">
+        <di:waypoint x="1000" y="140" />
+        <di:waypoint x="1050" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1016" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f_rehacer" bpmnElement="Q_f_rehacer">
+        <di:waypoint x="975" y="115" />
+        <di:waypoint x="975" y="60" />
+        <di:waypoint x="700" y="60" />
+        <di:waypoint x="700" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="985" y="75" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f8" bpmnElement="Q_f8">
+        <di:waypoint x="1150" y="140" />
+        <di:waypoint x="1200" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f9" bpmnElement="Q_f9">
+        <di:waypoint x="1250" y="140" />
+        <di:waypoint x="1312" y="140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1272" y="118" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_f_rojo" bpmnElement="Q_f_rojo">
+        <di:waypoint x="1225" y="165" />
+        <di:waypoint x="1225" y="252" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1235" y="196" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_asoc_clasificar" bpmnElement="Q_asoc_clasificar">
+        <di:waypoint x="300" y="180" />
+        <di:waypoint x="310" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_asoc_romper" bpmnElement="Q_asoc_romper">
+        <di:waypoint x="850" y="180" />
+        <di:waypoint x="830" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="E_Q_asoc_correr" bpmnElement="Q_asoc_correr">
+        <di:waypoint x="1100" y="180" />
+        <di:waypoint x="1075" y="420" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

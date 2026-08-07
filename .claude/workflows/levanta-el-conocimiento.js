@@ -126,6 +126,25 @@ const INVENTARIO = {
         }
       }
     },
+    // Barato porque el renglon de `corridas.jsonl` ya es compacto -no hay cuerpo que dejar
+    // afuera-. Sin esto, una duda sobre que se anoto de una corrida anterior no se puede
+    // contestar: esa respuesta no vive en las cuatro carpetas, vive aqui. Medido en la
+    // corrida `wf_24861ad7-882`: una de las dudas ya contestadas por el repositorio se
+    // contestaba con un renglon de este archivo, y el inventario no lo veia.
+    corridas: {
+      type: 'array',
+      description: 'Los renglones de docs/mediciones/corridas.jsonl. Vacio si el archivo no existe todavia.',
+      items: {
+        type: 'object',
+        required: ['paso', 'corrida', 'estado'],
+        properties: {
+          paso: { type: 'string' },
+          corrida: { type: 'number' },
+          estado: { type: 'string' },
+          dondeParo: { type: 'string' }
+        }
+      }
+    },
     noSePudo: { type: 'string', description: 'Por que no se pudo leer alguna carpeta. Vacio si se leyeron todas.' }
   }
 }
@@ -423,6 +442,59 @@ const EXAMEN_CONTESTADO = {
   }
 }
 
+// Antes de devolverle una duda al experto, se intenta contestar con lo que ya existe -la
+// platica de hoy y lo que ya esta escrito de antes-. El mismo veredicto de tres salidas que
+// usa `contestar-el-examen`, apuntado a otro material: ahi el material es el registro que
+// todavia no puede verse en la platica, aqui es al reves. Medido en la corrida
+// `wf_24861ad7-882`: de 37 dudas devueltas, 6 ya estaban dichas en la platica y 2 ya vivian
+// escritas.
+const DUDAS_VERIFICADAS = {
+  type: 'object',
+  required: ['respuestas'],
+  properties: {
+    respuestas: {
+      type: 'array',
+      description: 'Una por cada duda de la lista, en el mismo orden. Ninguna se omite.',
+      items: {
+        type: 'object',
+        required: ['pregunta', 'veredicto'],
+        properties: {
+          pregunta: { type: 'string', description: 'La duda, copiada tal cual.' },
+          veredicto: { type: 'string', enum: ['contestada', 'a-medias', 'sin-contestar'] },
+          deDonde: {
+            type: 'string',
+            description:
+              'Si contestada o a-medias: la frase de la platica, o la pieza y renglon del repositorio ' +
+              'que la contesta. Vacio si sin-contestar.'
+          }
+        }
+      }
+    }
+  }
+}
+
+// `juntar` solo senala los grupos -no redacta el renglon junto-, asi que el molino se queda
+// con la primera posicion de cada grupo tal cual se dijo, sin inventar una redaccion nueva.
+// Las posiciones son 1-based, en el mismo orden en que se numeraron para esta llamada.
+const DUDAS_JUNTADAS = {
+  type: 'object',
+  required: ['grupos'],
+  properties: {
+    grupos: {
+      type: 'array',
+      description: 'Solo los grupos de dos o mas. Las que ya estan bien repartidas no se listan.',
+      items: {
+        type: 'object',
+        required: ['posiciones', 'porQue'],
+        properties: {
+          posiciones: { type: 'array', items: { type: 'number' }, uniqueItems: true, description: 'Minimo dos, sin repetir.' },
+          porQue: { type: 'string', description: 'Por que son el mismo problema, en una linea.' }
+        }
+      }
+    }
+  }
+}
+
 // El escribano devuelve la correspondencia porque sin ella los reportes quedan huerfanos: las
 // mediciones citaron `CAP-1` y en disco quedo `CAP-0007`. Y devuelve aparte las senales que no
 // correspondian a ninguna pieza, porque no las puede marcar en ningun archivo.
@@ -635,6 +707,76 @@ function conElDominioEnlazado(modulos, dominios) {
     const suyo = dominios.find((d) => (d.modulos ?? []).indexOf(m.id) !== -1)
     return Object.assign({}, m, { dominio: suyo ? suyo.id : m.dominio })
   })
+}
+
+// El mismo par campo/vuelvePor que ya vive en `src/nucleo/el-enlace-va-en-los-dos-sentidos.ts`
+// (`TABLA_DE_ENLACES`, atada a `product/conocimiento/README.md:81-86`), copiado aqui a mano: el
+// molino corre sin `import` posible -la cabecera de este archivo y
+// `src/contratos/la-hora-no-se-inventa.test.ts` ya lo dejan medido-, el mismo trato que ya tiene
+// `FORMA_DE_HORA_CON_HUSO` mas abajo con `FECHA_CON_HUSO`. Solo trae `campo` y `vuelvePor`: aqui
+// no se valida el grafo entero -eso ya lo hace ese contrato, contra lo que queda en disco-, solo
+// se ubica que campo del archivo viejo hay que completar.
+const CAMPO_QUE_DEVUELVE = [
+  { tipo: 'dominio', campo: 'modulos', vuelvePor: 'dominio' },
+  { tipo: 'modulo', campo: 'dominio', vuelvePor: 'modulos' },
+  { tipo: 'modulo', campo: 'capacidades', vuelvePor: 'modulo' },
+  { tipo: 'capacidad', campo: 'modulo', vuelvePor: 'capacidades' },
+  { tipo: 'capacidad', campo: 'reglas', vuelvePor: 'capacidades' },
+  { tipo: 'regla', campo: 'capacidades', vuelvePor: 'reglas' }
+]
+
+/** Un campo de enlace trae un id suelto o una lista; aqui siempre sale como lista. */
+function idsCitados(valor) {
+  if (Array.isArray(valor)) return valor.filter((id) => !!id)
+  return valor ? [valor] : []
+}
+
+// Una cita hacia un id que no es de esta corrida es una cita hacia una pieza que ya vivia en
+// disco antes de que esta corrida empezara. El molino ya invierte el enlace DENTRO de una
+// corrida (`conLasCapacidadesEnlazadas` y sus dos vecinos, arriba); hacia afuera no hay quien lo
+// haga, porque el escribano de «Registrar» solo puede crear archivos, nunca abrir uno que ya
+// existia. Por eso esas citas se juntan aqui, para que «Marcar» -la unica fase con permiso de
+// abrir un archivo viejo- las pueda cerrar.
+//
+// `idsPropios` tiene que ser los ids de lo que esta corrida REALMENTE escribio -los de
+// `escritos.archivos`-, no todo lo que aparece en `registro`. Una pieza vieja puede "volver" a
+// `registro` -con su id real, no uno de trabajo- solo para declarar que ahora tambien contiene a
+// una pieza nueva (`bloqueComunDeConstruir`: "esa pieza vuelve con su id de carpeta"); esa pieza
+// vieja SI vive en `registro`, pero nadie la escribe de nuevo, y contarla como propia dejaria sin
+// cazar el enlace que ella misma provoca.
+function citasHaciaOtraCorrida(registro, idsPropios) {
+  const propios = new Set(idsPropios)
+  const citas = []
+  for (const fila of CAMPO_QUE_DEVUELVE) {
+    const clave = TIPOS_DE_PIEZA.find((t) => t.tipo === fila.tipo).clave
+    for (const pieza of registro[clave] ?? []) {
+      for (const citado of idsCitados(pieza[fila.campo])) {
+        if (propios.has(citado)) continue
+        citas.push({ idDeTrabajo: pieza.id, campoQueCito: fila.campo, campoQueLeFalta: fila.vuelvePor, idViejo: citado })
+      }
+    }
+  }
+  return citas
+}
+
+// Traduce el `idDeTrabajo` de quien cita a su id definitivo -el que quedo en el archivo, el unico
+// que le sirve a quien marca para nombrar quien esta citando. Una cita cuya pieza no aparece en lo
+// escrito no se puede cerrar -no se pudo escribir, `escritos.noEscritos` ya lo dice por su lado- y
+// se descarta en silencio aqui. Tambien deduplica: dos citas iguales -mismo par de ids, mismo
+// campo- solo se piden una vez.
+function enlacesPorCerrar(citas, archivosEscritos) {
+  const vistos = new Set()
+  const enlaces = []
+  for (const cita of citas) {
+    const escrito = archivosEscritos.find((a) => a.idDeTrabajo === cita.idDeTrabajo)
+    if (!escrito) continue
+    const enlace = { idNuevo: escrito.id, campoQueCito: cita.campoQueCito, idViejo: cita.idViejo, campoQueLeFalta: cita.campoQueLeFalta }
+    const clave = `${enlace.idNuevo} ${enlace.campoQueCito} ${enlace.idViejo}`
+    if (vistos.has(clave)) continue
+    vistos.add(clave)
+    enlaces.push(enlace)
+  }
+  return enlaces
 }
 
 // Cada senal viene con su razon, y la razon viaja pegada a la pieza hasta el escribano. Medido el
@@ -964,7 +1106,13 @@ function promptParaInventariar() {
     'haya y sigue. Si una carpeta existe y no la pudiste leer, eso si se dice en `noSePudo`.',
     '',
     '**No abras el cuerpo de los archivos, no los resumas y no opines sobre ellos.** Aqui solo se',
-    'lista lo que hay.'
+    'lista lo que hay.',
+    '',
+    'Ademas, si existe `docs/mediciones/corridas.jsonl`, leelo con Read y devuelve `paso`,',
+    '`corrida`, `estado` y `dondeParo` de cada uno de sus renglones en `corridas` -tal cual,',
+    'sin abrir ningun otro archivo por esto. **Si el renglon trae `dondeParo` en `null`,',
+    'devuelvelo como cadena vacia** -aqui vacio es lo que ese `null` significa, no lo omitas ni',
+    'inventes un valor. Si no existe todavia, `corridas` va vacio: no es un error.'
   ].join('\n')
 }
 
@@ -1233,6 +1381,99 @@ function promptParaContestarElExamen(registro, examen) {
   ].join('\n')
 }
 
+// Antes de devolverle una duda al experto, se intenta contestar con lo que ya existe. Es el
+// mismo oficio que `contestar-el-examen` -intentar contestar caminando el material, con el
+// mismo veredicto de tres salidas-, apuntado al otro lado: alla el material es el registro y
+// esta prohibido abrir la platica, porque lo que se mide es si el registro se basta solo. Aqui
+// es al reves -el material ES la platica, mas lo que ya esta escrito de sesiones anteriores-,
+// y por eso esa prohibicion de la carta no aplica a esta llamada: se le dice explicito, para
+// que no se confunda con su uso normal.
+function promptParaVerificarLasDudas(loQueDijoElExperto, inventario, dudas) {
+  const piezas = inventario?.piezas ?? []
+  const corridas = inventario?.corridas ?? []
+
+  return [
+    'Carga tu carta `contestar-el-examen` antes de leer nada: aqui se mide igual que ahi',
+    '-intentas contestar cada pregunta caminando el material, marcas contestada, a medias o',
+    'sin contestar, y dices de donde salio la respuesta-, pero el material es otro.',
+    '',
+    '**Aqui el material NO es un registro: es la platica de esta sesion, mas lo que ya esta',
+    'escrito de sesiones anteriores.** Tu carta te dice que no abras la platica -esa regla es',
+    'para cuando mides si el registro se basta solo. Aqui la pregunta es la contraria: si esto',
+    'que esta por preguntarsele al experto ya lo dijo el, o ya quedo escrito. Para esta llamada,',
+    'ignora esa prohibicion: abrir la platica es exactamente el trabajo.',
+    '',
+    '--- Lo que dijo el experto en esta sesion, y lo que contesto despues si lo hizo ---',
+    loQueDijoElExperto,
+    '',
+    piezas.length > 0 || corridas.length > 0
+      ? [
+          '--- Lo que ya esta escrito de sesiones anteriores -titulos y renglones, no el cuerpo ---',
+          '',
+          '**Si una duda te suena a que su respuesta ya vive en una pieza puntual o en un renglon',
+          'de corrida, abre SOLO esa con tu herramienta Read -dos o tres cuando mucho, nunca',
+          'todas- antes de decidir. El cuerpo no esta aqui a proposito: no cabria.**',
+          '',
+          JSON.stringify({ piezas, corridas }, null, 2)
+        ].join('\n')
+      : '--- No hay nada escrito todavia de sesiones anteriores ---',
+    '',
+    '--- Las dudas que estan por devolverse al experto ---',
+    dudas.map((d, i) => `${i + 1}. ${d.pregunta}`).join('\n')
+  ].join('\n')
+}
+
+// `juntar` mide si dos dudas, aunque digan las palabras distinto, son el mismo problema:
+// pasa seguido porque reglas y capacidades levantan sus dudas cada una por su lado y nadie
+// las compara. No redacta el renglon junto -eso lo prohibe su propia carta-, asi que el
+// molino se queda con la duda tal como se dijo en la primera posicion de cada grupo.
+function promptParaJuntarLasDudas(dudas) {
+  return [
+    'Carga tu carta `juntar` antes de leer nada.',
+    '',
+    'Estas son las dudas que le van a quedar al experto, ya numeradas. Senala los grupos que',
+    'son el mismo problema contado con otras palabras.',
+    '',
+    '--- Las dudas ---',
+    dudas.map((d, i) => `${i + 1}. ${d.pregunta}`).join('\n')
+  ].join('\n')
+}
+
+// Quita las dudas cuya respuesta salio `contestada`. Las `a-medias` se quedan: el peor de los
+// dos veredictos es el que manda, porque una respuesta a medias sigue sin ser una respuesta
+// -`contestar-el-examen` lo dice igual para el registro. Una duda que ninguna respuesta
+// menciono no se toca: que el agente no la haya cazado no es lo mismo que haberla contestado.
+function dudasSinContestar(dudas, respuestas) {
+  const preguntasContestadas = new Set(
+    respuestas.filter((r) => r.veredicto === 'contestada').map((r) => r.pregunta.trim())
+  )
+  return dudas.filter((d) => !preguntasContestadas.has(d.pregunta.trim()))
+}
+
+// De cada grupo que `juntar` senalo como el mismo problema, deja solo la primera posicion -la
+// de numero mas chico- y quita el resto. No redacta una pregunta nueva: `juntar` mismo prohibe
+// que quien mide decida como quedaria el renglon junto, y quedarse con una de las que ya se
+// dijeron, tal cual, es la unica salida que no inventa. Las posiciones son 1-based, en el mismo
+// orden en que se numeraron para `juntar`. Una posicion fuera de rango no truena la corrida: se
+// ignora, y si eso deja el grupo con una sola posicion valida, el grupo no quita nada.
+//
+// La posicion se dedup antes de contar cuantas trae el grupo: `[3,3]` no es una pareja, es una
+// sola posicion nombrada dos veces, y `[1,1,2]` trae una sola pareja real -1 con 2-, no dos.
+// Medido en revision de codigo: sin el dedup, `[3,3]` pasaba el «hacen falta dos para fundir» y
+// la duda de esa posicion se iba entera sin dejar superviviente; `[1,1,2]` se llevaba las dos.
+function dudasSinDuplicados(dudas, grupos) {
+  const posicionesAQuitar = new Set()
+
+  for (const grupo of grupos) {
+    const validas = [...new Set(grupo.posiciones.filter((p) => p >= 1 && p <= dudas.length))]
+    if (validas.length < 2) continue
+    const [, ...resto] = validas.sort((a, b) => a - b)
+    for (const posicion of resto) posicionesAQuitar.add(posicion)
+  }
+
+  return dudas.filter((_, indice) => !posicionesAQuitar.has(indice + 1))
+}
+
 // «Corregir» corre una vez por cada tipo que tenga piezas marcadas -antes corria una sola vez con
 // todo junto, con el esquema `REGISTRO` completo-. Aqui solo se le manda a cada llamada lo que le
 // toca a su propio tipo: sus piezas marcadas, y de los tres reportes de medicion, solo lo que
@@ -1366,28 +1607,62 @@ function promptParaAuditar(paso, rutaTranscript, escritos, respuestas, rutaRespu
   ].join('\n')
 }
 
-function promptParaMarcar(paso, dictamen, hora) {
-  return [
+function promptParaMarcar(paso, dictamen, hora, enlacesHaciaAtras) {
+  const bloques = [
     'Carga tu carta `marcar-lo-auditado` antes de abrir nada.',
     '',
-    `El paso "${paso}" ya se escribio en \`product/conocimiento/\` y ya se audito contra el crudo.`,
-    'Abajo va el dictamen. **Llevalo a los archivos que nombra, y solo a esos.**',
-    '',
-    'Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el',
-    'auditor haya probado que lo que dice nadie lo dijo, y quien lo abra dentro de seis meses se lo',
-    'cree. Que la medicion cuente quiere decir que llegue al archivo, no al reporte.',
+    `El paso "${paso}" ya se escribio en \`product/conocimiento/\`.`,
     '',
     hora
       ? `La hora para el campo \`marcado\` es \`${hora}\`. No la deduzcas.`
       : 'No llego la hora: no marques nada y reportalo. Una hora inventada se ve igual de bien que una real.',
     '',
-    '**No borras, no reescribes el cuerpo y no quitas ninguna marca.** El `estado` solo va de',
-    '`completa` a `con-huecos`, y lo del auditor se AGREGA al final de `<que-queda-abierto>`,',
-    'copiado con sus palabras.',
-    '',
-    '--- El dictamen ---',
-    JSON.stringify(dictamen, null, 2)
-  ].join('\n')
+    '**No borras, no reescribes el cuerpo y no quitas ninguna marca.**'
+  ]
+
+  if (dictamen) {
+    bloques.push(
+      '',
+      `El paso ya se audito contra el crudo. Abajo va el dictamen. **Llevalo a los archivos que`,
+      'nombra, y solo a esos.**',
+      '',
+      'Sin esto el dictamen se imprime y se pierde: el archivo se queda diciendo `completa` aunque el',
+      'auditor haya probado que lo que dice nadie lo dijo, y quien lo abra dentro de seis meses se lo',
+      'cree. Que la medicion cuente quiere decir que llegue al archivo, no al reporte.',
+      '',
+      'El `estado` solo va de `completa` a `con-huecos`, y lo del auditor se AGREGA al final de',
+      '`<que-queda-abierto>`, copiado con sus palabras.',
+      '',
+      '--- El dictamen ---',
+      JSON.stringify(dictamen, null, 2)
+    )
+  }
+
+  if (enlacesHaciaAtras && enlacesHaciaAtras.length > 0) {
+    bloques.push(
+      '',
+      `${enlacesHaciaAtras.length} pieza(s) de esta corrida citan una pieza que ya vivia en disco,`,
+      'y esa pieza vieja no devuelve la cita. El molino solo invierte el enlace entre piezas de la',
+      'misma corrida -aqui la pieza vieja ya estaba escrita antes de que esta empezara, y nadie mas',
+      'tiene permiso de abrirla.',
+      '',
+      'Por cada renglon: abre el archivo viejo -`idViejo` te dice la carpeta por su prefijo',
+      '(`DOM-`, `MOD-`, `CAP-`, `REG-`) y el numero de folio es el mismo con que empieza el nombre',
+      'del archivo dentro de esa carpeta, ej. `CAP-0013` vive en `capacidades/0013-*.md`-. Revisa su',
+      'campo `campoQueLeFalta`: si ya trae `idNuevo`, no hagas nada. Si no lo trae, **agrega',
+      '`idNuevo` a lo que ese campo ya tenia** -sin quitar ni reordenar lo que habia; si el campo',
+      'estaba vacio o en `[]`, queda con ese solo id.',
+      '',
+      '**Esto no es una falla que marcar: no toques `estado` ni `<que-queda-abierto>` por esto**',
+      '-el enlace queda cerrado, no senalado. Si no encuentras el archivo, repórtalo igual que uno',
+      'del dictamen que no exista.',
+      '',
+      '--- Los enlaces que faltan cerrar, hacia piezas de otra corrida ---',
+      JSON.stringify(enlacesHaciaAtras, null, 2)
+    )
+  }
+
+  return bloques.join('\n')
 }
 
 function promptParaArmarLoQueFalta(paso, escritos, senalesSinPieza) {
@@ -1810,6 +2085,56 @@ const construido = {
   senaladas: (construidoReglas.senaladas ?? []).concat(construidoCapacidades.senaladas ?? [])
 }
 
+// Antes de que una duda le llegue al experto, se intenta contestar con lo que ya existe y se
+// funden las que son el mismo problema contado distinto. Solo tiene caso en la primera
+// corrida -en la segunda las dudas se ignoran de cualquier forma, unas lineas mas abajo-.
+// Medido en la corrida `wf_24861ad7-882`: de 37 dudas devueltas, 6 ya estaban dichas en la
+// platica, 2 ya vivian escritas y 16 eran la misma pregunta repetida, porque reglas y
+// capacidades las levantan cada una por su lado y nadie las compara. Si un agente no
+// contesta, se sigue con la lista sin filtrar -fallar abierto aqui es preguntar de mas, no
+// perder una duda de verdad.
+if (construido.dudas.length > 0 && !segundaCorrida) {
+  const verificado = await agent(
+    promptParaVerificarLasDudas(loQueDijoElExperto, inventario, construido.dudas),
+    { label: `verificar-dudas:${paso}`, phase: 'Construir', agentType: 'auditor', schema: DUDAS_VERIFICADAS }
+  )
+
+  if (!verificado) {
+    log('Nadie verifico las dudas contra lo dicho y lo escrito. Se devuelven todas, sin filtrar.')
+  }
+
+  const sinContestar = verificado ? dudasSinContestar(construido.dudas, verificado.respuestas) : construido.dudas
+
+  if (verificado && sinContestar.length < construido.dudas.length) {
+    log(
+      `${construido.dudas.length - sinContestar.length} duda(s) ya tenian respuesta -en la platica o en lo ` +
+        'ya escrito- y no se devuelven.'
+    )
+  }
+
+  let dudasFinal = sinContestar
+
+  if (sinContestar.length > 1) {
+    const juntado = await agent(promptParaJuntarLasDudas(sinContestar), {
+      label: `juntar-dudas:${paso}`,
+      phase: 'Construir',
+      agentType: 'auditor',
+      schema: DUDAS_JUNTADAS
+    })
+
+    if (!juntado) {
+      log('Nadie junto las dudas repetidas. Se devuelven tal como salieron.')
+    } else {
+      dudasFinal = dudasSinDuplicados(sinContestar, juntado.grupos)
+      if (dudasFinal.length < sinContestar.length) {
+        log(`${sinContestar.length - dudasFinal.length} duda(s) eran el mismo problema contado distinto y se fundieron.`)
+      }
+    }
+  }
+
+  construido.dudas = dudasFinal
+}
+
 // Las cuatro llamadas de Construir ya contestaron: lo que hayan senalado se guarda para el
 // renglon, sin importar si la corrida sigue o se corta aqui mismo por dudas o por salir vacia.
 senaladasAlConstruirParaElRenglon = construido.senaladas
@@ -1997,6 +2322,14 @@ if (!escritos) {
 archivosEscritosParaElRenglon = escritos.archivos
 noEscritasParaElRenglon = escritos.noEscritos.length
 
+// Que pieza de esta corrida cita una pieza que ya vivia en disco, y esa vieja no devuelve la
+// cita: se calcula aqui, con datos que el molino ya tiene -`registro` trae las citas con sus ids
+// de trabajo, `escritos.archivos` los traduce a los ids definitivos-, sin volver a leer ningun
+// archivo. Se calcula antes de auditar porque no depende del dictamen: es un hecho de la propia
+// corrida, no algo que el auditor tenga que encontrar.
+const idsEscritosEstaCorrida = escritos.archivos.map((a) => a.idDeTrabajo)
+const enlacesHaciaAtras = enlacesPorCerrar(citasHaciaOtraCorrida(registro, idsEscritosEstaCorrida), escritos.archivos)
+
 // --- Auditar ---------------------------------------------------------------
 
 phase('Auditar')
@@ -2018,15 +2351,21 @@ dictamenParaElRenglon = dictamen
 // volvio a cometer con el dictamen ya contado para el estado de salida, pero sin nadie que pudiera
 // tocar los archivos.
 //
-// Solo corre si hay algo que marcar. Un dictamen limpio no manda a nadie a abrir treinta archivos.
+// Corre por dos razones, independientes entre si: el dictamen encontro algo, o esta misma
+// corrida dejo un enlace de un solo lado hacia una pieza vieja. Ninguna de las dos necesita a la
+// otra -medido en `product/conocimiento/` real: piezas de un paso citaban a piezas de un paso
+// anterior, el dictamen de esa corrida salia limpio, y el enlace se quedaba de un solo lado
+// porque esta fase solo corria con el dictamen. Sin ninguna de las dos razones, un dictamen
+// limpio y sin enlaces por cerrar no manda a nadie a abrir treinta archivos.
 
 const fallasQueMarcar = dictamen ? dictamen.inventado.concat(dictamen.perdido, dictamen.malMarcado) : []
+const hayFallasDelDictamen = !!dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)
 let marcado = null
 
-if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
+if (hayFallasDelDictamen || enlacesHaciaAtras.length > 0) {
   phase('Marcar')
 
-  marcado = await agent(promptParaMarcar(paso, dictamen, hora), {
+  marcado = await agent(promptParaMarcar(paso, dictamen, hora, enlacesHaciaAtras), {
     label: `marcar:${paso}`,
     phase: 'Marcar',
     agentType: 'escribano',
@@ -2034,7 +2373,11 @@ if (dictamen && (fallasQueMarcar.length > 0 || dictamen.sirve === false)) {
   })
 
   if (!marcado) {
-    log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+    if (hayFallasDelDictamen) {
+      log('El dictamen encontro fallas y nadie las marco en los archivos. Lo escrito se lee como si estuviera bien.')
+    } else {
+      log(`${enlacesHaciaAtras.length} enlace(s) hacia una pieza de otra corrida seguian sin cerrar y nadie los marco. Quedan de un solo lado.`)
+    }
     noContestaron.push('marcar')
   }
 }

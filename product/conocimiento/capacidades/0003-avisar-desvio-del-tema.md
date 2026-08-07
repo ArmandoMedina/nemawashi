@@ -2,7 +2,7 @@
 id: CAP-0003
 capacidad: Avisarle al experto que la plática se fue del tema, con la misma voz que la conduce.
 modulo: MOD-0001
-reglas: [REG-0016, REG-0017]
+reglas: [REG-0016, REG-0017, REG-0100]
 firmeza: dicho
 origen: escuchado
 estado: completa

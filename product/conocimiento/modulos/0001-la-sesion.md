@@ -1,13 +1,15 @@
 ---
 id: MOD-0001
 modulo: La sesión: escoger proyecto, fijar el tema, conducir la plática y decidir por dónde sigue.
-capacidades: [CAP-0001, CAP-0002, CAP-0003, CAP-0004, CAP-0005, CAP-0013, CAP-0014]
+dominio: DOM-0001
+capacidades: [CAP-0001, CAP-0002, CAP-0003, CAP-0004, CAP-0005, CAP-0013, CAP-0014, CAP-0030, CAP-0058]
 firmeza: dicho
 origen: propuesto
-estado: completa
+estado: con-huecos
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <modulo>
@@ -39,7 +41,9 @@ qué pasa con los archivos.
 </de-donde-salio>
 
 <que-queda-abierto>
-nada
+Auditoría del 2026-08-06: mal marcado. Enlace roto sin declarar: product/conocimiento/capacidades/0030-impedir-el-dar-por-sabido.md dice `modulo: MOD-0001` y este archivo no la nombra de vuelta en `capacidades`. No está en la lista de deuda declarada (`DEUDA_DE_ENLACE`), que hoy sólo tiene cinco entradas y todas de corridas anteriores. Prueba: `npx vitest run src/contratos/el-conocimiento-no-se-escapa.test.ts` falla con «11 enlace(s) roto(s) sin declarar».
+
+Cierre del enlace (marcar-lo-auditado): se agrega el campo `dominio: DOM-0001`, que este archivo no traía. DOM-0001 no nombra todavía a MOD-0001 de vuelta en su lista de `modulos` — su propio cuerpo declara esa cita como pregunta abierta, sin resolverla — así que el enlace queda escrito de este lado y sigue pendiente del otro.
 </que-queda-abierto>
 
 </modulo>

@@ -38,13 +38,18 @@ funciones, **nunca guarda reglas**.
 </decidido>
 
 <decidido nombre="puertos y adaptadores" seccion="§2.4">
+**Las flechas van siempre hacia adentro:** el núcleo no importa nada de Electron, del sistema de
+archivos, ni del proceso de Claude Code. Sin esa línea el patrón es decorativo.
+
 Pocos puertos —repo, proceso de Claude Code, reloj— y **prohibido crear una interfaz con una sola
 implementación y ninguna prueba que la use.**
 </decidido>
 
 <decidido nombre="tres patrones decididos, dos prohibidos" seccion="§2.16">
 Decididos: repositorio, resultado en vez de excepción **sólo en el núcleo**, y validar en la
-frontera. **Prohibidos, con motivo:** *singleton* —esconde de quién depende una pieza y arruina las
+frontera. El resultado llega con su disciplina: **un resultado sin consumir se marca
+automáticamente**, porque sin eso el patrón cambia un error ruidoso por uno callado, que es peor.
+**Prohibidos, con motivo:** *singleton* —esconde de quién depende una pieza y arruina las
 pruebas— y *herencia de más de un nivel*.
 </decidido>
 

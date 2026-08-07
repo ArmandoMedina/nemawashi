@@ -2,13 +2,14 @@
 id: CAP-0004
 capacidad: Devolverle al experto lo entendido con otras palabras para que diga si sí o si no.
 modulo: MOD-0001
-reglas: [REG-0004, REG-0005]
+reglas: [REG-0004, REG-0005, REG-0023, REG-0024]
 firmeza: dicho
 origen: escuchado
 estado: completa
 paso: que es Nemawashi y por que se pierde lo que el experto dice
 alta: 2026-08-04T09:42:15-06:00
 confirmado:
+marcado: 2026-08-06T13:35:39-06:00
 ---
 
 <capacidad>
