@@ -126,6 +126,25 @@ const INVENTARIO = {
         }
       }
     },
+    // Barato porque el renglon de `corridas.jsonl` ya es compacto -no hay cuerpo que dejar
+    // afuera-. Sin esto, una duda sobre que se anoto de una corrida anterior no se puede
+    // contestar: esa respuesta no vive en las cuatro carpetas, vive aqui. Medido en la
+    // corrida `wf_24861ad7-882`: una de las dudas ya contestadas por el repositorio se
+    // contestaba con un renglon de este archivo, y el inventario no lo veia.
+    corridas: {
+      type: 'array',
+      description: 'Los renglones de docs/mediciones/corridas.jsonl. Vacio si el archivo no existe todavia.',
+      items: {
+        type: 'object',
+        required: ['paso', 'corrida', 'estado'],
+        properties: {
+          paso: { type: 'string' },
+          corrida: { type: 'number' },
+          estado: { type: 'string' },
+          dondeParo: { type: 'string' }
+        }
+      }
+    },
     noSePudo: { type: 'string', description: 'Por que no se pudo leer alguna carpeta. Vacio si se leyeron todas.' }
   }
 }
@@ -419,6 +438,59 @@ const EXAMEN_CONTESTADO = {
         'Las preguntas que ninguna pieza tocaba, tal como venian en el examen. Sin id, porque no hay ' +
         'pieza. No propongas la pieza que faltaria: eso seria proponer el arreglo, y quien mide no arregla.',
       items: { type: 'string' }
+    }
+  }
+}
+
+// Antes de devolverle una duda al experto, se intenta contestar con lo que ya existe -la
+// platica de hoy y lo que ya esta escrito de antes-. El mismo veredicto de tres salidas que
+// usa `contestar-el-examen`, apuntado a otro material: ahi el material es el registro que
+// todavia no puede verse en la platica, aqui es al reves. Medido en la corrida
+// `wf_24861ad7-882`: de 37 dudas devueltas, 6 ya estaban dichas en la platica y 2 ya vivian
+// escritas.
+const DUDAS_VERIFICADAS = {
+  type: 'object',
+  required: ['respuestas'],
+  properties: {
+    respuestas: {
+      type: 'array',
+      description: 'Una por cada duda de la lista, en el mismo orden. Ninguna se omite.',
+      items: {
+        type: 'object',
+        required: ['pregunta', 'veredicto'],
+        properties: {
+          pregunta: { type: 'string', description: 'La duda, copiada tal cual.' },
+          veredicto: { type: 'string', enum: ['contestada', 'a-medias', 'sin-contestar'] },
+          deDonde: {
+            type: 'string',
+            description:
+              'Si contestada o a-medias: la frase de la platica, o la pieza y renglon del repositorio ' +
+              'que la contesta. Vacio si sin-contestar.'
+          }
+        }
+      }
+    }
+  }
+}
+
+// `juntar` solo senala los grupos -no redacta el renglon junto-, asi que el molino se queda
+// con la primera posicion de cada grupo tal cual se dijo, sin inventar una redaccion nueva.
+// Las posiciones son 1-based, en el mismo orden en que se numeraron para esta llamada.
+const DUDAS_JUNTADAS = {
+  type: 'object',
+  required: ['grupos'],
+  properties: {
+    grupos: {
+      type: 'array',
+      description: 'Solo los grupos de dos o mas. Las que ya estan bien repartidas no se listan.',
+      items: {
+        type: 'object',
+        required: ['posiciones', 'porQue'],
+        properties: {
+          posiciones: { type: 'array', items: { type: 'number' }, uniqueItems: true, description: 'Minimo dos, sin repetir.' },
+          porQue: { type: 'string', description: 'Por que son el mismo problema, en una linea.' }
+        }
+      }
     }
   }
 }
@@ -1034,7 +1106,13 @@ function promptParaInventariar() {
     'haya y sigue. Si una carpeta existe y no la pudiste leer, eso si se dice en `noSePudo`.',
     '',
     '**No abras el cuerpo de los archivos, no los resumas y no opines sobre ellos.** Aqui solo se',
-    'lista lo que hay.'
+    'lista lo que hay.',
+    '',
+    'Ademas, si existe `docs/mediciones/corridas.jsonl`, leelo con Read y devuelve `paso`,',
+    '`corrida`, `estado` y `dondeParo` de cada uno de sus renglones en `corridas` -tal cual,',
+    'sin abrir ningun otro archivo por esto. **Si el renglon trae `dondeParo` en `null`,',
+    'devuelvelo como cadena vacia** -aqui vacio es lo que ese `null` significa, no lo omitas ni',
+    'inventes un valor. Si no existe todavia, `corridas` va vacio: no es un error.'
   ].join('\n')
 }
 
@@ -1301,6 +1379,99 @@ function promptParaContestarElExamen(registro, examen) {
     '--- El registro ---',
     JSON.stringify(registroParaElLector(registro), null, 2)
   ].join('\n')
+}
+
+// Antes de devolverle una duda al experto, se intenta contestar con lo que ya existe. Es el
+// mismo oficio que `contestar-el-examen` -intentar contestar caminando el material, con el
+// mismo veredicto de tres salidas-, apuntado al otro lado: alla el material es el registro y
+// esta prohibido abrir la platica, porque lo que se mide es si el registro se basta solo. Aqui
+// es al reves -el material ES la platica, mas lo que ya esta escrito de sesiones anteriores-,
+// y por eso esa prohibicion de la carta no aplica a esta llamada: se le dice explicito, para
+// que no se confunda con su uso normal.
+function promptParaVerificarLasDudas(loQueDijoElExperto, inventario, dudas) {
+  const piezas = inventario?.piezas ?? []
+  const corridas = inventario?.corridas ?? []
+
+  return [
+    'Carga tu carta `contestar-el-examen` antes de leer nada: aqui se mide igual que ahi',
+    '-intentas contestar cada pregunta caminando el material, marcas contestada, a medias o',
+    'sin contestar, y dices de donde salio la respuesta-, pero el material es otro.',
+    '',
+    '**Aqui el material NO es un registro: es la platica de esta sesion, mas lo que ya esta',
+    'escrito de sesiones anteriores.** Tu carta te dice que no abras la platica -esa regla es',
+    'para cuando mides si el registro se basta solo. Aqui la pregunta es la contraria: si esto',
+    'que esta por preguntarsele al experto ya lo dijo el, o ya quedo escrito. Para esta llamada,',
+    'ignora esa prohibicion: abrir la platica es exactamente el trabajo.',
+    '',
+    '--- Lo que dijo el experto en esta sesion, y lo que contesto despues si lo hizo ---',
+    loQueDijoElExperto,
+    '',
+    piezas.length > 0 || corridas.length > 0
+      ? [
+          '--- Lo que ya esta escrito de sesiones anteriores -titulos y renglones, no el cuerpo ---',
+          '',
+          '**Si una duda te suena a que su respuesta ya vive en una pieza puntual o en un renglon',
+          'de corrida, abre SOLO esa con tu herramienta Read -dos o tres cuando mucho, nunca',
+          'todas- antes de decidir. El cuerpo no esta aqui a proposito: no cabria.**',
+          '',
+          JSON.stringify({ piezas, corridas }, null, 2)
+        ].join('\n')
+      : '--- No hay nada escrito todavia de sesiones anteriores ---',
+    '',
+    '--- Las dudas que estan por devolverse al experto ---',
+    dudas.map((d, i) => `${i + 1}. ${d.pregunta}`).join('\n')
+  ].join('\n')
+}
+
+// `juntar` mide si dos dudas, aunque digan las palabras distinto, son el mismo problema:
+// pasa seguido porque reglas y capacidades levantan sus dudas cada una por su lado y nadie
+// las compara. No redacta el renglon junto -eso lo prohibe su propia carta-, asi que el
+// molino se queda con la duda tal como se dijo en la primera posicion de cada grupo.
+function promptParaJuntarLasDudas(dudas) {
+  return [
+    'Carga tu carta `juntar` antes de leer nada.',
+    '',
+    'Estas son las dudas que le van a quedar al experto, ya numeradas. Senala los grupos que',
+    'son el mismo problema contado con otras palabras.',
+    '',
+    '--- Las dudas ---',
+    dudas.map((d, i) => `${i + 1}. ${d.pregunta}`).join('\n')
+  ].join('\n')
+}
+
+// Quita las dudas cuya respuesta salio `contestada`. Las `a-medias` se quedan: el peor de los
+// dos veredictos es el que manda, porque una respuesta a medias sigue sin ser una respuesta
+// -`contestar-el-examen` lo dice igual para el registro. Una duda que ninguna respuesta
+// menciono no se toca: que el agente no la haya cazado no es lo mismo que haberla contestado.
+function dudasSinContestar(dudas, respuestas) {
+  const preguntasContestadas = new Set(
+    respuestas.filter((r) => r.veredicto === 'contestada').map((r) => r.pregunta.trim())
+  )
+  return dudas.filter((d) => !preguntasContestadas.has(d.pregunta.trim()))
+}
+
+// De cada grupo que `juntar` senalo como el mismo problema, deja solo la primera posicion -la
+// de numero mas chico- y quita el resto. No redacta una pregunta nueva: `juntar` mismo prohibe
+// que quien mide decida como quedaria el renglon junto, y quedarse con una de las que ya se
+// dijeron, tal cual, es la unica salida que no inventa. Las posiciones son 1-based, en el mismo
+// orden en que se numeraron para `juntar`. Una posicion fuera de rango no truena la corrida: se
+// ignora, y si eso deja el grupo con una sola posicion valida, el grupo no quita nada.
+//
+// La posicion se dedup antes de contar cuantas trae el grupo: `[3,3]` no es una pareja, es una
+// sola posicion nombrada dos veces, y `[1,1,2]` trae una sola pareja real -1 con 2-, no dos.
+// Medido en revision de codigo: sin el dedup, `[3,3]` pasaba el «hacen falta dos para fundir» y
+// la duda de esa posicion se iba entera sin dejar superviviente; `[1,1,2]` se llevaba las dos.
+function dudasSinDuplicados(dudas, grupos) {
+  const posicionesAQuitar = new Set()
+
+  for (const grupo of grupos) {
+    const validas = [...new Set(grupo.posiciones.filter((p) => p >= 1 && p <= dudas.length))]
+    if (validas.length < 2) continue
+    const [, ...resto] = validas.sort((a, b) => a - b)
+    for (const posicion of resto) posicionesAQuitar.add(posicion)
+  }
+
+  return dudas.filter((_, indice) => !posicionesAQuitar.has(indice + 1))
 }
 
 // «Corregir» corre una vez por cada tipo que tenga piezas marcadas -antes corria una sola vez con
@@ -1912,6 +2083,56 @@ const construido = {
   // cerrar. Modulos y dominios solo agrupan lo que ya existe.
   dudas: (construidoReglas.dudas ?? []).concat(construidoCapacidades.dudas ?? []),
   senaladas: (construidoReglas.senaladas ?? []).concat(construidoCapacidades.senaladas ?? [])
+}
+
+// Antes de que una duda le llegue al experto, se intenta contestar con lo que ya existe y se
+// funden las que son el mismo problema contado distinto. Solo tiene caso en la primera
+// corrida -en la segunda las dudas se ignoran de cualquier forma, unas lineas mas abajo-.
+// Medido en la corrida `wf_24861ad7-882`: de 37 dudas devueltas, 6 ya estaban dichas en la
+// platica, 2 ya vivian escritas y 16 eran la misma pregunta repetida, porque reglas y
+// capacidades las levantan cada una por su lado y nadie las compara. Si un agente no
+// contesta, se sigue con la lista sin filtrar -fallar abierto aqui es preguntar de mas, no
+// perder una duda de verdad.
+if (construido.dudas.length > 0 && !segundaCorrida) {
+  const verificado = await agent(
+    promptParaVerificarLasDudas(loQueDijoElExperto, inventario, construido.dudas),
+    { label: `verificar-dudas:${paso}`, phase: 'Construir', agentType: 'auditor', schema: DUDAS_VERIFICADAS }
+  )
+
+  if (!verificado) {
+    log('Nadie verifico las dudas contra lo dicho y lo escrito. Se devuelven todas, sin filtrar.')
+  }
+
+  const sinContestar = verificado ? dudasSinContestar(construido.dudas, verificado.respuestas) : construido.dudas
+
+  if (verificado && sinContestar.length < construido.dudas.length) {
+    log(
+      `${construido.dudas.length - sinContestar.length} duda(s) ya tenian respuesta -en la platica o en lo ` +
+        'ya escrito- y no se devuelven.'
+    )
+  }
+
+  let dudasFinal = sinContestar
+
+  if (sinContestar.length > 1) {
+    const juntado = await agent(promptParaJuntarLasDudas(sinContestar), {
+      label: `juntar-dudas:${paso}`,
+      phase: 'Construir',
+      agentType: 'auditor',
+      schema: DUDAS_JUNTADAS
+    })
+
+    if (!juntado) {
+      log('Nadie junto las dudas repetidas. Se devuelven tal como salieron.')
+    } else {
+      dudasFinal = dudasSinDuplicados(sinContestar, juntado.grupos)
+      if (dudasFinal.length < sinContestar.length) {
+        log(`${sinContestar.length - dudasFinal.length} duda(s) eran el mismo problema contado distinto y se fundieron.`)
+      }
+    }
+  }
+
+  construido.dudas = dudasFinal
 }
 
 // Las cuatro llamadas de Construir ya contestaron: lo que hayan senalado se guarda para el
