@@ -1,7 +1,7 @@
 ---
 id: CAP-0063
 capacidad: Juntar lo hallado por los revisores en una sola nota ya redactada como plática, o en ninguna.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0111, REG-0113, REG-0114]
 firmeza: dicho
 origen: escuchado

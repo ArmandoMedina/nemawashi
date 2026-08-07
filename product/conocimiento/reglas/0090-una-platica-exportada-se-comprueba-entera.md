@@ -1,7 +1,7 @@
 ---
 id: REG-0090
 regla: Una plática exportada se comprueba entera antes de molerla, porque las largas se cortan o se desordenan.
-capacidades: []
+capacidades: [CAP-0054]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

@@ -1,7 +1,7 @@
 ---
 id: REG-0077
 regla: No hay número para dejar de revisar capacidad por capacidad: lo decide una persona, sin medirlo ni automatizarlo.
-capacidades: []
+capacidades: [CAP-0047]
 firmeza: confirmado
 origen: escuchado
 estado: con-huecos

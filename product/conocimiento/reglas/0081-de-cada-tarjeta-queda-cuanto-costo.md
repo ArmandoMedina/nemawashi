@@ -1,7 +1,7 @@
 ---
 id: REG-0081
 regla: De cada tarjeta que ya pasó queda cuánto tardó y cuánto esfuerzo costó.
-capacidades: []
+capacidades: [CAP-0050]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos

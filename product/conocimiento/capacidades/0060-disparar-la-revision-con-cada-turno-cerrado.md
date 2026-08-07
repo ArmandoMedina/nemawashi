@@ -1,7 +1,7 @@
 ---
 id: CAP-0060
 capacidad: Disparar la revisión de atrás con cada turno cerrado del experto, sin que el consultor la pida.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0107, REG-0108, REG-0109]
 firmeza: abierto
 origen: propuesto

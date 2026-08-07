@@ -1,7 +1,7 @@
 ---
 id: REG-0084
 regla: El proyecto define hasta dónde llega y respeta su esencia: perdida la esencia, ya no es el mismo proyecto.
-capacidades: []
+capacidades: [CAP-0052]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos

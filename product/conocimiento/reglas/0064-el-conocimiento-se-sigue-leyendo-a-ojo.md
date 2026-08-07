@@ -1,7 +1,7 @@
 ---
 id: REG-0064
 regla: El conocimiento se sigue leyendo a ojo como archivos; dónde vive el estado de las corridas no está decidido.
-capacidades: []
+capacidades: [CAP-0041]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

@@ -1,7 +1,7 @@
 ---
 id: CAP-0062
 capacidad: Correr en vivo sólo la revisión ligera y dejar la pesada para el cierre de la sesión.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0124, REG-0119, REG-0120]
 firmeza: abierto
 origen: propuesto

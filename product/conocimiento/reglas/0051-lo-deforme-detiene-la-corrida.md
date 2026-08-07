@@ -1,7 +1,7 @@
 ---
 id: REG-0051
 regla: Lo que un agente entrega fuera de la forma acordada no se corrige ni se pasa: la corrida se detiene ahí.
-capacidades: []
+capacidades: [CAP-0034]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

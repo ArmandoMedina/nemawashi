@@ -1,7 +1,7 @@
 ---
 id: REG-0067
 regla: De las herramientas que ya orquestan agentes se copia el principio, no la librería.
-capacidades: []
+capacidades: [CAP-0042]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos

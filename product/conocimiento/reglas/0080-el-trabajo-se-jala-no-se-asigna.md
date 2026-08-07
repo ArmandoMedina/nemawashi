@@ -1,7 +1,7 @@
 ---
 id: REG-0080
 regla: El trabajo no se asigna: cada quien, persona o agente, jala su tarjeta del tablero cuando se desocupa.
-capacidades: []
+capacidades: [CAP-0050]
 firmeza: confirmado
 origen: escuchado
 estado: con-huecos

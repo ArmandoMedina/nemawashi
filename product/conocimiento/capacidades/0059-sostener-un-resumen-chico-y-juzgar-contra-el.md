@@ -1,7 +1,7 @@
 ---
 id: CAP-0059
 capacidad: Sostener un resumen chico de lo ya establecido y juzgar contra él cada cosa nueva.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0121, REG-0122, REG-0123, REG-0128]
 firmeza: abierto
 origen: propuesto

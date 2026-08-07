@@ -1,7 +1,7 @@
 ---
 id: REG-0065
 regla: El flujo aplanado en un solo archivo con copias a mano deja de pagar al crecer; desde qué tamaño, sin número.
-capacidades: []
+capacidades: [CAP-0042]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos

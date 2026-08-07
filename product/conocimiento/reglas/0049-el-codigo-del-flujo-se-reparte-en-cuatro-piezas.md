@@ -1,7 +1,7 @@
 ---
 id: REG-0049
 regla: El código de un flujo con agentes se reparte en cuatro piezas: mundo, adaptador, puerto y núcleo.
-capacidades: []
+capacidades: [CAP-0033]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos

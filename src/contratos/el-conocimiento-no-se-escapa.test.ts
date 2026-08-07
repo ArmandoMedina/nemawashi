@@ -42,7 +42,6 @@ const CARPETA_POR_TIPO: Record<TipoDePieza, string> = {
  * corrija, esta misma prueba avisa que ya se puede sacar la clave de esta lista.
  */
 const DEUDA_DE_FORMA: Record<string, string> = {
-  'product/conocimiento/modulos/0001-la-sesion.md': 'el modulo no cuelga de ningun dominio',
   'product/conocimiento/modulos/0002-el-registro-de-lo-dicho.md': 'el modulo no cuelga de ningun dominio',
   'product/conocimiento/modulos/0003-la-revision-en-frio.md': 'el modulo no cuelga de ningun dominio',
   'product/conocimiento/modulos/0004-el-programa-en-manos-de-quien-no-sabe.md':
@@ -84,9 +83,15 @@ const TODAS: PiezaLeida[] = (['dominio', 'modulo', 'capacidad', 'regla'] as cons
 )
 
 /**
- * Deuda del enlace: aristas de un solo lado que hoy existen en el registro, y en una linea de
- * negocio por que sigue sin cerrar. Igual que `DEUDA_DE_FORMA`, cierra por los dos lados: si
- * la falla sigue, el suite no truena; si la falla ya no esta, esta misma prueba avisa.
+ * Deuda del enlace: aristas que hoy no cierran en el registro -de un solo lado, o apuntando a
+ * un id que nadie ha escrito- y en una linea de negocio por que siguen asi. Igual que
+ * `DEUDA_DE_FORMA`, cierra por los dos lados: si la falla sigue, el suite no truena; si la
+ * falla ya no esta, esta misma prueba avisa.
+ *
+ * Un `id-inexistente` se declara aqui y no se tapa creando la pieza que falta: un modulo
+ * escrito para que el grafo cierre es un corte que nadie levanto, y el registro dejaria de
+ * distinguir lo que se escucho de lo que se invento para pasar la prueba. La cita se queda
+ * apuntando al hueco, con nombre, hasta que una sesion diga de que cuelga.
  */
 const DEUDA_DE_ENLACE: Record<string, string> = {
   'product/conocimiento/capacidades/0015-instalar-y-abrir-como-cualquier-programa.md enlace-de-un-solo-lado reglas:REG-0001':
@@ -100,7 +105,25 @@ const DEUDA_DE_ENLACE: Record<string, string> = {
   'product/conocimiento/modulos/0004-el-programa-en-manos-de-quien-no-sabe.md enlace-de-un-solo-lado capacidades:CAP-0015':
     'el modulo cita la capacidad de instalar y abrir el programa, que declara el campo modulo vacio',
   'product/conocimiento/reglas/0027-el-experto-platica-directo-con-la-ia.md sin-quien-lo-contenga capacidades:':
-    'la regla dice que el experto platica directo con la ia porque le sigue el ritmo, y en el levantamiento nadie dijo de que capacidad cuelga; colgarla de una seria inventar el enlace'
+    'la regla dice que el experto platica directo con la ia porque le sigue el ritmo, y en el levantamiento nadie dijo de que capacidad cuelga; colgarla de una seria inventar el enlace',
+  'product/conocimiento/capacidades/0035-detener-la-corrida-sin-materia-prima.md id-inexistente modulo:MOD-0012':
+    'detener la corrida cuando no llega materia prima cuelga del modulo de como se comporta la corrida del molino, que ninguna sesion ha levantado',
+  'product/conocimiento/capacidades/0037-seguir-la-corrida-si-falla-una-medicion.md id-inexistente modulo:MOD-0012':
+    'seguir la corrida aunque reviente una medicion cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0038-retomar-la-corrida-interrumpida.md id-inexistente modulo:MOD-0012':
+    'retomar lo interrumpido cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0039-repetir-un-paso-que-escribe-sin-ensuciar.md id-inexistente modulo:MOD-0012':
+    'repetir un paso que escribe sin dejar basura cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0040-recoger-lo-tirado-por-la-marca-de-la-corrida.md id-inexistente modulo:MOD-0012':
+    'recoger lo tirado por la marca de la corrida cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0041-abrir-a-ojo-el-conocimiento-escrito.md id-inexistente modulo:MOD-0012':
+    'abrir a ojo lo ya escrito cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0054-moler-una-platica-exportada-de-la-nube.md id-inexistente modulo:MOD-0012':
+    'moler una platica traida de fuera cuelga del mismo modulo de la corrida, todavia sin escribir',
+  'product/conocimiento/capacidades/0053-ver-dibujado-lo-que-hoy-solo-se-lee.md id-inexistente modulo:MOD-0015':
+    'ver dibujado lo que hoy solo se lee cuelga del modulo de las pantallas donde se ve y se ajusta lo que vive en texto, reservado desde el 2026-08-06 y todavia sin escribir',
+  'product/conocimiento/dominios/0005-el-rumbo-del-propio-proyecto.md id-inexistente modulos:MOD-0015':
+    'el dominio nombra ese mismo modulo de las pantallas como el tercero de sus tres pedazos, y lo lista antes de que exista'
 }
 
 describe('el conocimiento no se escapa, en los archivos de verdad', () => {

@@ -1,7 +1,7 @@
 ---
 id: REG-0062
 regla: Lo que dejó tirado un intento fallido se borra por la marca de la corrida antes de reintentar.
-capacidades: []
+capacidades: [CAP-0040]
 firmeza: abierto
 origen: escuchado
 estado: con-huecos

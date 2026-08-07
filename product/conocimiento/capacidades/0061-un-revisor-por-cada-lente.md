@@ -1,7 +1,7 @@
 ---
 id: CAP-0061
 capacidad: Poner detrás del consultor un revisor por cada lente: contradicciones, huecos, conexiones y método.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0116, REG-0117, REG-0118, REG-0115]
 firmeza: abierto
 origen: escuchado

@@ -1,7 +1,7 @@
 ---
 id: REG-0050
 regla: El puerto es el esquema: la forma que el núcleo le exige a lo que un agente entrega.
-capacidades: []
+capacidades: [CAP-0034]
 firmeza: confirmado
 origen: escuchado
 estado: con-huecos

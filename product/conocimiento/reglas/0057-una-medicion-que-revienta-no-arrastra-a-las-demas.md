@@ -1,7 +1,7 @@
 ---
 id: REG-0057
 regla: Una medición que revienta no se lleva a las que ya terminaron bien: cada resultado se recoge por separado.
-capacidades: []
+capacidades: [CAP-0037]
 firmeza: abierto
 origen: propuesto
 estado: con-huecos

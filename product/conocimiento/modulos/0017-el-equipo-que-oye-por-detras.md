@@ -1,5 +1,5 @@
 ---
-id: MOD-0015
+id: MOD-0017
 modulo: El equipo que oye por detrás mientras el experto habla: quién mira, cada cuándo y qué le llega al consultor.
 dominio: DOM-0001
 capacidades: [CAP-0059, CAP-0060, CAP-0061, CAP-0062, CAP-0063, CAP-0064]

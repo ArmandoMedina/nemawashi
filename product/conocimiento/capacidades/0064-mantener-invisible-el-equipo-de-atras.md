@@ -1,7 +1,7 @@
 ---
 id: CAP-0064
 capacidad: Mantener invisible el equipo de atrás: el experto no ve esa plática ni sabe que lo oyen en vivo.
-modulo: MOD-0015
+modulo: MOD-0017
 reglas: [REG-0104, REG-0105, REG-0106]
 firmeza: confirmado
 origen: escuchado

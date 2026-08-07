@@ -1,7 +1,7 @@
 ---
 id: REG-0068
 regla: Un dominio tiene muchos módulos, un módulo muchas capacidades y una capacidad muchas reglas de negocio.
-capacidades: []
+capacidades: [CAP-0043]
 firmeza: dicho
 origen: escuchado
 estado: con-huecos
